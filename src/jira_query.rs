@@ -54,7 +54,8 @@ pub struct Fields {
     pub comment: Comments,
     pub issuelinks: Vec<IssueLink>,
     pub votes: Votes,
-    pub parent: Option<Parent>,
+    pub parent: Option<CondensedIssue>,
+    pub subtasks: Vec<CondensedIssue>,
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
@@ -314,8 +315,8 @@ pub struct AvatarUrls {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Parent {
-    pub fields: ParentFields,
+pub struct CondensedIssue {
+    pub fields: CondensedFields,
     pub id: String,
     pub key: String,
     #[serde(rename = "self")]
@@ -325,7 +326,7 @@ pub struct Parent {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ParentFields {
+pub struct CondensedFields {
     pub issuetype: IssueType,
     pub priority: Priority,
     pub status: Status,
