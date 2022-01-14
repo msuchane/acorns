@@ -72,14 +72,14 @@ fn main() {
     }
 
     if let Some(cli) = cli.subcommand_matches("jira") {
-        jira_query::main(
+        let _issue = jira_query::main(
             cli.value_of("server").unwrap(),
             cli.value_of("ticket").unwrap(),
             cli.value_of("api_key").unwrap(),
         );
     }
     if let Some(cli) = cli.subcommand_matches("bugzilla") {
-        bugzilla_query::main(
+        let _bugs = bugzilla_query::main(
             cli.value_of("server").unwrap(),
             cli.value_of("ticket").unwrap(),
             cli.value_of("api_key").unwrap(),

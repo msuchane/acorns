@@ -6,342 +6,343 @@ use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub struct JiraIssue {
-    id: String,
-    key: String,
-    expand: String,
-    fields: Fields,
+    pub id: String,
+    pub key: String,
+    pub expand: String,
+    pub fields: Fields,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Fields {
     #[serde(rename = "lastViewed")]
-    last_viewed: Option<String>,
-    labels: Vec<String>,
-    versions: Vec<Version>,
-    assignee: User,
-    description: Option<String>,
-    duedate: Option<String>,
+    pub last_viewed: Option<String>,
+    pub labels: Vec<String>,
+    pub versions: Vec<Version>,
+    pub assignee: User,
+    pub description: Option<String>,
+    pub duedate: Option<String>,
     #[serde(rename = "fixVersions")]
-    fix_versions: Vec<Version>,
-    reporter: User,
-    status: Status,
-    created: String,
-    updated: String,
-    issuetype: IssueType,
-    timeestimate: Option<i32>,
-    aggregatetimeestimate: Option<i32>,
-    timeoriginalestimate: Option<i32>,
-    timespent: Option<i32>,
-    aggregatetimespent: Option<i32>,
-    aggregatetimeoriginalestimate: Option<i32>,
-    progress: Progress,
-    aggregateprogress: Progress,
-    workratio: i32,
-    summary: String,
-    creator: User,
-    project: Project,
-    priority: Priority,
-    components: Vec<Component>,
-    watches: Watches,
-    archiveddate: Option<String>,
-    archivedby: Option<String>,
-    resolution: Option<Resolution>,
-    resolutiondate: Option<String>,
-    comment: Comments,
-    issuelinks: Vec<IssueLink>,
-    votes: Votes,
-    parent: Option<Parent>,
+    pub fix_versions: Vec<Version>,
+    pub reporter: User,
+    pub status: Status,
+    pub created: String,
+    pub updated: String,
+    pub issuetype: IssueType,
+    pub timeestimate: Option<i32>,
+    pub aggregatetimeestimate: Option<i32>,
+    pub timeoriginalestimate: Option<i32>,
+    pub timespent: Option<i32>,
+    pub aggregatetimespent: Option<i32>,
+    pub aggregatetimeoriginalestimate: Option<i32>,
+    pub progress: Progress,
+    pub aggregateprogress: Progress,
+    pub workratio: i32,
+    pub summary: String,
+    pub creator: User,
+    pub project: Project,
+    pub priority: Priority,
+    pub components: Vec<Component>,
+    pub watches: Watches,
+    pub archiveddate: Option<String>,
+    pub archivedby: Option<String>,
+    pub resolution: Option<Resolution>,
+    pub resolutiondate: Option<String>,
+    pub comment: Comments,
+    pub issuelinks: Vec<IssueLink>,
+    pub votes: Votes,
+    pub parent: Option<Parent>,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct User {
-    active: bool,
+    pub active: bool,
     #[serde(rename = "displayName")]
-    display_name: String,
+    pub display_name: String,
     #[serde(rename = "emailAddress")]
-    email_address: String,
-    key: String,
-    name: String,
+    pub email_address: String,
+    pub key: String,
+    pub name: String,
     #[serde(rename = "timeZone")]
-    time_zone: String,
+    pub time_zone: String,
     #[serde(rename = "avatarUrls")]
-    avatar_urls: AvatarUrls,
+    pub avatar_urls: AvatarUrls,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Version {
-    id: String,
-    description: Option<String>,
-    name: String,
-    archived: bool,
-    released: bool,
+    pub id: String,
+    pub description: Option<String>,
+    pub name: String,
+    pub archived: bool,
+    pub released: bool,
     #[serde(rename = "releaseDate")]
-    release_date: Option<String>,
+    pub release_date: Option<String>,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Status {
-    description: String,
+    pub description: String,
     #[serde(rename = "iconUrl")]
-    icon_url: String,
-    id: String,
-    name: String,
+    pub icon_url: String,
+    pub id: String,
+    pub name: String,
     #[serde(rename = "statusCategory")]
-    status_category: StatusCategory,
+    pub status_category: StatusCategory,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct StatusCategory {
     #[serde(rename = "colorName")]
-    color_name: String,
-    id: i32,
-    key: String,
-    name: String,
+    pub color_name: String,
+    pub id: i32,
+    pub key: String,
+    pub name: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Resolution {
-    description: String,
-    id: String,
-    name: String,
+    pub description: String,
+    pub id: String,
+    pub name: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct IssueType {
     #[serde(rename = "avatarId")]
-    avatar_id: i32,
-    description: String,
+    pub avatar_id: i32,
+    pub description: String,
     #[serde(rename = "iconUrl")]
-    icon_url: String,
-    id: String,
-    name: String,
-    subtask: bool,
+    pub icon_url: String,
+    pub id: String,
+    pub name: String,
+    pub subtask: bool,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Project {
-    id: String,
-    key: String,
-    name: String,
+    pub id: String,
+    pub key: String,
+    pub name: String,
     #[serde(rename = "projectTypeKey")]
-    project_type_key: String,
+    pub project_type_key: String,
     #[serde(rename = "projectCategory")]
-    project_category: ProjectCategory,
+    pub project_category: ProjectCategory,
     #[serde(rename = "avatarUrls")]
-    avatar_urls: AvatarUrls,
+    pub avatar_urls: AvatarUrls,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ProjectCategory {
-    description: String,
-    id: String,
-    name: String,
+    pub description: String,
+    pub id: String,
+    pub name: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Priority {
     #[serde(rename = "iconUrl")]
-    icon_url: String,
-    id: String,
-    name: String,
+    pub icon_url: String,
+    pub id: String,
+    pub name: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Component {
-    description: Option<String>,
-    id: String,
-    name: String,
+    pub description: Option<String>,
+    pub id: String,
+    pub name: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Watches {
     #[serde(rename = "isWatching")]
-    is_watching: bool,
+    pub is_watching: bool,
     #[serde(rename = "watchCount")]
-    watch_count: i32,
+    pub watch_count: i32,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Progress {
-    progress: i32,
-    total: i32,
+    pub progress: i32,
+    pub total: i32,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Comment {
-    author: User,
-    body: String,
-    created: String,
-    id: String,
+    pub author: User,
+    pub body: String,
+    pub created: String,
+    pub id: String,
     #[serde(rename = "updateAuthor")]
-    update_author: User,
-    updated: String,
+    pub update_author: User,
+    pub updated: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Comments {
-    comments: Vec<Comment>,
+    pub comments: Vec<Comment>,
     #[serde(rename = "maxResults")]
-    max_results: i32,
+    pub max_results: i32,
     #[serde(rename = "startAt")]
-    start_at: i32,
-    total: i32,
+    pub start_at: i32,
+    pub total: i32,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct IssueLink {
-    id: String,
+    pub id: String,
     #[serde(rename = "outwardIssue")]
-    outward_issue: OutwardIssue,
+    pub outward_issue: OutwardIssue,
     #[serde(rename = "type")]
-    link_type: IssueLinkType,
+    pub link_type: IssueLinkType,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutwardIssue {
-    id: String,
-    key: String,
-    fields: OutwardIssueFields,
+    pub id: String,
+    pub key: String,
+    pub fields: OutwardIssueFields,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutwardIssueFields {
-    issuetype: IssueType,
-    priority: Option<Priority>,
-    status: Status,
-    summary: String,
+    pub issuetype: IssueType,
+    pub priority: Option<Priority>,
+    pub status: Status,
+    pub summary: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct IssueLinkType {
-    id: String,
-    inward: String,
-    name: String,
-    outward: String,
+    pub id: String,
+    pub inward: String,
+    pub name: String,
+    pub outward: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Votes {
     #[serde(rename = "hasVoted")]
-    has_voted: bool,
-    votes: i32,
+    pub has_voted: bool,
+    pub votes: i32,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AvatarUrls {
     #[serde(rename = "16x16")]
-    xsmall: String,
+    pub xsmall: String,
     #[serde(rename = "24x24")]
-    small: String,
+    pub small: String,
     #[serde(rename = "32x32")]
-    medium: String,
+    pub medium: String,
     #[serde(rename = "48x48")]
-    full: String,
+    pub full: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Parent {
-    fields: ParentFields,
-    id: String,
-    key: String,
+    pub fields: ParentFields,
+    pub id: String,
+    pub key: String,
     #[serde(rename = "self")]
-    self_link: String,
+    pub self_link: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ParentFields {
-    issuetype: IssueType,
-    priority: Priority,
-    status: Status,
-    summary: String,
+    pub issuetype: IssueType,
+    pub priority: Priority,
+    pub status: Status,
+    pub summary: String,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
-pub fn main(host: &str, issue: &str, api_key: &str) {
+pub fn main(host: &str, issue: &str, api_key: &str) -> JiraIssue {
     let mut client = RestClient::builder().blocking(host).unwrap();
     client
         .set_header("Authorization", &format!("Bearer {}", api_key))
         .unwrap();
     // Gets a bug by ID and deserializes the JSON to data variable
     let data: Response<JiraIssue> = client.get(issue).unwrap();
-    println!("{:#?}", data.into_inner());
+    let issue = data.into_inner();
+    println!("{:#?}", issue);
 
-    // println!("{:#?}", data);
+    issue
 }
 
 // API call with one String parameter (e.g. "https://issues.redhat.com/rest/api/2/issue/RHELPLAN-12345")
