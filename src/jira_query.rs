@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use restson::{Error, Response, RestClient, RestPath};
+use restson::{Error as RestError, Response as RestResponse, RestClient, RestPath};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -347,7 +347,7 @@ pub fn main(host: &str, issue: &str, api_key: &str) -> JiraIssue {
         .set_header("Authorization", &format!("Bearer {}", api_key))
         .unwrap();
     // Gets a bug by ID and deserializes the JSON to data variable
-    let data: Response<JiraIssue> = client.get(issue).unwrap();
+    let data: RestResponse<JiraIssue> = client.get(issue).unwrap();
     let issue = data.into_inner();
     println!("{:#?}", issue);
 
@@ -356,7 +356,7 @@ pub fn main(host: &str, issue: &str, api_key: &str) -> JiraIssue {
 
 // API call with one String parameter (e.g. "https://issues.redhat.com/rest/api/2/issue/RHELPLAN-12345")
 impl RestPath<&str> for JiraIssue {
-    fn get_path(param: &str) -> Result<String, Error> {
+    fn get_path(param: &str) -> Result<String, RestError> {
         Ok(format!("rest/api/2/issue/{}", param))
     }
 }

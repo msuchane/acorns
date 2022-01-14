@@ -3,12 +3,12 @@
 
 use std::collections::HashMap;
 
-use restson::{Error, Response, RestClient, RestPath};
+use restson::{Error as RestError, Response as RestResponse, RestClient, RestPath};
 use serde::Deserialize;
 use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
-pub struct BZResponse {
+pub struct Response {
     pub offset: i32,
     pub limit: String,
     pub total_matches: i32,
@@ -109,16 +109,16 @@ pub fn main(host: &str, bug: &str, api_key: &str) -> Vec<Bug> {
         .set_header("Authorization", &format!("Bearer {}", api_key))
         .unwrap();
     // Gets a bug by ID and deserializes the JSON to data variable
-    let data: Response<BZResponse> = client.get(bug).unwrap();
-    let bzresponse = data.into_inner();
-    println!("{:#?}", bzresponse);
+    let data: RestResponse<Response> = client.get(bug).unwrap();
+    let response = data.into_inner();
+    println!("{:#?}", response);
 
-    bzresponse.bugs
+    response.bugs
 }
 
 // API call with one String parameter, which is the bug ID
-impl RestPath<&str> for BZResponse {
-    fn get_path(param: &str) -> Result<String, Error> {
+impl RestPath<&str> for Response {
+    fn get_path(param: &str) -> Result<String, RestError> {
         Ok(format!("rest/bug?id={}", param))
     }
 }
