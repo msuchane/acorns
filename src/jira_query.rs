@@ -337,7 +337,7 @@ pub fn main(host: &str, issue: &str, api_key: &str) {
     client
         .set_header("Authorization", &format!("Bearer {}", api_key))
         .unwrap();
-    // Gets https://issues.redhat.com/rest/api/2/issue/<key> and deserializes the JSON to data variable
+    // Gets a bug by ID and deserializes the JSON to data variable
     let data: Response<JiraIssue> = client.get(issue).unwrap();
     println!("{:#?}", data.into_inner());
 

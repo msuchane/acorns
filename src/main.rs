@@ -1,6 +1,7 @@
 use clap::{app_from_crate, arg, App, ArgMatches};
 use std::path::Path;
 
+mod bugzilla_query;
 mod jira_query;
 use crate::jira_query::JiraIssue;
 
@@ -16,21 +17,33 @@ fn build_cli() -> ArgMatches {
             .allow_invalid_utf8(true),
         )
         .arg(arg!(
-            -i --issue <ID> "The ID of the JIRA issue"
-        ))
-        .arg(arg!(
-            -a --api_key <KEY> "The JIRA API key"
-        ))
-        .arg(arg!(
-            -h --jira_host <URL> "The URL to the host with a JIRA instance"
-        ))
-        .arg(arg!(
             -d --debug ... "Turn debugging information on"
         ))
         .subcommand(
-            App::new("test")
-                .about("does testing things")
-                .arg(arg!(-l --list "lists test values")),
+            App::new("jira")
+                .about("Query JIRA")
+                .arg(arg!(
+                    -t --ticket <ID> "The ID of the JIRA issue"
+                ))
+                .arg(arg!(
+                    -a --api_key <KEY> "The JIRA API key"
+                ))
+                .arg(arg!(
+                    -s --server <URL> "The URL to the host with a JIRA instance"
+                )),
+        )
+        .subcommand(
+            App::new("bugzilla")
+                .about("Query Bugzilla")
+                .arg(arg!(
+                    -t --ticket <ID> "The ID of the bug"
+                ))
+                .arg(arg!(
+                    -a --api_key <KEY> "The Bugzilla API key"
+                ))
+                .arg(arg!(
+                    -s --server <URL> "The URL to the host with a Bugzilla instance"
+                )),
         )
         .get_matches();
 
@@ -58,19 +71,18 @@ fn main() {
         _ => println!("Don't be crazy"),
     }
 
-    if let Some(cli) = cli.subcommand_matches("test") {
-        // "$ myapp test" was run
-        if cli.is_present("list") {
-            // "$ myapp test -l" was run
-            println!("Printing testing lists...");
-        } else {
-            println!("Not printing testing lists...");
-        }
+    if let Some(cli) = cli.subcommand_matches("jira") {
+        jira_query::main(
+            cli.value_of("server").unwrap(),
+            cli.value_of("ticket").unwrap(),
+            cli.value_of("api_key").unwrap(),
+        );
     }
-
-    jira_query::main(
-        cli.value_of("jira_host").unwrap(),
-        cli.value_of("issue").unwrap(),
-        cli.value_of("api_key").unwrap(),
-    );
+    if let Some(cli) = cli.subcommand_matches("bugzilla") {
+        bugzilla_query::main(
+            cli.value_of("server").unwrap(),
+            cli.value_of("ticket").unwrap(),
+            cli.value_of("api_key").unwrap(),
+        );
+    }
 }
