@@ -88,6 +88,8 @@ pub struct Version {
     pub released: bool,
     #[serde(rename = "releaseDate")]
     pub release_date: Option<String>,
+    #[serde(rename = "self")]
+    pub self_link: String,
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
@@ -125,6 +127,8 @@ pub struct Resolution {
     pub description: String,
     pub id: String,
     pub name: String,
+    #[serde(rename = "self")]
+    pub self_link: String,
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
@@ -190,6 +194,8 @@ pub struct Component {
     pub description: Option<String>,
     pub id: String,
     pub name: String,
+    #[serde(rename = "self")]
+    pub self_link: String,
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
