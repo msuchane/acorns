@@ -244,7 +244,9 @@ pub struct Comments {
 pub struct IssueLink {
     pub id: String,
     #[serde(rename = "outwardIssue")]
-    pub outward_issue: OutwardIssue,
+    pub outward_issue: Option<LinkedIssue>,
+    #[serde(rename = "inwardIssue")]
+    pub inward_issue: Option<LinkedIssue>,
     #[serde(rename = "type")]
     pub link_type: IssueLinkType,
     #[serde(rename = "self")]
@@ -254,10 +256,10 @@ pub struct IssueLink {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct OutwardIssue {
+pub struct LinkedIssue {
     pub id: String,
     pub key: String,
-    pub fields: OutwardIssueFields,
+    pub fields: LinkedIssueFields,
     #[serde(rename = "self")]
     pub self_link: String,
     #[serde(flatten)]
@@ -265,7 +267,7 @@ pub struct OutwardIssue {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct OutwardIssueFields {
+pub struct LinkedIssueFields {
     pub issuetype: IssueType,
     pub priority: Option<Priority>,
     pub status: Status,
