@@ -233,6 +233,7 @@ pub struct Comment {
     #[serde(rename = "updateAuthor")]
     pub update_author: User,
     pub updated: String,
+    pub visibility: Visibility,
     #[serde(rename = "self")]
     pub self_link: String,
     #[serde(flatten)]
@@ -341,6 +342,14 @@ pub struct CondensedFields {
     pub priority: Priority,
     pub status: Status,
     pub summary: String,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Visibility {
+    pub r#type: String,
+    pub value: String,
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
