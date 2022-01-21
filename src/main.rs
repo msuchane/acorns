@@ -16,18 +16,33 @@ fn main() {
     }
 
     let raw_config = cli_arguments.value_of_os("config").unwrap();
-        let config_path = Path::new(raw_config);
+    let config_path = Path::new(raw_config);
     let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
-        let trackers_path = Path::new(raw_trackers);
-        println!("Configuration files: {}, {}", config_path.display(), trackers_path.display());
-        let (tickets, trackers) = config::get(config_path, trackers_path);
+    let trackers_path = Path::new(raw_trackers);
+    println!(
+        "Configuration files: {}, {}",
+        config_path.display(),
+        trackers_path.display()
+    );
+    let (tickets, trackers) = config::get(config_path, trackers_path);
 
-        for ticket in &tickets {
-            match &ticket.tracker {
-                config::TrackerType::Bugzilla => println!("Bugzilla ticket: {:#?}", ticket),
-                config::TrackerType::JIRA => println!("JIRA ticket: {:#?}", ticket),
+    for ticket in &tickets {
+        match &ticket.tracker {
+            config::TrackerType::Bugzilla => {
+                println!("Bugzilla ticket: {:#?}", ticket);
+                let _bugs = bugzilla_query::main(
+                    &trackers.bugzilla.host,
+                    &ticket.key,
+                    &trackers.bugzilla.api_key,
+                );
+            }
+            config::TrackerType::JIRA => {
+                println!("JIRA ticket: {:#?}", ticket);
+                let _issue =
+                    jira_query::main(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
             }
         }
+    }
 
     match cli_arguments.occurrences_of("debug") {
         0 => println!("Debug mode is off"),
