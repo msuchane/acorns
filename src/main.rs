@@ -2,22 +2,32 @@ use std::path::Path;
 
 mod bugzilla_query;
 mod cli;
+mod config;
 mod jira_query;
 use crate::jira_query::JiraIssue;
 
 fn main() {
     println!("Hello, world!");
 
-    let cli_arguments = cli::build_cli();
+    let cli_arguments = cli::arguments();
 
     if let Some(name) = cli_arguments.value_of("name") {
         println!("Value for name: {}", name);
     }
 
-    if let Some(raw_config) = cli_arguments.value_of_os("config") {
+    let raw_config = cli_arguments.value_of_os("config").unwrap();
         let config_path = Path::new(raw_config);
-        println!("Value for config: {}", config_path.display());
-    }
+    let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
+        let trackers_path = Path::new(raw_trackers);
+        println!("Configuration files: {}, {}", config_path.display(), trackers_path.display());
+        let (tickets, trackers) = config::get(config_path, trackers_path);
+
+        for ticket in &tickets {
+            match &ticket.tracker {
+                config::TrackerType::Bugzilla => println!("Bugzilla ticket: {:#?}", ticket),
+                config::TrackerType::JIRA => println!("JIRA ticket: {:#?}", ticket),
+            }
+        }
 
     match cli_arguments.occurrences_of("debug") {
         0 => println!("Debug mode is off"),

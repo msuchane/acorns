@@ -1,13 +1,21 @@
 use clap::{app_from_crate, arg, App, ArgMatches};
 
-pub fn build_cli() -> ArgMatches {
+pub fn arguments() -> ArgMatches {
     let cli = app_from_crate!()
         .arg(arg!([name] "Optional name to operate on"))
         .arg(
             arg!(
-                -c --config <FILE> "Sets a custom config file"
+                -c --config <FILE> "A configuration file containing tickets"
             )
-            .required(false)
+            .required(true)
+            // Support non-UTF8 paths
+            .allow_invalid_utf8(true),
+        )
+        .arg(
+            arg!(
+                -t --trackers <FILE> "A configuration file containing trackers"
+            )
+            .required(true)
             // Support non-UTF8 paths
             .allow_invalid_utf8(true),
         )
