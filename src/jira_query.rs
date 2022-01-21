@@ -1,3 +1,7 @@
+// API documentation:
+// * https://docs.atlassian.com/software/jira/docs/api/REST/latest/
+// * https://docs.atlassian.com/jira-software/REST/latest/
+
 use std::collections::HashMap;
 
 use restson::{Error as RestError, Response as RestResponse, RestClient, RestPath};

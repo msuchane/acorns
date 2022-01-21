@@ -3,6 +3,10 @@ name = "cizrna"
 authors = ["Marek Suchánek <msuchane@redhat.com>"]
 version = "0.1.0"
 edition = "2021"
+description = "Generate an AsciiDoc release notes document from tracking tickets."
+license = "GPL-3.0-or-later"
+readme = "README.adoc"
+categories = ["command-line-utilities", "text-processing", "template-engine"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
