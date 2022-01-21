@@ -4,7 +4,6 @@ mod bugzilla_query;
 mod cli;
 mod config;
 mod jira_query;
-use crate::jira_query::JiraIssue;
 
 fn main() {
     println!("Hello, world!");
