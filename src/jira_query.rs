@@ -233,7 +233,7 @@ pub struct Comment {
     #[serde(rename = "updateAuthor")]
     pub update_author: User,
     pub updated: String,
-    pub visibility: Visibility,
+    pub visibility: Option<Visibility>,
     #[serde(rename = "self")]
     pub self_link: String,
     #[serde(flatten)]
