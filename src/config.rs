@@ -26,7 +26,7 @@ pub struct TrackerConfig {
     pub bugzilla: Tracker,
 }
 
-pub fn get(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, TrackerConfig) {
+pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, TrackerConfig) {
     let text = fs::read_to_string(config_file).unwrap();
     let config: Vec<Ticket> = serde_yaml::from_str(&text).unwrap();
     println!("{:#?}", config);

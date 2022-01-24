@@ -13,16 +13,16 @@ fn main() {
         println!("Value for name: {}", name);
     }
 
-    let raw_config = cli_arguments.value_of_os("config").unwrap();
-    let config_path = Path::new(raw_config);
+    let raw_tickets = cli_arguments.value_of_os("tickets").unwrap();
+    let tickets_path = Path::new(raw_tickets);
     let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
     let trackers_path = Path::new(raw_trackers);
-    println!(
+    eprintln!(
         "Configuration files: {}, {}",
-        config_path.display(),
+        tickets_path.display(),
         trackers_path.display()
     );
-    let (tickets, trackers) = config::get(config_path, trackers_path);
+    let (tickets, trackers) = config::parse(tickets_path, trackers_path);
 
     let mut release_notes: Vec<String> = Vec::new();
 

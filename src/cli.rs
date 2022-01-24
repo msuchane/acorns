@@ -5,7 +5,7 @@ pub fn arguments() -> ArgMatches {
         .arg(arg!([name] "Optional name to operate on"))
         .arg(
             arg!(
-                -c --config <FILE> "A configuration file containing tickets"
+                -t --tickets <FILE> "A configuration file containing tickets"
             )
             .required(true)
             // Support non-UTF8 paths
@@ -13,7 +13,7 @@ pub fn arguments() -> ArgMatches {
         )
         .arg(
             arg!(
-                -t --trackers <FILE> "A configuration file containing trackers"
+                -T --trackers <FILE> "A configuration file containing trackers"
             )
             .required(true)
             // Support non-UTF8 paths
