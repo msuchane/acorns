@@ -4,10 +4,9 @@ mod bugzilla_query;
 mod cli;
 mod config;
 mod jira_query;
+mod note;
 
 fn main() {
-    println!("Hello, world!");
-
     let cli_arguments = cli::arguments();
 
     if let Some(name) = cli_arguments.value_of("name") {
@@ -25,23 +24,33 @@ fn main() {
     );
     let (tickets, trackers) = config::get(config_path, trackers_path);
 
+    let mut release_notes: Vec<String> = Vec::new();
+
     for ticket in &tickets {
         match &ticket.tracker {
             config::TrackerType::Bugzilla => {
                 println!("Bugzilla ticket: {:#?}", ticket);
-                let _bugs = bugzilla_query::main(
+                let bugs = bugzilla_query::main(
                     &trackers.bugzilla.host,
                     &ticket.key,
                     &trackers.bugzilla.api_key,
                 );
+                let rn = note::display_bugzilla_bug(&bugs[0]);
+                release_notes.push(rn);
             }
             config::TrackerType::JIRA => {
                 println!("JIRA ticket: {:#?}", ticket);
-                let _issue =
+                let issue =
                     jira_query::main(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
+                let rn = note::display_jira_issue(&issue);
+                release_notes.push(rn);
             }
         }
     }
+
+    let document = release_notes.join("\n\n");
+
+    println!("Release notes:\n\n{}", document);
 
     match cli_arguments.occurrences_of("debug") {
         0 => println!("Debug mode is off"),
