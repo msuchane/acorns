@@ -5,6 +5,7 @@ use std::path::Path;
 mod cli;
 mod config;
 mod note;
+mod ticket_abstraction;
 
 fn main() {
     let cli_arguments = cli::arguments();
