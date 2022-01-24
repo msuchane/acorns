@@ -12,9 +12,10 @@ categories = ["command-line-utilities", "text-processing", "template-engine"]
 
 [dependencies]
 clap = { version = "^3", features = ["cargo"] }
-# jira-query = { path = "../jira-query" }
 restson = "^1.0"
 serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "1.0"
 serde_yaml = "0.8"
+bugzilla_query = { path = "../bugzilla_query" }
+jira_query = { path = "../jira_query" }

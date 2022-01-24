@@ -32,6 +32,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "bugzilla_query"
+version = "0.1.0"
+dependencies = [
+ "restson",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "bytes"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,7 +63,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "cizrna"
 version = "0.1.0"
 dependencies = [
+ "bugzilla_query",
  "clap",
+ "jira_query",
  "restson",
  "serde",
  "serde_derive",
@@ -368,6 +380,16 @@ name = "itoa"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
+
+[[package]]
+name = "jira_query"
+version = "0.1.0"
+dependencies = [
+ "restson",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
 
 [[package]]
 name = "lazy_static"

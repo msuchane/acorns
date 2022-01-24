@@ -1,9 +1,9 @@
+use bugzilla_query;
+use jira_query;
 use std::path::Path;
 
-mod bugzilla_query;
 mod cli;
 mod config;
-mod jira_query;
 mod note;
 
 fn main() {
@@ -30,18 +30,18 @@ fn main() {
         match &ticket.tracker {
             config::TrackerType::Bugzilla => {
                 println!("Bugzilla ticket: {:#?}", ticket);
-                let bugs = bugzilla_query::main(
+                let bug = bugzilla_query::bug(
                     &trackers.bugzilla.host,
                     &ticket.key,
                     &trackers.bugzilla.api_key,
                 );
-                let rn = note::display_bugzilla_bug(&bugs[0]);
+                let rn = note::display_bugzilla_bug(&bug);
                 release_notes.push(rn);
             }
             config::TrackerType::JIRA => {
                 println!("JIRA ticket: {:#?}", ticket);
                 let issue =
-                    jira_query::main(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
+                    jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
                 let rn = note::display_jira_issue(&issue);
                 release_notes.push(rn);
             }
@@ -60,14 +60,14 @@ fn main() {
     }
 
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
-        let _issue = jira_query::main(
+        let _issue = jira_query::issue(
             cli_arguments.value_of("server").unwrap(),
             cli_arguments.value_of("ticket").unwrap(),
             cli_arguments.value_of("api_key").unwrap(),
         );
     }
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("bugzilla") {
-        let _bugs = bugzilla_query::main(
+        let _bugs = bugzilla_query::bug(
             cli_arguments.value_of("server").unwrap(),
             cli_arguments.value_of("ticket").unwrap(),
             cli_arguments.value_of("api_key").unwrap(),
