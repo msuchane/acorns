@@ -1,5 +1,5 @@
-use crate::bugzilla_query::Bug;
-use crate::jira_query::JiraIssue;
+use bugzilla_query::Bug;
+use jira_query::JiraIssue;
 
 pub fn display_bugzilla_bug(bug: &Bug) -> String {
     let doc_text = bug
