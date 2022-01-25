@@ -8,13 +8,6 @@ pub fn display_bugzilla_bug(bug: &Bug) -> String {
 }
 
 pub fn display_jira_issue(issue: &JiraIssue) -> String {
-    let doc_text = issue
-        .fields
-        .extra
-        .get("customfield_12317322")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
-    doc_text
+    let abstract_ticket = AbstractTicket::from(issue.clone());
+    abstract_ticket.release_note()
 }

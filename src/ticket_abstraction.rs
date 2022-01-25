@@ -9,7 +9,7 @@ pub struct AbstractTicket {
     // TODO: Find out how to get the bug description from comment#0 with Bugzilla
     pub description: Option<String>,
     pub doc_type: String,
-    pub doc_text: String,
+    pub doc_text: Option<String>,
     pub docs_contact: String,
     pub release_note: Option<String>,
     pub status: String,
@@ -61,13 +61,11 @@ impl From<Bug> for AbstractTicket {
                 .as_str()
                 .unwrap()
                 .to_string(),
-            doc_text: bug
-                .extra
-                .get("cf_release_notes")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
+            doc_text: if let Some(cf_release_notes) = bug.extra.get("cf_release_notes") {
+                Some(cf_release_notes.as_str().unwrap().to_string())
+            } else {
+                None
+            },
             docs_contact: bug.docs_contact,
             release_note: None,
             status: bug.status,
@@ -121,16 +119,18 @@ impl From<JiraIssue> for AbstractTicket {
                 .as_str()
                 .unwrap()
                 .to_string(),
-            doc_text: issue
-                .fields
-                .extra
-                .get("customfield_12317322")
-                .unwrap()
-                .get("value")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
+            // TODO: Streamline this Option checking, maybe move to a function
+            doc_text: if let Some(customfield_12317322) =
+                issue.fields.extra.get("customfield_12317322")
+            {
+                if let Some(value) = customfield_12317322.get("value") {
+                    Some(value.as_str().unwrap().to_string())
+                } else {
+                    None
+                }
+            } else {
+                None
+            },
             docs_contact: issue
                 .fields
                 .extra
@@ -176,29 +176,6 @@ impl From<JiraIssue> for AbstractTicket {
 
 impl AbstractTicket {
     pub fn release_note(self) -> String {
-        self.doc_text
+        self.doc_text.unwrap_or("No release note.".to_string())
     }
-}
-
-pub fn display_bugzilla_bug(bug: &Bug) -> String {
-    let doc_text = bug
-        .extra
-        .get("cf_release_notes")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
-    doc_text
-}
-
-pub fn display_jira_issue(issue: &JiraIssue) -> String {
-    let doc_text = issue
-        .fields
-        .extra
-        .get("customfield_12317322")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
-    doc_text
 }
