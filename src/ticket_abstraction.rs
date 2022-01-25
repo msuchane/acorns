@@ -61,11 +61,10 @@ impl From<Bug> for AbstractTicket {
                 .as_str()
                 .unwrap()
                 .to_string(),
-            doc_text: if let Some(cf_release_notes) = bug.extra.get("cf_release_notes") {
-                Some(cf_release_notes.as_str().unwrap().to_string())
-            } else {
-                None
-            },
+            doc_text: bug
+                .extra
+                .get("cf_release_notes")
+                .map(|cf_release_notes| cf_release_notes.as_str().unwrap().to_string()),
             docs_contact: bug.docs_contact,
             release_note: None,
             status: bug.status,
@@ -119,18 +118,16 @@ impl From<JiraIssue> for AbstractTicket {
                 .as_str()
                 .unwrap()
                 .to_string(),
-            // TODO: Streamline this Option checking, maybe move to a function
-            doc_text: if let Some(customfield_12317322) =
-                issue.fields.extra.get("customfield_12317322")
-            {
-                if let Some(value) = customfield_12317322.get("value") {
-                    Some(value.as_str().unwrap().to_string())
-                } else {
-                    None
-                }
-            } else {
-                None
-            },
+            // This chain of `and_then` and `map` handles the two consecutive Options:
+            // The result is a String only when neither Option is None.
+            // The first method is `and_then` rather than `map` to avoid a nested Option.
+            doc_text: issue.fields.extra.get("customfield_12317322").and_then(
+                |customfield_12317322| {
+                    customfield_12317322
+                        .get("value")
+                        .map(|value| value.as_str().unwrap().to_string())
+                },
+            ),
             docs_contact: issue
                 .fields
                 .extra
@@ -143,11 +140,7 @@ impl From<JiraIssue> for AbstractTicket {
                 .to_string(),
             release_note: None,
             status: issue.fields.status.name.clone(),
-            is_open: if &issue.fields.status.name == "Closed" {
-                false
-            } else {
-                true
-            },
+            is_open: &issue.fields.status.name != "Closed",
             priority: issue.fields.priority.name,
             url: issue.self_link,
             assignee: issue.fields.assignee.email_address,
