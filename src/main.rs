@@ -13,10 +13,6 @@ fn main() {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
-    if let Some(name) = cli_arguments.value_of("name") {
-        debug!("Value for name: {}", name);
-    }
-
     let raw_tickets = cli_arguments.value_of_os("tickets").unwrap();
     let tickets_path = Path::new(raw_tickets);
     let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
