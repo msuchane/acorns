@@ -2,10 +2,10 @@ use clap::{app_from_crate, arg, App, ArgMatches};
 
 pub fn arguments() -> ArgMatches {
     let cli = app_from_crate!()
-        .arg(arg!([name] "Optional name to operate on"))
+        .arg(arg!([name] "Optional name to operate on."))
         .arg(
             arg!(
-                -t --tickets <FILE> "A configuration file containing tickets"
+                -t --tickets <FILE> "A configuration file containing tickets."
             )
             .required(true)
             // Support non-UTF8 paths
@@ -13,14 +13,14 @@ pub fn arguments() -> ArgMatches {
         )
         .arg(
             arg!(
-                -T --trackers <FILE> "A configuration file containing trackers"
+                -T --trackers <FILE> "A configuration file containing trackers."
             )
             .required(true)
             // Support non-UTF8 paths
             .allow_invalid_utf8(true),
         )
         .arg(arg!(
-            -d --debug ... "Turn debugging information on"
+            -v --verbose ... "Display more detailed progress messages."
         ))
         .subcommand(
             App::new("jira")

@@ -1,24 +1,29 @@
 use bugzilla_query;
 use jira_query;
+use log::{debug, info};
 use std::path::Path;
 
 mod cli;
 mod config;
+mod logging;
 mod note;
 mod ticket_abstraction;
 
 fn main() {
     let cli_arguments = cli::arguments();
 
+    // Initialize the logging system based on the set verbosity
+    logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
+
     if let Some(name) = cli_arguments.value_of("name") {
-        println!("Value for name: {}", name);
+        debug!("Value for name: {}", name);
     }
 
     let raw_tickets = cli_arguments.value_of_os("tickets").unwrap();
     let tickets_path = Path::new(raw_tickets);
     let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
     let trackers_path = Path::new(raw_trackers);
-    eprintln!(
+    debug!(
         "Configuration files: {}, {}",
         tickets_path.display(),
         trackers_path.display()
@@ -30,7 +35,7 @@ fn main() {
     for ticket in &tickets {
         match &ticket.tracker {
             config::TrackerType::Bugzilla => {
-                println!("Bugzilla ticket: {:#?}", ticket);
+                debug!("Bugzilla ticket: {:#?}", ticket);
                 let bug = bugzilla_query::bug(
                     &trackers.bugzilla.host,
                     &ticket.key,
@@ -40,7 +45,7 @@ fn main() {
                 release_notes.push(rn);
             }
             config::TrackerType::JIRA => {
-                println!("JIRA ticket: {:#?}", ticket);
+                debug!("JIRA ticket: {:#?}", ticket);
                 let issue =
                     jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
                 let rn = note::display_jira_issue(&issue);
@@ -51,14 +56,7 @@ fn main() {
 
     let document = release_notes.join("\n\n");
 
-    println!("Release notes:\n\n{}", document);
-
-    match cli_arguments.occurrences_of("debug") {
-        0 => println!("Debug mode is off"),
-        1 => println!("Debug mode is kind of on"),
-        2 => println!("Debug mode is on"),
-        _ => println!("Don't be crazy"),
-    }
+    info!("Release notes:\n\n{}", document);
 
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
         let _issue = jira_query::issue(
