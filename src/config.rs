@@ -13,7 +13,7 @@ pub struct TicketQuery {
 pub mod tracker {
     use serde::Deserialize;
 
-    #[derive(Debug, PartialEq, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize)]
     pub enum Service {
         Bugzilla,
         Jira,

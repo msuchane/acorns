@@ -35,7 +35,7 @@ pub struct AbstractTicket {
 #[derive(Clone, Debug)]
 pub struct TicketId {
     pub key: String,
-    pub tracker: String,
+    pub tracker: tracker::Service,
 }
 
 #[derive(Clone, Debug)]
@@ -50,7 +50,7 @@ impl From<Bug> for AbstractTicket {
         AbstractTicket {
             id: TicketId {
                 key: bug.id.to_string(),
-                tracker: "Bugzilla".to_string(),
+                tracker: tracker::Service::Bugzilla,
             },
             summary: bug.summary,
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
@@ -105,7 +105,7 @@ impl From<JiraIssue> for AbstractTicket {
         AbstractTicket {
             id: TicketId {
                 key: issue.key,
-                tracker: "Jira".to_string(),
+                tracker: tracker::Service::Jira,
             },
             summary: issue.fields.summary,
             description: issue.fields.description,

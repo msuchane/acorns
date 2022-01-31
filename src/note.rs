@@ -1,4 +1,17 @@
+use std::fmt;
+
+use crate::config::tracker::Service;
 use crate::ticket_abstraction::AbstractTicket;
+
+impl fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match self {
+            Self::Bugzilla => "Bugzilla",
+            Self::Jira => "Jira",
+        };
+        write!(f, "{}", name)
+    }
+}
 
 impl AbstractTicket {
     pub fn release_note(self) -> String {
