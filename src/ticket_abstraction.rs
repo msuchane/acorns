@@ -3,7 +3,7 @@ use std::convert::From;
 use bugzilla_query::Bug;
 use jira_query::JiraIssue;
 
-use crate::config::{tracker, Ticket};
+use crate::config::{tracker, TicketQuery};
 
 #[derive(Clone, Debug)]
 pub struct AbstractTicket {
@@ -170,11 +170,11 @@ impl From<JiraIssue> for AbstractTicket {
     }
 }
 
-pub fn from_queries(tickets: &[Ticket], trackers: &tracker::Config) -> Vec<AbstractTicket> {
-    let bugzilla_queries = tickets
+pub fn from_queries(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<AbstractTicket> {
+    let bugzilla_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Bugzilla);
-    let jira_queries = tickets
+    let jira_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Jira);
 

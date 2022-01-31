@@ -5,7 +5,7 @@ use log::debug;
 use serde::Deserialize;
 
 #[derive(Debug, PartialEq, Deserialize)]
-pub struct Ticket {
+pub struct TicketQuery {
     pub tracker: tracker::Service,
     pub key: String,
 }
@@ -32,9 +32,9 @@ pub mod tracker {
     }
 }
 
-pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, tracker::Config) {
+pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<TicketQuery>, tracker::Config) {
     let text = fs::read_to_string(config_file).unwrap();
-    let config: Vec<Ticket> = serde_yaml::from_str(&text).unwrap();
+    let config: Vec<TicketQuery> = serde_yaml::from_str(&text).unwrap();
     debug!("{:#?}", config);
 
     let text = fs::read_to_string(trackers_file).unwrap();
