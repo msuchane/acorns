@@ -144,8 +144,8 @@ impl From<JiraIssue> for AbstractTicket {
                 .unwrap()
                 .to_string(),
             release_note: None,
-            status: issue.fields.status.name.clone(),
             is_open: &issue.fields.status.name != "Closed",
+            status: issue.fields.status.name,
             priority: issue.fields.priority.name,
             url: issue.self_link,
             assignee: issue.fields.assignee.email_address,
@@ -158,7 +158,13 @@ impl From<JiraIssue> for AbstractTicket {
             // Jira does not support flags
             flags: None,
             // TODO: Is the first fix version in the list the one that we want?
-            target_release: issue.fields.fix_versions[0].clone().name,
+            target_release: issue
+                .fields
+                .fix_versions
+                .into_iter()
+                .next()
+                .expect("No fix version set for an issue.")
+                .name,
             // TODO: Implement SSTs. Previously, we used labels, but now the menu is available.
             subsystems: vec!["SST".to_string()],
             // Jira does not recognize groups in the Bugzilla way. This might change.
@@ -215,8 +221,8 @@ fn unsorted_tickets(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<
         &trackers.jira.api_key,
     );
 
-    let tickets_from_bugzilla = bugs.iter().map(|b| AbstractTicket::from(b.clone()));
-    let tickets_from_jira = issues.iter().map(|i| AbstractTicket::from(i.clone()));
+    let tickets_from_bugzilla = bugs.into_iter().map(|b| AbstractTicket::from(b));
+    let tickets_from_jira = issues.into_iter().map(|i| AbstractTicket::from(i));
 
     tickets_from_bugzilla.chain(tickets_from_jira).collect()
 }

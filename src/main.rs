@@ -28,10 +28,10 @@ fn main() {
 
     let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers);
 
-    let mut release_notes: Vec<String> = Vec::new();
-    for at in abstract_tickets {
-        release_notes.push(at.release_note());
-    }
+    let release_notes: Vec<String> = abstract_tickets
+        .into_iter()
+        .map(|t| t.release_note())
+        .collect();
     let document = release_notes.join("\n\n");
 
     info!("Release notes:\n\n{}", document);
