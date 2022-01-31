@@ -1,5 +1,7 @@
 use std::convert::From;
 
+use log::error;
+
 use bugzilla_query::Bug;
 use jira_query::JiraIssue;
 
@@ -171,6 +173,28 @@ impl From<JiraIssue> for AbstractTicket {
 }
 
 pub fn from_queries(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<AbstractTicket> {
+    let tickets = unsorted_tickets(queries, trackers);
+
+    // Sort tickets to the order in the config file:
+    let mut sorted_tickets: Vec<AbstractTicket> = Vec::new();
+
+    for query in queries {
+        let mut matching_tickets: Vec<AbstractTicket> = tickets
+            .iter()
+            .filter(|t| query.tracker == t.id.tracker && query.key == t.id.key)
+            // TODO: Try to avoid the cloning.
+            .cloned()
+            .collect();
+        if matching_tickets.is_empty() {
+            error!("Query produced no tickets: {:#?}", query);
+        }
+        sorted_tickets.append(&mut matching_tickets);
+    }
+
+    sorted_tickets
+}
+
+fn unsorted_tickets(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<AbstractTicket> {
     let bugzilla_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Bugzilla);

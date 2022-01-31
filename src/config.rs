@@ -4,7 +4,7 @@ use std::path::Path;
 use log::debug;
 use serde::Deserialize;
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 pub struct TicketQuery {
     pub tracker: tracker::Service,
     pub key: String,
@@ -13,7 +13,7 @@ pub struct TicketQuery {
 pub mod tracker {
     use serde::Deserialize;
 
-    #[derive(Debug, Clone, PartialEq, Deserialize)]
+    #[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
     pub enum Service {
         Bugzilla,
         Jira,
