@@ -2,7 +2,6 @@ use clap::{app_from_crate, arg, App, ArgMatches};
 
 pub fn arguments() -> ArgMatches {
     let cli = app_from_crate!()
-        .arg(arg!([name] "Optional name to operate on."))
         .arg(
             arg!(
                 -t --tickets <FILE> "A configuration file containing tickets."

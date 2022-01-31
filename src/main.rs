@@ -13,41 +13,25 @@ fn main() {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
-    let raw_tickets = cli_arguments.value_of_os("tickets").unwrap();
-    let tickets_path = Path::new(raw_tickets);
-    let raw_trackers = cli_arguments.value_of_os("trackers").unwrap();
-    let trackers_path = Path::new(raw_trackers);
+    // Record the paths to the configuration files.
+    // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
+    let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
+    let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
     debug!(
         "Configuration files: {}, {}",
         tickets_path.display(),
         trackers_path.display()
     );
+
+    // Parse the configuration files specified on the command line.
     let (tickets, trackers) = config::parse(tickets_path, trackers_path);
 
+    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers);
+
     let mut release_notes: Vec<String> = Vec::new();
-
-    for ticket in &tickets {
-        match &ticket.tracker {
-            config::tracker::Service::Bugzilla => {
-                debug!("Bugzilla ticket: {:#?}", ticket);
-                let bug = bugzilla_query::bug(
-                    &trackers.bugzilla.host,
-                    &ticket.key,
-                    &trackers.bugzilla.api_key,
-                );
-                let rn = note::display_bugzilla_bug(&bug);
-                release_notes.push(rn);
-            }
-            config::tracker::Service::Jira => {
-                debug!("Jira ticket: {:#?}", ticket);
-                let issue =
-                    jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
-                let rn = note::display_jira_issue(&issue);
-                release_notes.push(rn);
-            }
-        }
+    for at in abstract_tickets {
+        release_notes.push(at.release_note());
     }
-
     let document = release_notes.join("\n\n");
 
     info!("Release notes:\n\n{}", document);
