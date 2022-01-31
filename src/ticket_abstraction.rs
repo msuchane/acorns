@@ -192,5 +192,29 @@ pub fn from_query(ticket: &Ticket, trackers: &tracker::Config) -> AbstractTicket
 }
 
 pub fn from_queries(tickets: &[Ticket], trackers: &tracker::Config) -> Vec<AbstractTicket> {
-    tickets.iter().map(|t| from_query(t, trackers)).collect()
+    // tickets.iter().map(|t| from_query(t, trackers)).collect()
+    let bugzilla_queries = tickets
+        .iter()
+        .filter(|t| t.tracker == tracker::Service::Bugzilla);
+    let jira_queries = tickets
+        .iter()
+        .filter(|t| t.tracker == tracker::Service::Jira);
+
+    let bugs = bugzilla_query::bugs(
+        &trackers.bugzilla.host,
+        &bugzilla_queries
+            .map(|q| q.key.as_str())
+            .collect::<Vec<&str>>(),
+        &trackers.bugzilla.api_key,
+    );
+    let issues = jira_query::issues(
+        &trackers.jira.host,
+        &jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>(),
+        &trackers.jira.api_key,
+    );
+
+    let tickets_from_bugzilla = bugs.iter().map(|b| AbstractTicket::from(b.clone()));
+    let tickets_from_jira = issues.iter().map(|i| AbstractTicket::from(i.clone()));
+
+    tickets_from_bugzilla.chain(tickets_from_jira).collect()
 }
