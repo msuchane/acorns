@@ -44,8 +44,8 @@ fn main() {
                 let rn = note::display_bugzilla_bug(&bug);
                 release_notes.push(rn);
             }
-            config::TrackerType::JIRA => {
-                debug!("JIRA ticket: {:#?}", ticket);
+            config::TrackerType::Jira => {
+                debug!("Jira ticket: {:#?}", ticket);
                 let issue =
                     jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
                 let rn = note::display_jira_issue(&issue);

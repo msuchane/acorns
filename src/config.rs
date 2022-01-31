@@ -1,6 +1,8 @@
-use serde::Deserialize;
 use std::fs;
 use std::path::Path;
+
+use log::debug;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Ticket {
@@ -11,7 +13,7 @@ pub struct Ticket {
 #[derive(Debug, Deserialize)]
 pub enum TrackerType {
     Bugzilla,
-    JIRA,
+    Jira,
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,11 +31,11 @@ pub struct TrackerConfig {
 pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, TrackerConfig) {
     let text = fs::read_to_string(config_file).unwrap();
     let config: Vec<Ticket> = serde_yaml::from_str(&text).unwrap();
-    println!("{:#?}", config);
+    debug!("{:#?}", config);
 
     let text = fs::read_to_string(trackers_file).unwrap();
     let trackers: TrackerConfig = serde_yaml::from_str(&text).unwrap();
-    println!("{:#?}", trackers);
+    debug!("{:#?}", trackers);
 
     (config, trackers)
 }

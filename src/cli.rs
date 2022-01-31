@@ -24,15 +24,15 @@ pub fn arguments() -> ArgMatches {
         ))
         .subcommand(
             App::new("jira")
-                .about("Query JIRA")
+                .about("Query Jira")
                 .arg(arg!(
-                    -t --ticket <ID> "The ID of the JIRA issue"
+                    -t --ticket <ID> "The ID of the Jira issue"
                 ))
                 .arg(arg!(
-                    -a --api_key <KEY> "The JIRA API key"
+                    -a --api_key <KEY> "The Jira API key"
                 ))
                 .arg(arg!(
-                    -s --server <URL> "The URL to the host with a JIRA instance"
+                    -s --server <URL> "The URL to the host with a Jira instance"
                 )),
         )
         .subcommand(

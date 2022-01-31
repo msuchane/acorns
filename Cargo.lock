@@ -35,6 +35,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 name = "bugzilla_query"
 version = "0.1.0"
 dependencies = [
+ "log",
  "restson",
  "serde",
  "serde_derive",
@@ -400,6 +401,7 @@ checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
 name = "jira_query"
 version = "0.1.0"
 dependencies = [
+ "log",
  "restson",
  "serde",
  "serde_derive",
