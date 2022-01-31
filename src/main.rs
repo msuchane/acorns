@@ -1,5 +1,3 @@
-use bugzilla_query;
-use jira_query;
 use log::{debug, info};
 use std::path::Path;
 
@@ -34,7 +32,7 @@ fn main() {
 
     for ticket in &tickets {
         match &ticket.tracker {
-            config::TrackerType::Bugzilla => {
+            config::tracker::Service::Bugzilla => {
                 debug!("Bugzilla ticket: {:#?}", ticket);
                 let bug = bugzilla_query::bug(
                     &trackers.bugzilla.host,
@@ -44,7 +42,7 @@ fn main() {
                 let rn = note::display_bugzilla_bug(&bug);
                 release_notes.push(rn);
             }
-            config::TrackerType::Jira => {
+            config::tracker::Service::Jira => {
                 debug!("Jira ticket: {:#?}", ticket);
                 let issue =
                     jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);

@@ -6,35 +6,39 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Ticket {
-    pub tracker: TrackerType,
+    pub tracker: tracker::Service,
     pub key: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub enum TrackerType {
-    Bugzilla,
-    Jira,
+pub mod tracker {
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    pub enum Service {
+        Bugzilla,
+        Jira,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct Instance {
+        pub host: String,
+        pub api_key: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct Config {
+        pub jira: Instance,
+        pub bugzilla: Instance,
+    }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Tracker {
-    pub host: String,
-    pub api_key: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TrackerConfig {
-    pub jira: Tracker,
-    pub bugzilla: Tracker,
-}
-
-pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, TrackerConfig) {
+pub fn parse(config_file: &Path, trackers_file: &Path) -> (Vec<Ticket>, tracker::Config) {
     let text = fs::read_to_string(config_file).unwrap();
     let config: Vec<Ticket> = serde_yaml::from_str(&text).unwrap();
     debug!("{:#?}", config);
 
     let text = fs::read_to_string(trackers_file).unwrap();
-    let trackers: TrackerConfig = serde_yaml::from_str(&text).unwrap();
+    let trackers: tracker::Config = serde_yaml::from_str(&text).unwrap();
     debug!("{:#?}", trackers);
 
     (config, trackers)
