@@ -1,7 +1,5 @@
 use std::convert::From;
 
-use log::debug;
-
 use bugzilla_query::Bug;
 use jira_query::JiraIssue;
 
@@ -172,27 +170,7 @@ impl From<JiraIssue> for AbstractTicket {
     }
 }
 
-pub fn from_query(ticket: &Ticket, trackers: &tracker::Config) -> AbstractTicket {
-    match &ticket.tracker {
-        tracker::Service::Bugzilla => {
-            debug!("Bugzilla ticket: {:#?}", ticket);
-            let bug = bugzilla_query::bug(
-                &trackers.bugzilla.host,
-                &ticket.key,
-                &trackers.bugzilla.api_key,
-            );
-            AbstractTicket::from(bug)
-        }
-        tracker::Service::Jira => {
-            debug!("Jira ticket: {:#?}", ticket);
-            let issue = jira_query::issue(&trackers.jira.host, &ticket.key, &trackers.jira.api_key);
-            AbstractTicket::from(issue)
-        }
-    }
-}
-
 pub fn from_queries(tickets: &[Ticket], trackers: &tracker::Config) -> Vec<AbstractTicket> {
-    // tickets.iter().map(|t| from_query(t, trackers)).collect()
     let bugzilla_queries = tickets
         .iter()
         .filter(|t| t.tracker == tracker::Service::Bugzilla);
