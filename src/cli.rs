@@ -22,6 +22,11 @@ pub fn arguments() -> ArgMatches {
             -v --verbose ... "Display more detailed progress messages."
         ))
         .subcommand(
+            App::new("build")
+                .about("Build release notes from a configuration directory.")
+                .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.")),
+        )
+        .subcommand(
             App::new("jira")
                 .about("Query Jira")
                 .arg(arg!(
