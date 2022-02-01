@@ -1,7 +1,6 @@
 use std::convert::From;
 
-use color_eyre::eyre::{Context, Result};
-use log::error;
+use color_eyre::eyre::{eyre, Context, Result};
 
 use bugzilla_query::Bug;
 use jira_query::JiraIssue;
@@ -195,8 +194,10 @@ pub fn from_queries(
             // TODO: Try to avoid the cloning.
             .cloned()
             .collect();
+        // A query might result in no tickets. For example, Bugzilla silently ignores nonexistent IDs.
+        // In that case, report the error and immediately exit the program.
         if matching_tickets.is_empty() {
-            error!("Query produced no tickets: {:#?}", query);
+            return Err(eyre!("Query produced no tickets: {:#?}", query));
         }
         sorted_tickets.append(&mut matching_tickets);
     }
