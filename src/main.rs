@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     // Parse the configuration files specified on the command line.
     let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
 
-    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers);
+    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
     let release_notes: Vec<String> = abstract_tickets
         .into_iter()

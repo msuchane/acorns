@@ -1,5 +1,6 @@
 use std::convert::From;
 
+use color_eyre::eyre::{Context, Result};
 use log::error;
 
 use bugzilla_query::Bug;
@@ -178,8 +179,11 @@ impl From<JiraIssue> for AbstractTicket {
     }
 }
 
-pub fn from_queries(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<AbstractTicket> {
-    let tickets = unsorted_tickets(queries, trackers);
+pub fn from_queries(
+    queries: &[TicketQuery],
+    trackers: &tracker::Config,
+) -> Result<Vec<AbstractTicket>> {
+    let tickets = unsorted_tickets(queries, trackers)?;
 
     // Sort tickets to the order in the config file:
     let mut sorted_tickets: Vec<AbstractTicket> = Vec::new();
@@ -197,10 +201,13 @@ pub fn from_queries(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<
         sorted_tickets.append(&mut matching_tickets);
     }
 
-    sorted_tickets
+    Ok(sorted_tickets)
 }
 
-fn unsorted_tickets(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<AbstractTicket> {
+fn unsorted_tickets(
+    queries: &[TicketQuery],
+    trackers: &tracker::Config,
+) -> Result<Vec<AbstractTicket>> {
     let bugzilla_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Bugzilla);
@@ -214,15 +221,15 @@ fn unsorted_tickets(queries: &[TicketQuery], trackers: &tracker::Config) -> Vec<
             .map(|q| q.key.as_str())
             .collect::<Vec<&str>>(),
         &trackers.bugzilla.api_key,
-    );
+    )?;
     let issues = jira_query::issues(
         &trackers.jira.host,
         &jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>(),
         &trackers.jira.api_key,
-    );
+    )?;
 
     let tickets_from_bugzilla = bugs.into_iter().map(|b| AbstractTicket::from(b));
     let tickets_from_jira = issues.into_iter().map(|i| AbstractTicket::from(i));
 
-    tickets_from_bugzilla.chain(tickets_from_jira).collect()
+    Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
 }
