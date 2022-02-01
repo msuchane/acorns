@@ -1,5 +1,7 @@
-use log::{debug, info};
 use std::path::Path;
+
+use color_eyre::eyre::Result;
+use log::{debug, info};
 
 mod cli;
 mod config;
@@ -7,7 +9,7 @@ mod logging;
 mod note;
 mod ticket_abstraction;
 
-fn main() {
+fn main() -> Result<()> {
     let cli_arguments = cli::arguments();
 
     // Initialize the logging system based on the set verbosity
@@ -24,7 +26,7 @@ fn main() {
     );
 
     // Parse the configuration files specified on the command line.
-    let (tickets, trackers) = config::parse(tickets_path, trackers_path);
+    let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
 
     let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers);
 
@@ -50,4 +52,6 @@ fn main() {
             cli_arguments.value_of("api_key").unwrap(),
         );
     }
+
+    Ok(())
 }

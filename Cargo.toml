@@ -14,6 +14,7 @@ categories = ["command-line-utilities", "text-processing", "template-engine"]
 clap = { version = "^3", features = ["cargo"] }
 log = "0.4"
 simplelog = "0.11"
+color-eyre = "0.6"
 restson = "^1.0"
 serde = "^1.0"
 serde_derive = "^1.0"
