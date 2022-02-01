@@ -229,8 +229,8 @@ fn unsorted_tickets(
         &trackers.jira.api_key,
     )?;
 
-    let tickets_from_bugzilla = bugs.into_iter().map(|b| AbstractTicket::from(b));
-    let tickets_from_jira = issues.into_iter().map(|i| AbstractTicket::from(i));
+    let tickets_from_bugzilla = bugs.into_iter().map(AbstractTicket::from);
+    let tickets_from_jira = issues.into_iter().map(AbstractTicket::from);
 
     Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
 }
