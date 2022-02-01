@@ -16,10 +16,35 @@ fn main() -> Result<()> {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
-    // Record the paths to the configuration files.
-    // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
-    let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
-    let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
+    if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
+        let _issue = jira_query::issue(
+            cli_arguments.value_of("server").unwrap(),
+            cli_arguments.value_of("ticket").unwrap(),
+            cli_arguments.value_of("api_key").unwrap(),
+        );
+    }
+    if let Some(cli_arguments) = cli_arguments.subcommand_matches("bugzilla") {
+        let _bugs = bugzilla_query::bug(
+            cli_arguments.value_of("server").unwrap(),
+            cli_arguments.value_of("ticket").unwrap(),
+            cli_arguments.value_of("api_key").unwrap(),
+        );
+    }
+
+    if let Some(build) = cli_arguments.subcommand_matches("build") {
+        todo!();
+    } else {
+        // Record the paths to the configuration files.
+        // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
+        let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
+        let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
+        write_rns(tickets_path, trackers_path)?;
+    }
+
+    Ok(())
+}
+
+fn write_rns(tickets_path: &Path, trackers_path: &Path) -> Result<()> {
     debug!(
         "Configuration files: {}, {}",
         tickets_path.display(),
@@ -41,21 +66,6 @@ fn main() -> Result<()> {
 
     let out_file = Path::new("main.adoc");
     std::fs::write(out_file, document)?;
-
-    if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
-        let _issue = jira_query::issue(
-            cli_arguments.value_of("server").unwrap(),
-            cli_arguments.value_of("ticket").unwrap(),
-            cli_arguments.value_of("api_key").unwrap(),
-        );
-    }
-    if let Some(cli_arguments) = cli_arguments.subcommand_matches("bugzilla") {
-        let _bugs = bugzilla_query::bug(
-            cli_arguments.value_of("server").unwrap(),
-            cli_arguments.value_of("ticket").unwrap(),
-            cli_arguments.value_of("api_key").unwrap(),
-        );
-    }
 
     Ok(())
 }
