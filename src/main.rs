@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 
 use color_eyre::eyre::Result;
@@ -34,9 +35,12 @@ fn main() -> Result<()> {
         .into_iter()
         .map(|t| t.release_note())
         .collect();
-    let document = release_notes.join("\n\n");
+    let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
 
     info!("Release notes:\n\n{}", document);
+
+    let out_file = Path::new("main.adoc");
+    std::fs::write(out_file, document)?;
 
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
         let _issue = jira_query::issue(
