@@ -12,14 +12,13 @@ mod note;
 mod ticket_abstraction;
 
 fn main() -> Result<()> {
-    if let Some(cli_arguments) = cli::arguments() {
-        run(cli_arguments)?;
-    }
+    let cli_arguments = cli::arguments();
+        run(&cli_arguments)?;
 
     Ok(())
 }
 
-fn run(cli_arguments: ArgMatches) -> Result<()> {
+fn run(cli_arguments: &ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 

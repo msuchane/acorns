@@ -1,7 +1,7 @@
-use clap::{app_from_crate, arg, App, ArgMatches};
+use clap::{app_from_crate, arg, App, AppSettings, ArgMatches};
 
-pub fn arguments() -> Option<ArgMatches> {
-    let mut app = app_from_crate!()
+pub fn arguments() -> ArgMatches {
+    let app = app_from_crate!()
         .arg(arg!(
             -v --verbose ... "Display more detailed progress messages."
         ))
@@ -49,17 +49,8 @@ pub fn arguments() -> Option<ArgMatches> {
                 .arg(arg!(
                     -s --server <URL> "The URL to the host with a Bugzilla instance"
                 )),
-        );
+        // Require using at least one subcommand or some other argument.
+        ).setting(AppSettings::ArgRequiredElseHelp);
 
-    // This clone is necessary so that we can either return the cli value
-    // or print help from its owner app.
-    let cli = app.clone().get_matches();
-
-    // Require using at least one subcommand.
-    if cli.subcommand().is_none() {
-        app.print_long_help().unwrap();
-        None
-    } else {
-        Some(cli)
-    }
+    app.get_matches()
 }
