@@ -1,7 +1,7 @@
 use clap::{app_from_crate, arg, App, ArgMatches};
 
-pub fn arguments() -> ArgMatches {
-    let cli = app_from_crate!()
+pub fn arguments() -> Option<ArgMatches> {
+    let mut app = app_from_crate!()
         .arg(arg!(
             -v --verbose ... "Display more detailed progress messages."
         ))
@@ -11,17 +11,15 @@ pub fn arguments() -> ArgMatches {
                 .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.").allow_invalid_utf8(true))
                 .arg(
                     arg!(
-                        -t --tickets <FILE> "A configuration file containing tickets."
+                        -t --tickets [FILE] "A configuration file containing tickets."
                     )
-                    .required(false)
                     // Support non-UTF8 paths
                     .allow_invalid_utf8(true),
                 )
                 .arg(
                     arg!(
-                        -T --trackers <FILE> "A configuration file containing trackers."
+                        -T --trackers [FILE] "A configuration file containing trackers."
                     )
-                    .required(false)
                     // Support non-UTF8 paths
                     .allow_invalid_utf8(true),
                 )
@@ -51,8 +49,17 @@ pub fn arguments() -> ArgMatches {
                 .arg(arg!(
                     -s --server <URL> "The URL to the host with a Bugzilla instance"
                 )),
-        )
-        .get_matches();
+        );
 
-    cli
+    // This clone is necessary so that we can either return the cli value
+    // or print help from its owner app.
+    let cli = app.clone().get_matches();
+
+    // Require using at least one subcommand.
+    if cli.subcommand().is_none() {
+        app.print_long_help().unwrap();
+        None
+    } else {
+        Some(cli)
+    }
 }

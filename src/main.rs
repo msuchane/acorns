@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use clap::ArgMatches;
 use color_eyre::eyre::Result;
 use log::{debug, info};
 
@@ -11,8 +12,14 @@ mod note;
 mod ticket_abstraction;
 
 fn main() -> Result<()> {
-    let cli_arguments = cli::arguments();
+    if let Some(cli_arguments) = cli::arguments() {
+        run(cli_arguments)?;
+    }
 
+    Ok(())
+}
+
+fn run(cli_arguments: ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
@@ -37,8 +44,8 @@ fn main() -> Result<()> {
             Some(dir) => Path::new(dir),
             None => Path::new("."),
         };
-        let tickets_path = Path::new(project_dir).join("tickets.yaml");
-        let trackers_path = Path::new(project_dir).join("trackers.yaml");
+        let tickets_path = project_dir.join("tickets.yaml");
+        let trackers_path = project_dir.join("trackers.yaml");
 
         // TODO: Enable overriding the default config paths.
         // Record the paths to the configuration files.
@@ -73,7 +80,7 @@ fn write_rns(tickets_path: &Path, trackers_path: &Path) -> Result<()> {
     debug!("Release notes:\n\n{}", document);
 
     let out_file = Path::new("main.adoc");
-    std::fs::write(out_file, document)?;
+    fs::write(out_file, document)?;
 
     Ok(())
 }
