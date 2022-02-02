@@ -13,7 +13,7 @@ mod ticket_abstraction;
 
 fn main() -> Result<()> {
     let cli_arguments = cli::arguments();
-        run(&cli_arguments)?;
+    run(&cli_arguments)?;
 
     Ok(())
 }
@@ -52,33 +52,36 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
         // let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
         // let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
 
-        write_rns(&tickets_path, &trackers_path)?;
+        debug!(
+            "Configuration files: {}, {}",
+            tickets_path.display(),
+            trackers_path.display()
+        );
+
+        // Parse the configuration files specified on the command line.
+        let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
+
+        let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
+
+        let release_notes: Vec<String> = abstract_tickets
+            .into_iter()
+            .map(|t| t.release_note())
+            .collect();
+
+        write_rns(&release_notes, project_dir)?;
     }
 
     Ok(())
 }
 
-fn write_rns(tickets_path: &Path, trackers_path: &Path) -> Result<()> {
-    debug!(
-        "Configuration files: {}, {}",
-        tickets_path.display(),
-        trackers_path.display()
-    );
-
-    // Parse the configuration files specified on the command line.
-    let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
-
-    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
-
-    let release_notes: Vec<String> = abstract_tickets
-        .into_iter()
-        .map(|t| t.release_note())
-        .collect();
+fn write_rns(release_notes: &[String], out_dir: &Path) -> Result<()> {
     let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
 
     debug!("Release notes:\n\n{}", document);
 
-    let out_file = Path::new("main.adoc");
+    // By default, save the resulting document to the project directory.
+    // TODO: Make the output configurable.
+    let out_file = out_dir.join("main.adoc");
     fs::write(out_file, document)?;
 
     Ok(())
