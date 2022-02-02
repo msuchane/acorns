@@ -234,3 +234,21 @@ fn unsorted_tickets(
 
     Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
 }
+
+pub fn from_args(
+    service: tracker::Service,
+    id: &str,
+    host: &str,
+    api_key: &str,
+) -> Result<AbstractTicket> {
+    match service {
+        tracker::Service::Jira => {
+            let issue = jira_query::issue(host, id, api_key)?;
+            Ok(issue.into())
+        }
+        tracker::Service::Bugzilla => {
+            let bug = bugzilla_query::bug(host, id, api_key)?;
+            Ok(bug.into())
+        }
+    }
+}
