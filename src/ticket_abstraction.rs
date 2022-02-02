@@ -13,9 +13,9 @@ pub struct AbstractTicket {
     pub summary: String,
     // TODO: Find out how to get the bug description from comment#0 with Bugzilla
     pub description: Option<String>,
-    pub doc_type: String,
+    pub doc_type: Option<String>,
     pub doc_text: Option<String>,
-    pub docs_contact: String,
+    pub docs_contact: Option<String>,
     pub release_note: Option<String>,
     pub status: String,
     pub is_open: bool,
@@ -26,7 +26,7 @@ pub struct AbstractTicket {
     pub product: String,
     pub labels: Option<Vec<String>>,
     pub flags: Option<Vec<String>>,
-    pub target_release: String,
+    pub target_release: Option<String>,
     pub subsystems: Vec<String>,
     pub groups: Option<Vec<String>>,
     pub public: bool,
@@ -58,19 +58,17 @@ impl From<Bug> for AbstractTicket {
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
             // TODO: These two fields should be configurable by tracker.
-            // Also, handle the errors properly.
+            // Also, handle the errors properly. For now, we're just assuming that the fields
+            // are strings, and panicking if not.
             doc_type: bug
                 .extra
                 .get("cf_doc_type")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
+                .map(|dt| dt.as_str().unwrap().to_string()),
             doc_text: bug
                 .extra
                 .get("cf_release_notes")
-                .map(|cf_release_notes| cf_release_notes.as_str().unwrap().to_string()),
-            docs_contact: bug.docs_contact,
+                .map(|rn| rn.as_str().unwrap().to_string()),
+            docs_contact: Some(bug.docs_contact),
             release_note: None,
             status: bug.status,
             is_open: bug.is_open,
@@ -86,10 +84,7 @@ impl From<Bug> for AbstractTicket {
             target_release: bug
                 .extra
                 .get("cf_internal_target_release")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
+                .map(|itr| itr.as_str().unwrap().to_string()),
             // TODO: Implement SST. The path is extra.pool.team.name
             subsystems: vec!["SST".to_string()],
             groups: Some(bug.groups),
@@ -111,38 +106,29 @@ impl From<JiraIssue> for AbstractTicket {
             },
             summary: issue.fields.summary,
             description: issue.fields.description,
-            // TODO: These two fields should be configurable by tracker.
+            // TODO: These fields should be configurable by tracker.
             // Also, handle the errors properly.
+            // This chain of `and_then` and `map` handles the two consecutive Options:
+            // The result is a String only when neither Option is None.
+            // The first method is `and_then` rather than `map` to avoid a nested Option.
             doc_type: issue
                 .fields
                 .extra
                 .get("customfield_12317310")
-                .unwrap()
-                .get("value")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
-            // This chain of `and_then` and `map` handles the two consecutive Options:
-            // The result is a String only when neither Option is None.
-            // The first method is `and_then` rather than `map` to avoid a nested Option.
-            doc_text: issue.fields.extra.get("customfield_12317322").and_then(
-                |customfield_12317322| {
-                    customfield_12317322
-                        .get("value")
-                        .map(|value| value.as_str().unwrap().to_string())
-                },
-            ),
+                .and_then(|cf| cf.get("value"))
+                .map(|v| v.as_str().unwrap().to_string()),
+            doc_text: issue
+                .fields
+                .extra
+                .get("customfield_12317322")
+                .and_then(|cf| cf.get("value"))
+                .map(|value| value.as_str().unwrap().to_string()),
             docs_contact: issue
                 .fields
                 .extra
                 .get("customfield_12317336")
-                .unwrap()
-                .get("emailAddress")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string(),
+                .and_then(|cf| cf.get("emailAddress"))
+                .map(|value| value.as_str().unwrap().to_string()),
             release_note: None,
             is_open: &issue.fields.status.name != "Closed",
             status: issue.fields.status.name,
@@ -163,8 +149,7 @@ impl From<JiraIssue> for AbstractTicket {
                 .fix_versions
                 .into_iter()
                 .next()
-                .expect("No fix version set for an issue.")
-                .name,
+                .map(|version| version.name),
             // TODO: Implement SSTs. Previously, we used labels, but now the menu is available.
             subsystems: vec!["SST".to_string()],
             // Jira does not recognize groups in the Bugzilla way. This might change.
