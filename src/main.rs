@@ -32,13 +32,21 @@ fn main() -> Result<()> {
     }
 
     if let Some(build) = cli_arguments.subcommand_matches("build") {
-        todo!();
-    } else {
+        // By default, build release notes in the current working directory.
+        let project_dir = match build.value_of_os("project") {
+            Some(dir) => Path::new(dir),
+            None => Path::new("."),
+        };
+        let tickets_path = Path::new(project_dir).join("tickets.yaml");
+        let trackers_path = Path::new(project_dir).join("trackers.yaml");
+
+        // TODO: Enable overriding the default config paths.
         // Record the paths to the configuration files.
         // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
-        let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
-        let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
-        write_rns(tickets_path, trackers_path)?;
+        // let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
+        // let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
+
+        write_rns(&tickets_path, &trackers_path)?;
     }
 
     Ok(())
@@ -62,7 +70,7 @@ fn write_rns(tickets_path: &Path, trackers_path: &Path) -> Result<()> {
         .collect();
     let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
 
-    info!("Release notes:\n\n{}", document);
+    debug!("Release notes:\n\n{}", document);
 
     let out_file = Path::new("main.adoc");
     std::fs::write(out_file, document)?;
