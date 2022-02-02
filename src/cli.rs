@@ -4,7 +4,7 @@ pub fn arguments() -> ArgMatches {
     let app = app_from_crate!()
         .arg(arg!(
             -v --verbose ... "Display more detailed progress messages."
-        ))
+        ).global(true))
         .subcommand(
             App::new("build")
                 .about("Build release notes from a configuration directory.")
