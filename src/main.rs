@@ -24,20 +24,16 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
-    if let Some(cli_arguments) = cli_arguments.subcommand_matches("jira") {
+    if let Some(cli_arguments) = cli_arguments.subcommand_matches("ticket") {
+        let service = match cli_arguments.value_of("service").unwrap() {
+            "jira" => Service::Jira,
+            "bugzilla" => Service::Bugzilla,
+            _ => unreachable!(),
+        };
         let ticket = ticket_abstraction::from_args(
-            Service::Jira,
-            cli_arguments.value_of("ticket").unwrap(),
-            cli_arguments.value_of("server").unwrap(),
-            cli_arguments.value_of("api_key").unwrap(),
-        )?;
-        info!("{}", ticket.release_note());
-    }
-    if let Some(cli_arguments) = cli_arguments.subcommand_matches("bugzilla") {
-        let ticket = ticket_abstraction::from_args(
-            Service::Bugzilla,
-            cli_arguments.value_of("ticket").unwrap(),
-            cli_arguments.value_of("server").unwrap(),
+            service,
+            cli_arguments.value_of("id").unwrap(),
+            cli_arguments.value_of("host").unwrap(),
             cli_arguments.value_of("api_key").unwrap(),
         )?;
         info!("{}", ticket.release_note());
