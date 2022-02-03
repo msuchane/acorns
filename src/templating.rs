@@ -65,11 +65,7 @@ pub fn parse(template_file: &Path) -> Result<Template> {
     Ok(templates)
 }
 
-pub fn format_document(tickets: &[AbstractTicket], template: Template) -> String {
-    let release_notes: Vec<String> = tickets.into_iter().map(|t| t.release_note()).collect();
-    // let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
-    // debug!("Release notes:\n\n{}", document);
-
+pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> String {
     let chapters: Vec<_> = template
         .chapters
         .iter()
