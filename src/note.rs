@@ -17,11 +17,12 @@ impl AbstractTicket {
     pub fn release_note(&self) -> String {
         let docs_contact_placeholder = "No docs contact".to_string();
         let empty = format!(
-            ".🚧 {} | {}\n\n**No release note.** link:{}[]",
+            ".🚧 {} | {} | {}\n\n**No release note.** link:{}[]",
             self.summary,
             self.docs_contact
                 .as_ref()
                 .unwrap_or(&docs_contact_placeholder),
+            self.requires_doc_text,
             self.url
         );
         if let Some(ref doc_text) = self.doc_text {

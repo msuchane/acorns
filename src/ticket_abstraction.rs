@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::fmt;
 
 use color_eyre::eyre::{eyre, Context, Result};
 
@@ -53,6 +54,17 @@ impl From<&str> for DocTextStatus {
             "-" => Self::NoDocumentation,
             _ => Self::InProgress,
         }
+    }
+}
+
+impl fmt::Display for DocTextStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let display = match self {
+            Self::Approved => "RDT+",
+            Self::InProgress => "RDT?",
+            Self::NoDocumentation => "RDT-"
+        };
+        write!(f, "{}", display)
     }
 }
 
