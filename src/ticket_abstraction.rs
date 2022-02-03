@@ -46,6 +46,16 @@ pub enum DocTextStatus {
     NoDocumentation,
 }
 
+impl From<&str> for DocTextStatus {
+    fn from(string: &str) -> Self {
+        match string {
+            "+" => Self::Approved,
+            "-" => Self::NoDocumentation,
+            _ => Self::InProgress,
+        }
+    }
+}
+
 impl From<Bug> for AbstractTicket {
     fn from(bug: Bug) -> Self {
         AbstractTicket {
@@ -88,7 +98,6 @@ impl From<Bug> for AbstractTicket {
                 .extra
                 .get("cf_internal_target_release")
                 .map(|itr| itr.as_str().unwrap().to_string()),
-            // TODO: Implement SST. The path is extra.pool.team.name
             subsystems: bug
                 .extra
                 .get("pool")
@@ -165,8 +174,13 @@ impl From<JiraIssue> for AbstractTicket {
             groups: None,
             // TODO: Implement public
             public: false,
-            // TODO: Implement RDT
-            requires_doc_text: DocTextStatus::InProgress,
+            requires_doc_text: issue
+                .fields
+                .extra
+                .get("customfield_12317337")
+                .map_or(DocTextStatus::InProgress, |rdt| {
+                    DocTextStatus::from(rdt.as_str().unwrap())
+                }),
             duplicates: Vec::new(),
         }
     }
