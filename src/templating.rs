@@ -5,6 +5,8 @@ use color_eyre::eyre::{Context, Result};
 use log::debug;
 use serde::Deserialize;
 
+use crate::ticket_abstraction::AbstractTicket;
+
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Template {
     pub chapters: Vec<Section>,
@@ -31,4 +33,11 @@ pub fn parse(template_file: &Path) -> Result<Template> {
         serde_yaml::from_str(&text).context("Cannot parse the template file.")?;
     debug!("{:#?}", templates);
     Ok(templates)
+}
+
+pub fn format_document(tickets: Vec<AbstractTicket>, template: Template) -> String {
+    let release_notes: Vec<String> = tickets.into_iter().map(|t| t.release_note()).collect();
+    let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
+    debug!("Release notes:\n\n{}", document);
+    document
 }

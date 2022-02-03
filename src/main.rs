@@ -65,26 +65,19 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
 
         // Parse the configuration files specified on the command line.
         let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
-        let _templates = templating::parse(&templates_path)?;
+        let templates = templating::parse(&templates_path)?;
 
         let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
-        let release_notes: Vec<String> = abstract_tickets
-            .into_iter()
-            .map(|t| t.release_note())
-            .collect();
+        let document = templating::format_document(abstract_tickets, templates);
 
-        write_rns(&release_notes, project_dir)?;
+        write_rns(&document, project_dir)?;
     }
 
     Ok(())
 }
 
-fn write_rns(release_notes: &[String], out_dir: &Path) -> Result<()> {
-    let document = format!("= Release notes\n\n{}", release_notes.join("\n\n"));
-
-    debug!("Release notes:\n\n{}", document);
-
+fn write_rns(document: &str, out_dir: &Path) -> Result<()> {
     // By default, save the resulting document to the project directory.
     // TODO: Make the output configurable.
     let out_file = out_dir.join("main.adoc");
