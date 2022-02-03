@@ -78,7 +78,12 @@ impl From<Bug> for AbstractTicket {
             // Bugzilla has no labels
             labels: None,
             // TODO: Implement flags as strings
-            flags: None,
+            flags: bug.flags.map(|flags| {
+                flags
+                    .into_iter()
+                    .map(|flag| format!("{}: {}", flag.name, flag.status))
+                    .collect()
+            }),
             target_release: bug
                 .extra
                 .get("cf_internal_target_release")
