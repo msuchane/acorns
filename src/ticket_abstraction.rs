@@ -89,7 +89,12 @@ impl From<Bug> for AbstractTicket {
                 .get("cf_internal_target_release")
                 .map(|itr| itr.as_str().unwrap().to_string()),
             // TODO: Implement SST. The path is extra.pool.team.name
-            subsystems: vec!["SST".to_string()],
+            subsystems: bug
+                .extra
+                .get("pool")
+                .and_then(|pool| pool.get("team"))
+                .and_then(|team| team.get("name"))
+                .map_or(Vec::new(), |name| vec![name.as_str().unwrap().to_string()]),
             groups: Some(bug.groups),
             // TODO: Implement public
             public: false,
