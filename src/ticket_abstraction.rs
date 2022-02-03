@@ -174,13 +174,13 @@ impl From<JiraIssue> for AbstractTicket {
             groups: None,
             // TODO: Implement public
             public: false,
+            // TODO: This field should be configurable
             requires_doc_text: issue
                 .fields
                 .extra
                 .get("customfield_12317337")
-                .map_or(DocTextStatus::InProgress, |rdt| {
-                    DocTextStatus::from(rdt.as_str().unwrap())
-                }),
+                .and_then(|rdt| rdt.as_str())
+                .map_or(DocTextStatus::InProgress, |rdt| DocTextStatus::from(rdt)),
             duplicates: Vec::new(),
         }
     }
