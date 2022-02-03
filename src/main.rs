@@ -69,7 +69,7 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
 
         let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
-        let document = templating::format_document(abstract_tickets, templates);
+        let document = templating::format_document(&abstract_tickets, templates);
 
         write_rns(&document, project_dir)?;
     }
