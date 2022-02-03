@@ -16,7 +16,6 @@ pub struct AbstractTicket {
     pub doc_type: Option<String>,
     pub doc_text: Option<String>,
     pub docs_contact: Option<String>,
-    pub release_note: Option<String>,
     pub status: String,
     pub is_open: bool,
     pub priority: String,
@@ -69,7 +68,6 @@ impl From<Bug> for AbstractTicket {
                 .get("cf_release_notes")
                 .map(|rn| rn.as_str().unwrap().to_string()),
             docs_contact: Some(bug.docs_contact),
-            release_note: None,
             status: bug.status,
             is_open: bug.is_open,
             priority: bug.priority,
@@ -129,7 +127,6 @@ impl From<JiraIssue> for AbstractTicket {
                 .get("customfield_12317336")
                 .and_then(|cf| cf.get("emailAddress"))
                 .map(|value| value.as_str().unwrap().to_string()),
-            release_note: None,
             is_open: &issue.fields.status.name != "Closed",
             status: issue.fields.status.name,
             priority: issue.fields.priority.name,
