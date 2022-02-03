@@ -30,15 +30,30 @@ pub struct Filter {
 impl Section {
     fn render(&self, tickets: &[AbstractTicket]) -> String {
         let heading = format!("= {}", self.title);
-        let matching_tickets = tickets.iter().filter(|t| {
-            self.filter
-                .doc_type
-                .as_ref()
-                .unwrap()
-                .contains(t.doc_type.as_ref().unwrap())
-        });
+        let matching_tickets = tickets.iter().filter(|t| self.matches_ticket(t));
         let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
         format!("{}\n\n{}", heading, release_notes.join("\n\n"))
+    }
+
+    fn matches_ticket(&self, ticket: &AbstractTicket) -> bool {
+        let matches_doc_type = self
+            .filter
+            .doc_type
+            .as_ref()
+            .map_or(true, |dt| dt.contains(ticket.doc_type.as_ref().unwrap()));
+        let matches_subsystem = self
+            .filter
+            .subsystem
+            .as_ref()
+            // TODO: Also take into account additional subsystems.
+            .map_or(true, |sst| sst.contains(&ticket.subsystems[0]));
+        let matches_component = self
+            .filter
+            .component
+            .as_ref()
+            // TODO: Also take into account additional components.
+            .map_or(true, |c| c.contains(&ticket.components[0]));
+        matches_doc_type && matches_subsystem && matches_component
     }
 }
 
