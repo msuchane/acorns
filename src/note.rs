@@ -21,7 +21,7 @@ impl AbstractTicket {
             self.summary,
             self.docs_contact
                 .as_ref()
-                .unwrap_or(&docs_contact_placeholder),
+                .map_or(&docs_contact_placeholder, |dc| if dc.trim() == "" {&docs_contact_placeholder} else {dc}),
             self.requires_doc_text,
             self.url
         );
