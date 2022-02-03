@@ -132,10 +132,12 @@ impl From<JiraIssue> for AbstractTicket {
             priority: issue.fields.priority.name,
             url: issue.self_link,
             assignee: issue.fields.assignee.email_address,
-            // TODO: Implement components.
-            // The call would be issue.fields.components.map(|&c| c.name),
-            // but I'm getting an iterator trait error.
-            components: Vec::new(),
+            components: issue
+                .fields
+                .components
+                .into_iter()
+                .map(|c| c.name)
+                .collect(),
             product: issue.fields.project.name,
             labels: Some(issue.fields.labels),
             // Jira does not support flags
