@@ -9,6 +9,7 @@ mod cli;
 mod config;
 mod logging;
 mod note;
+mod templating;
 mod ticket_abstraction;
 
 use config::tracker::Service;
@@ -47,6 +48,7 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
         };
         let tickets_path = project_dir.join("tickets.yaml");
         let trackers_path = project_dir.join("trackers.yaml");
+        let templates_path = project_dir.join("templates.yaml");
 
         // TODO: Enable overriding the default config paths.
         // Record the paths to the configuration files.
@@ -55,13 +57,15 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
         // let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
 
         debug!(
-            "Configuration files: {}, {}",
+            "Configuration files: {}, {}, {}",
             tickets_path.display(),
-            trackers_path.display()
+            trackers_path.display(),
+            templates_path.display()
         );
 
         // Parse the configuration files specified on the command line.
         let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
+        let _templates = templating::parse(&templates_path)?;
 
         let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
