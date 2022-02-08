@@ -62,7 +62,7 @@ impl fmt::Display for DocTextStatus {
         let display = match self {
             Self::Approved => "RDT+",
             Self::InProgress => "RDT?",
-            Self::NoDocumentation => "RDT-"
+            Self::NoDocumentation => "RDT-",
         };
         write!(f, "{}", display)
     }
