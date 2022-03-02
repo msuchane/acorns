@@ -49,14 +49,21 @@ impl Section {
     }
 
     fn into_modules(&self, tickets: &[AbstractTicket]) -> Module {
-        let matching_tickets: Vec<AbstractTicket> = tickets.iter().filter(|&t| self.matches_ticket(t)).cloned().collect();
+        let matching_tickets: Vec<AbstractTicket> = tickets
+            .iter()
+            .filter(|&t| self.matches_ticket(t))
+            .cloned()
+            .collect();
 
         let file_name = format!("{}.adoc", &self.title);
-        
+
         if let Some(sections) = &self.sections {
-            let included_modules: Vec<Module> = sections.into_iter()
-                .map(|s| s.into_modules(&matching_tickets)).collect();
-            let include_statements: Vec<String> = included_modules.iter()
+            let included_modules: Vec<Module> = sections
+                .into_iter()
+                .map(|s| s.into_modules(&matching_tickets))
+                .collect();
+            let include_statements: Vec<String> = included_modules
+                .iter()
                 .map(|m| m.include_statement())
                 .collect();
             let include_block = include_statements.join("\n\n");
@@ -68,7 +75,6 @@ impl Section {
                 included_modules: Some(included_modules),
             }
         } else {
-
             Module {
                 file_name,
                 text: self.render(tickets),
