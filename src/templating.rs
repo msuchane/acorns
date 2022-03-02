@@ -36,7 +36,7 @@ pub struct Module {
 
 impl Module {
     pub fn include_statement(&self) -> String {
-        format!("include::{}.adoc[leveloffset=+1]", &self.file_name)
+        format!("include::{}[leveloffset=+1]", &self.file_name)
     }
 }
 
@@ -55,9 +55,13 @@ impl Section {
             .cloned()
             .collect();
 
-        let file_name = format!("{}.adoc", &self.title);
+        let module_id = self.title
+            .to_lowercase()
+            .replace(' ', "-");
 
+        // If the section includes other sections, treat it as an assembly.
         if let Some(sections) = &self.sections {
+            let file_name = format!("assembly_{}.adoc", module_id);
             let included_modules: Vec<Module> = sections
                 .iter()
                 .map(|s| s.modules(&matching_tickets))
@@ -67,16 +71,17 @@ impl Section {
                 .map(|m| m.include_statement())
                 .collect();
             let include_block = include_statements.join("\n\n");
-            let text = format!("{}\n\n{}", self.render(&matching_tickets), include_block);
+            let text = format!("= {}\n\n{}", &self.title, include_block);
 
             Module {
                 file_name,
                 text,
                 included_modules: Some(included_modules),
             }
+        // If the section includes no sections, treat it as a leaf, reference module.
         } else {
             Module {
-                file_name,
+                file_name: format!("ref_{}.adoc", module_id),
                 text: self.render(tickets),
                 included_modules: None,
             }
