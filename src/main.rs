@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use clap::ArgMatches;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{Context, Result};
 use log::{debug, info};
 
 mod cli;
@@ -90,7 +90,7 @@ fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
     // TODO: Make the output configurable.
     for module in modules {
         let out_file = out_dir.join(&module.file_name);
-        fs::write(out_file, &module.text)?;
+        fs::write(out_file, &module.text).context("Failed to write generated module.")?;
     }
     
     Ok(())

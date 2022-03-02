@@ -242,12 +242,12 @@ fn unsorted_tickets(
             .map(|q| q.key.as_str())
             .collect::<Vec<&str>>(),
         &trackers.bugzilla.api_key,
-    )?;
+    ).context("Failed to download tickets from Bugzilla.")?;
     let issues = jira_query::issues(
         &trackers.jira.host,
         &jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>(),
         &trackers.jira.api_key,
-    )?;
+    ).context("Failed to download tickets from Jira.")?;
 
     let tickets_from_bugzilla = bugs.into_iter().map(AbstractTicket::from);
     let tickets_from_jira = issues.into_iter().map(AbstractTicket::from);
