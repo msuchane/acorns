@@ -27,12 +27,54 @@ pub struct Filter {
     pub component: Option<Vec<String>>,
 }
 
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+struct Module {
+    pub file_name: String,
+    pub text: String,
+    pub included_modules: Option<Vec<Self>>,
+}
+
+impl Module {
+    pub fn include_statement(&self) -> String {
+        format!("include::{}.adoc[leveloffset=+1]", &self.file_name)
+    }
+}
+
 impl Section {
     fn render(&self, tickets: &[AbstractTicket]) -> String {
-        let heading = format!("= {}", self.title);
+        let heading = format!("= {}", &self.title);
         let matching_tickets = tickets.iter().filter(|t| self.matches_ticket(t));
         let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
         format!("{}\n\n{}", heading, release_notes.join("\n\n"))
+    }
+
+    fn into_modules(&self, tickets: &[AbstractTicket]) -> Module {
+        let matching_tickets: Vec<AbstractTicket> = tickets.iter().filter(|&t| self.matches_ticket(t)).cloned().collect();
+
+        let file_name = format!("{}.adoc", &self.title);
+        
+        if let Some(sections) = &self.sections {
+            let included_modules: Vec<Module> = sections.into_iter()
+                .map(|s| s.into_modules(&matching_tickets)).collect();
+            let include_statements: Vec<String> = included_modules.iter()
+                .map(|m| m.include_statement())
+                .collect();
+            let include_block = include_statements.join("\n\n");
+            let text = format!("{}\n\n{}", self.render(tickets), include_block);
+
+            Module {
+                file_name,
+                text,
+                included_modules: Some(included_modules),
+            }
+        } else {
+
+            Module {
+                file_name,
+                text: self.render(tickets),
+                included_modules: None,
+            }
+        }
     }
 
     fn matches_ticket(&self, ticket: &AbstractTicket) -> bool {
