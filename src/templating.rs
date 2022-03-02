@@ -60,7 +60,7 @@ impl Section {
                 .map(|m| m.include_statement())
                 .collect();
             let include_block = include_statements.join("\n\n");
-            let text = format!("{}\n\n{}", self.render(tickets), include_block);
+            let text = format!("{}\n\n{}", self.render(&matching_tickets), include_block);
 
             Module {
                 file_name,
