@@ -150,7 +150,6 @@ impl From<JiraIssue> for AbstractTicket {
                 .fields
                 .extra
                 .get("customfield_12317322")
-                .and_then(|cf| cf.get("value"))
                 .map(|value| value.as_str().unwrap().to_string()),
             docs_contact: issue
                 .fields
@@ -180,8 +179,17 @@ impl From<JiraIssue> for AbstractTicket {
                 .into_iter()
                 .next()
                 .map(|version| version.name),
-            // TODO: Implement SSTs. Previously, we used labels, but now the menu is available.
-            subsystems: vec!["SST".to_string()],
+            // TODO: Handle the errors more safely, without unwraps.
+            subsystems: issue
+                .fields
+                .extra
+                // This is the "Pool Team" field.
+                .get("customfield_12317259")
+                .and_then(|ssts| ssts.as_array())
+                .unwrap()
+                .iter()
+                .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
+                .collect(),
             // Jira does not recognize groups in the Bugzilla way. This might change.
             groups: None,
             // TODO: Implement public
