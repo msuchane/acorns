@@ -13,6 +13,7 @@ mod templating;
 mod ticket_abstraction;
 
 use config::tracker::Service;
+use templating::Module;
 
 fn main() -> Result<()> {
     let cli_arguments = cli::arguments();
@@ -76,19 +77,21 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
         let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
         info!("Formatting the document.");
-        let document = templating::format_document(&abstract_tickets, &templates);
+        let modules = templating::format_document(&abstract_tickets, &templates);
 
-        write_rns(&document, project_dir)?;
+        write_rns(&modules, project_dir)?;
     }
 
     Ok(())
 }
 
-fn write_rns(document: &str, out_dir: &Path) -> Result<()> {
+fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
     // By default, save the resulting document to the project directory.
     // TODO: Make the output configurable.
-    let out_file = out_dir.join("main.adoc");
-    fs::write(out_file, document)?;
-
+    for module in modules {
+        let out_file = out_dir.join(&module.file_name);
+        fs::write(out_file, &module.text)?;
+    }
+    
     Ok(())
 }

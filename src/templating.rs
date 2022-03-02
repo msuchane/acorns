@@ -28,7 +28,7 @@ pub struct Filter {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-struct Module {
+pub struct Module {
     pub file_name: String,
     pub text: String,
     pub included_modules: Option<Vec<Self>>,
@@ -107,15 +107,13 @@ pub fn parse(template_file: &Path) -> Result<Template> {
     Ok(templates)
 }
 
-pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> String {
+pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<Module> {
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .map(|t| t.render(tickets))
+        .map(|section| section.into_modules(tickets))
         .collect();
     debug!("Chapters: {:#?}", chapters);
 
-    let document = chapters.join("\n\n");
-    debug!("Document: {}", document);
-    document
+    chapters
 }
