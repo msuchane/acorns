@@ -93,7 +93,7 @@ fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
         fs::write(out_file, &module.text).context("Failed to write generated module.")?;
 
         if let Some(included_modules) = &module.included_modules {
-            write_rns(&included_modules, out_dir)?;
+            write_rns(included_modules, out_dir)?;
         }
     }
 

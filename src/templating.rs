@@ -48,7 +48,7 @@ impl Section {
         format!("{}\n\n{}", heading, release_notes.join("\n\n"))
     }
 
-    fn into_modules(&self, tickets: &[AbstractTicket]) -> Module {
+    fn modules(&self, tickets: &[AbstractTicket]) -> Module {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
             .filter(|&t| self.matches_ticket(t))
@@ -59,8 +59,8 @@ impl Section {
 
         if let Some(sections) = &self.sections {
             let included_modules: Vec<Module> = sections
-                .into_iter()
-                .map(|s| s.into_modules(&matching_tickets))
+                .iter()
+                .map(|s| s.modules(&matching_tickets))
                 .collect();
             let include_statements: Vec<String> = included_modules
                 .iter()
@@ -117,7 +117,7 @@ pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<M
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .map(|section| section.into_modules(tickets))
+        .map(|section| section.modules(tickets))
         .collect();
     debug!("Chapters: {:#?}", chapters);
 
