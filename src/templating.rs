@@ -41,35 +41,40 @@ impl Module {
 }
 
 impl Section {
-    fn render(&self, tickets: &[AbstractTicket]) -> String {
+    fn render(&self, id: &str, tickets: &[AbstractTicket]) -> String {
         let heading = format!("= {}", &self.title);
-        let matching_tickets = tickets.iter().filter(|t| self.matches_ticket(t));
+        let matching_tickets = tickets.iter().filter(|&t| self.matches_ticket(t));
         let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
-        format!("{}\n\n{}", heading, release_notes.join("\n\n"))
+        format!("[id=\"{}\"]\n{}\n\n{}", id, heading, release_notes.join("\n\n"))
     }
 
-    fn modules(&self, tickets: &[AbstractTicket]) -> Module {
+    fn modules(&self, tickets: &[AbstractTicket], prefix: Option<&str>) -> Module {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
             .filter(|&t| self.matches_ticket(t))
             .cloned()
             .collect();
 
-        let module_id = self.title.to_lowercase().replace(' ', "-");
+        let module_id_fragment = self.title.to_lowercase().replace(' ', "-");
+        let module_id = if let Some(prefix) = prefix {
+            format!("{}-{}", prefix, module_id_fragment)
+        } else {
+            module_id_fragment
+        };
 
         // If the section includes other sections, treat it as an assembly.
         if let Some(sections) = &self.sections {
             let file_name = format!("assembly_{}.adoc", module_id);
             let included_modules: Vec<Module> = sections
                 .iter()
-                .map(|s| s.modules(&matching_tickets))
+                .map(|s| s.modules(&matching_tickets, Some(&module_id)))
                 .collect();
             let include_statements: Vec<String> = included_modules
                 .iter()
                 .map(|m| m.include_statement())
                 .collect();
             let include_block = include_statements.join("\n\n");
-            let text = format!("= {}\n\n{}", &self.title, include_block);
+            let text = format!("[id=\"{}\"]\n= {}\n\n{}", &module_id, &self.title, include_block);
 
             Module {
                 file_name,
@@ -80,7 +85,7 @@ impl Section {
         } else {
             Module {
                 file_name: format!("ref_{}.adoc", module_id),
-                text: self.render(tickets),
+                text: self.render(&module_id, tickets),
                 included_modules: None,
             }
         }
@@ -120,7 +125,7 @@ pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<M
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .map(|section| section.modules(tickets))
+        .map(|section| section.modules(tickets, None))
         .collect();
     debug!("Chapters: {:#?}", chapters);
 
