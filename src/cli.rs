@@ -1,12 +1,12 @@
-use clap::{app_from_crate, arg, App, AppSettings, ArgMatches};
+use clap::{arg, command, ArgMatches, Command};
 
 pub fn arguments() -> ArgMatches {
-    let app = app_from_crate!()
+    let app = command!()
         .arg(arg!(
             -v --verbose ... "Display more detailed progress messages."
         ).global(true))
         .subcommand(
-            App::new("build")
+            Command::new("build")
                 .about("Build release notes from a configuration directory.")
                 .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.").allow_invalid_utf8(true))
                 .arg(
@@ -25,7 +25,7 @@ pub fn arguments() -> ArgMatches {
                 )
         )
         .subcommand(
-            App::new("ticket")
+            Command::new("ticket")
                 .about("Query a single ticket.")
                 .arg(arg!(
                     -i --id <ID> "The ID of the ticket"
@@ -40,7 +40,7 @@ pub fn arguments() -> ArgMatches {
                     -s --service <URL> "The URL to the host with a Bugzilla instance"
                 ).possible_values(["bugzilla", "jira"]))
         // Require using at least one subcommand or some other argument.
-        ).setting(AppSettings::ArgRequiredElseHelp);
+        ).arg_required_else_help(true);
 
     app.get_matches()
 }

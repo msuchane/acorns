@@ -55,9 +55,7 @@ impl Section {
             .cloned()
             .collect();
 
-        let module_id = self.title
-            .to_lowercase()
-            .replace(' ', "-");
+        let module_id = self.title.to_lowercase().replace(' ', "-");
 
         // If the section includes other sections, treat it as an assembly.
         if let Some(sections) = &self.sections {
