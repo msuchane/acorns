@@ -33,7 +33,10 @@ impl AbstractTicket {
             if doc_text.trim() == "" {
                 empty
             } else {
-                format!("{}\n\n({})", doc_text, self.format_signature())
+                // If the doc text contains DOS line endings (`\r`), remove them
+                // and keep just UNIX endings (`\n`).
+                let doc_text_unix = doc_text.replace('\r', "");
+                format!("{}\n\n({})", doc_text_unix, self.format_signature())
             }
         } else {
             empty
