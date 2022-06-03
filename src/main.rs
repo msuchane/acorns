@@ -22,13 +22,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Run the subcommand that the user picked on the command line.
 fn run(cli_arguments: &ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
     logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
 
     // If the user picked the `ticket` subcommand, fetch and display a single ticket
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("ticket") {
-        display_single_ticket(&cli_arguments)?;
+        display_single_ticket(cli_arguments)?;
     }
 
     // If the user picked the `build` subcommand, build the specified release notes project directory
@@ -39,6 +40,8 @@ fn run(cli_arguments: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+/// Run the `ticket` subcommand, which downloads information about the single specified ticket
+/// and prints out the release note resulting from the ticket.
 fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
     info!("Downloading ticket information.");
     let service = match ticket_args.value_of("service").unwrap() {
@@ -57,6 +60,8 @@ fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+/// Run the `build` subcommand, which build the release notes project that's configured
+/// in the project directory specified on the command line, or in the working directory.
 fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     // By default, build release notes in the current working directory.
     let project_dir = match build_args.value_of_os("project") {
@@ -84,22 +89,30 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         templates_path.display()
     );
 
-    // Parse the configuration files specified on the command line.
-    let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
-    let templates = templating::parse(&templates_path)?;
-
-    info!("Downloading ticket information.");
-    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
-
-    info!("Formatting the document.");
-    let modules = templating::format_document(&abstract_tickets, &templates);
+    let modules = form_modules(&tickets_path, &trackers_path, &templates_path)?;
 
     write_rns(&modules, project_dir)?;
 
     Ok(())
 }
 
+/// Prepare all populated and formatted modules that result from the RN project configuration.
+fn form_modules(tickets_path: &Path, trackers_path: &Path, templates_path: &Path) -> Result<Vec<Module>> {
+    // Parse the configuration files specified on the command line.
+    let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
+    let templates = templating::parse(templates_path)?;
+
+    info!("Downloading ticket information.");
+    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
+
+    info!("Formatting the document.");
+    Ok(templating::format_document(&abstract_tickets, &templates))
+}
+
+/// Write all the formatted RN modules as files to the output directory.
 fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
+    info!("Saving the generated release notes.");
+
     // By default, save the resulting document to the project directory.
     // TODO: Make the output configurable.
     for module in modules {
