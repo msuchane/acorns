@@ -200,7 +200,7 @@ impl From<JiraIssue> for AbstractTicket {
                 .extra
                 .get("customfield_12317337")
                 .and_then(|rdt| rdt.as_str())
-                .map_or(DocTextStatus::InProgress, |rdt| DocTextStatus::from(rdt)),
+                .map_or(DocTextStatus::InProgress, DocTextStatus::from),
             duplicates: Vec::new(),
         }
     }
