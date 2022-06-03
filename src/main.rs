@@ -97,7 +97,11 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 }
 
 /// Prepare all populated and formatted modules that result from the RN project configuration.
-fn form_modules(tickets_path: &Path, trackers_path: &Path, templates_path: &Path) -> Result<Vec<Module>> {
+fn form_modules(
+    tickets_path: &Path,
+    trackers_path: &Path,
+    templates_path: &Path,
+) -> Result<Vec<Module>> {
     // Parse the configuration files specified on the command line.
     let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
     let templates = templating::parse(templates_path)?;
