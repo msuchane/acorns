@@ -13,7 +13,7 @@ categories = ["command-line-utilities", "text-processing", "template-engine"]
 [dependencies]
 clap = { version = "^3", features = ["cargo"] }
 log = "0.4"
-simplelog = "0.11"
+simplelog = "0.12"
 # Disable support for tracing_error and SpanTrace in eyre
 color-eyre = { version = "0.6", default-features = false }
 restson = "1.2"
