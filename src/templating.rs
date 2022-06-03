@@ -45,7 +45,12 @@ impl Section {
         let heading = format!("= {}", &self.title);
         let matching_tickets = tickets.iter().filter(|&t| self.matches_ticket(t));
         let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
-        format!("[id=\"{}\"]\n{}\n\n{}", id, heading, release_notes.join("\n\n"))
+        format!(
+            "[id=\"{}\"]\n{}\n\n{}",
+            id,
+            heading,
+            release_notes.join("\n\n")
+        )
     }
 
     fn modules(&self, tickets: &[AbstractTicket], prefix: Option<&str>) -> Module {
@@ -74,7 +79,10 @@ impl Section {
                 .map(|m| m.include_statement())
                 .collect();
             let include_block = include_statements.join("\n\n");
-            let text = format!("[id=\"{}\"]\n= {}\n\n{}", &module_id, &self.title, include_block);
+            let text = format!(
+                "[id=\"{}\"]\n= {}\n\n{}",
+                &module_id, &self.title, include_block
+            );
 
             Module {
                 file_name,
