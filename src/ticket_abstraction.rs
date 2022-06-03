@@ -4,7 +4,7 @@ use std::fmt;
 use color_eyre::eyre::{eyre, Context, Result};
 
 use bugzilla_query::Bug;
-use jira_query::JiraIssue;
+use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
 
@@ -126,8 +126,8 @@ impl From<Bug> for AbstractTicket {
     }
 }
 
-impl From<JiraIssue> for AbstractTicket {
-    fn from(issue: JiraIssue) -> Self {
+impl From<Issue> for AbstractTicket {
+    fn from(issue: Issue) -> Self {
         AbstractTicket {
             id: TicketId {
                 key: issue.key,
