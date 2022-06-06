@@ -243,13 +243,16 @@ fn unsorted_tickets(
     let jira_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Jira);
+    
+    let bz_instance = bugzilla_query::BzInstance {
+        host: trackers.bugzilla.host.clone(),
+        auth: bugzilla_query::Auth::ApiKey(trackers.bugzilla.api_key.clone()),
+    };
 
-    let bugs = bugzilla_query::bugs(
-        &trackers.bugzilla.host,
+    let bugs = bz_instance.bugs(
         &bugzilla_queries
             .map(|q| q.key.as_str())
             .collect::<Vec<&str>>(),
-        bugzilla_query::Authorization::ApiKey(trackers.bugzilla.api_key.clone()),
     )
     .context("Failed to download tickets from Bugzilla.")?;
     let issues = jira_query::issues(
@@ -277,10 +280,13 @@ pub fn from_args(
             Ok(issue.into())
         }
         tracker::Service::Bugzilla => {
-            let bug = bugzilla_query::bug(
-                host,
+            let bz_instance = bugzilla_query::BzInstance {
+                host: host.to_string(),
+                auth: bugzilla_query::Auth::ApiKey(api_key.to_string()),
+            };
+
+            let bug = bz_instance.bug(
                 id,
-                bugzilla_query::Authorization::ApiKey(api_key.to_string()),
             )?;
             Ok(bug.into())
         }
