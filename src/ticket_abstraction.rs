@@ -249,7 +249,7 @@ fn unsorted_tickets(
         &bugzilla_queries
             .map(|q| q.key.as_str())
             .collect::<Vec<&str>>(),
-        &trackers.bugzilla.api_key,
+        bugzilla_query::Authorization::ApiKey(trackers.bugzilla.api_key.clone()),
     )
     .context("Failed to download tickets from Bugzilla.")?;
     let issues = jira_query::issues(
@@ -277,7 +277,11 @@ pub fn from_args(
             Ok(issue.into())
         }
         tracker::Service::Bugzilla => {
-            let bug = bugzilla_query::bug(host, id, api_key)?;
+            let bug = bugzilla_query::bug(
+                host,
+                id,
+                bugzilla_query::Authorization::ApiKey(api_key.to_string()),
+            )?;
             Ok(bug.into())
         }
     }

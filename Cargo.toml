@@ -21,5 +21,5 @@ serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "1.0"
 serde_yaml = "0.8"
-bugzilla_query = { path = "../bugzilla_query" }
+bugzilla_query = "^0.1"
 jira_query = { path = "../jira_query" }

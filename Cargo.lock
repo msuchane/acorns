@@ -63,7 +63,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bugzilla_query"
-version = "0.1.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0dec77cec00124eb9b3449590d9f0d55a2eb00843081747caada32c6e1c595f"
 dependencies = [
  "log",
  "restson",
