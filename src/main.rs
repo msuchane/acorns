@@ -25,7 +25,7 @@ fn main() -> Result<()> {
 /// Run the subcommand that the user picked on the command line.
 fn run(cli_arguments: &ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
-    logging::initialize_logger(cli_arguments.occurrences_of("verbose"));
+    logging::initialize_logger(cli_arguments.occurrences_of("verbose"))?;
 
     // If the user picked the `ticket` subcommand, fetch and display a single ticket
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("ticket") {
