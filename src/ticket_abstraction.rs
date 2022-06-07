@@ -161,7 +161,7 @@ impl From<Issue> for AbstractTicket {
             status: issue.fields.status.name,
             priority: issue.fields.priority.name,
             url: issue.self_link,
-            assignee: issue.fields.assignee.email_address,
+            assignee: issue.fields.assignee.name,
             components: issue
                 .fields
                 .components
@@ -243,24 +243,28 @@ fn unsorted_tickets(
     let jira_queries = queries
         .iter()
         .filter(|t| t.tracker == tracker::Service::Jira);
-    
+
     let bz_instance = bugzilla_query::BzInstance {
         host: trackers.bugzilla.host.clone(),
         auth: bugzilla_query::Auth::ApiKey(trackers.bugzilla.api_key.clone()),
     };
 
-    let bugs = bz_instance.bugs(
-        &bugzilla_queries
-            .map(|q| q.key.as_str())
-            .collect::<Vec<&str>>(),
-    )
-    .context("Failed to download tickets from Bugzilla.")?;
-    let issues = jira_query::issues(
-        &trackers.jira.host,
-        &jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>(),
-        &trackers.jira.api_key,
-    )
-    .context("Failed to download tickets from Jira.")?;
+    let bugs = bz_instance
+        .bugs(
+            &bugzilla_queries
+                .map(|q| q.key.as_str())
+                .collect::<Vec<&str>>(),
+        )
+        .context("Failed to download tickets from Bugzilla.")?;
+
+    let jira_instance = jira_query::JiraInstance {
+        host: trackers.jira.host.clone(),
+        auth: jira_query::Auth::ApiKey(trackers.jira.api_key.clone()),
+    };
+
+    let issues = jira_instance
+        .issues(&jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>())
+        .context("Failed to download tickets from Jira.")?;
 
     let tickets_from_bugzilla = bugs.into_iter().map(AbstractTicket::from);
     let tickets_from_jira = issues.into_iter().map(AbstractTicket::from);
@@ -276,7 +280,12 @@ pub fn from_args(
 ) -> Result<AbstractTicket> {
     match service {
         tracker::Service::Jira => {
-            let issue = jira_query::issue(host, id, api_key)?;
+            let jira_instance = jira_query::JiraInstance {
+                host: host.to_string(),
+                auth: jira_query::Auth::ApiKey(api_key.to_string()),
+            };
+
+            let issue = jira_instance.issue(id)?;
             Ok(issue.into())
         }
         tracker::Service::Bugzilla => {
@@ -285,9 +294,7 @@ pub fn from_args(
                 auth: bugzilla_query::Auth::ApiKey(api_key.to_string()),
             };
 
-            let bug = bz_instance.bug(
-                id,
-            )?;
+            let bug = bz_instance.bug(id)?;
             Ok(bug.into())
         }
     }
