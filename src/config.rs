@@ -5,6 +5,7 @@ use color_eyre::eyre::{Context, Result};
 use log::debug;
 use serde::Deserialize;
 
+/// A request to query for a ticket in a tracker.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 pub struct TicketQuery {
     pub tracker: tracker::Service,
@@ -14,18 +15,22 @@ pub struct TicketQuery {
 pub mod tracker {
     use serde::Deserialize;
 
+    /// An issue-tracking service, as in the platform.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize)]
     pub enum Service {
         Bugzilla,
         Jira,
     }
 
+    /// The particular instance of an issue tracker,
+    /// with a host URL and access credentials.
     #[derive(Debug, PartialEq, Deserialize)]
     pub struct Instance {
         pub host: String,
         pub api_key: String,
     }
 
+    /// The issue tracker instances configured in the current release notes project.
     #[derive(Debug, PartialEq, Deserialize)]
     pub struct Config {
         pub jira: Instance,
@@ -33,6 +38,8 @@ pub mod tracker {
     }
 }
 
+/// Parse the specified config file and tracker file
+/// into the ticket queries and the trackers configuration.
 pub fn parse(
     config_file: &Path,
     trackers_file: &Path,

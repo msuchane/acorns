@@ -8,6 +8,7 @@ use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
 
+/// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
 pub struct AbstractTicket {
     pub id: TicketId,
@@ -34,12 +35,14 @@ pub struct AbstractTicket {
     pub duplicates: Vec<AbstractTicket>,
 }
 
+/// An identification of the original ticket on the issue tracker.
 #[derive(Clone, Debug)]
 pub struct TicketId {
     pub key: String,
     pub tracker: tracker::Service,
 }
 
+/// The status or progress of the release note.
 #[derive(Clone, Debug)]
 pub enum DocTextStatus {
     Approved,
@@ -206,6 +209,8 @@ impl From<Issue> for AbstractTicket {
     }
 }
 
+/// Process the configured ticket queries into abstract tickets,
+/// sorted in the original order as found in the config file.
 pub fn from_queries(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
@@ -233,6 +238,8 @@ pub fn from_queries(
     Ok(sorted_tickets)
 }
 
+/// Process the configured ticket queries into abstract tickets,
+/// sorted in no particular order, which depends on the response from the issue tracker.
 fn unsorted_tickets(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
@@ -272,6 +279,7 @@ fn unsorted_tickets(
     Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
 }
 
+/// Process a single ticket specified using the `ticket` subcommand.
 pub fn from_args(
     service: tracker::Service,
     id: &str,

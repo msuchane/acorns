@@ -1,5 +1,6 @@
 use clap::{arg, command, ArgMatches, Command};
 
+/// Define the command-line arguments of the tool.
 pub fn arguments() -> ArgMatches {
     let app = command!()
         .arg(arg!(

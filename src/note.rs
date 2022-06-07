@@ -14,6 +14,7 @@ impl fmt::Display for Service {
 }
 
 impl AbstractTicket {
+    /// Compose a release note from an abstract ticket.
     pub fn release_note(&self) -> String {
         let docs_contact_placeholder = "No docs contact".to_string();
         let empty = format!(
@@ -43,6 +44,8 @@ impl AbstractTicket {
         }
     }
 
+    /// Prepare the link or the non-clickable signature that marks the ticket
+    /// belonging to this release note.
     fn format_signature(&self) -> String {
         let label = format!("{}:{}", self.id.tracker, self.id.key);
         if self.public {
