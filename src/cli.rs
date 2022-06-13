@@ -1,3 +1,4 @@
+use clap::builder::ValueParser;
 use clap::{arg, command, ArgMatches, Command};
 
 /// Define the command-line arguments of the tool.
@@ -9,20 +10,20 @@ pub fn arguments() -> ArgMatches {
         .subcommand(
             Command::new("build")
                 .about("Build release notes from a configuration directory.")
-                .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.").allow_invalid_utf8(true))
+                .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.").value_parser(ValueParser::os_string()))
                 .arg(
                     arg!(
                         -t --tickets [FILE] "A configuration file containing tickets."
                     )
                     // Support non-UTF8 paths
-                    .allow_invalid_utf8(true),
+                    .value_parser(ValueParser::os_string()),
                 )
                 .arg(
                     arg!(
                         -T --trackers [FILE] "A configuration file containing trackers."
                     )
                     // Support non-UTF8 paths
-                    .allow_invalid_utf8(true),
+                    .value_parser(ValueParser::os_string()),
                 )
         )
         .subcommand(
