@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use color_eyre::eyre::{Context, Result};
-use log::debug;
+use log;
 use serde::Deserialize;
 
 use crate::ticket_abstraction::AbstractTicket;
@@ -125,7 +125,7 @@ pub fn parse(template_file: &Path) -> Result<Template> {
     let text = fs::read_to_string(template_file).context("Cannot read the template file.")?;
     let templates: Template =
         serde_yaml::from_str(&text).context("Cannot parse the template file.")?;
-    debug!("{:#?}", templates);
+    log::debug!("{:#?}", templates);
     Ok(templates)
 }
 
@@ -135,7 +135,7 @@ pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<M
         .iter()
         .map(|section| section.modules(tickets, None))
         .collect();
-    debug!("Chapters: {:#?}", chapters);
+    log::debug!("Chapters: {:#?}", chapters);
 
     chapters
 }

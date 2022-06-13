@@ -3,7 +3,7 @@ use std::path::Path;
 
 use clap::ArgMatches;
 use color_eyre::eyre::{Context, Result};
-use log::{debug, info};
+use log;
 
 pub mod cli;
 mod config;
@@ -36,7 +36,7 @@ pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
 /// Run the `ticket` subcommand, which downloads information about the single specified ticket
 /// and prints out the release note resulting from the ticket.
 fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
-    info!("Downloading ticket information.");
+    log::info!("Downloading ticket information.");
     let service = match ticket_args.value_of("service").unwrap() {
         "jira" => Service::Jira,
         "bugzilla" => Service::Bugzilla,
@@ -63,7 +63,7 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     };
     let abs_path = project_dir.canonicalize()?;
 
-    info!("Building release notes in {}", abs_path.display());
+    log::info!("Building release notes in {}", abs_path.display());
 
     let tickets_path = abs_path.join("tickets.yaml");
     let trackers_path = abs_path.join("trackers.yaml");
@@ -75,7 +75,7 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     // let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
     // let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
 
-    debug!(
+    log::debug!(
         "Configuration files:\n* {}\n* {}\n* {}",
         tickets_path.display(),
         trackers_path.display(),
@@ -99,16 +99,16 @@ fn form_modules(
     let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
     let templates = templating::parse(templates_path)?;
 
-    info!("Downloading ticket information.");
+    log::info!("Downloading ticket information.");
     let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
 
-    info!("Formatting the document.");
+    log::info!("Formatting the document.");
     Ok(templating::format_document(&abstract_tickets, &templates))
 }
 
 /// Write all the formatted RN modules as files to the output directory.
 fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
-    info!("Saving the generated release notes.");
+    log::info!("Saving the generated release notes.");
 
     // By default, save the resulting document to the project directory.
     // TODO: Make the output configurable.

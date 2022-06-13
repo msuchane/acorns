@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use color_eyre::eyre::{Context, Result};
-use log::debug;
+use log;
 use serde::Deserialize;
 
 /// A request to query for a ticket in a tracker.
@@ -48,13 +48,13 @@ pub fn parse(
         fs::read_to_string(config_file).context("Cannot read the tickets configuration file.")?;
     let config: Vec<TicketQuery> =
         serde_yaml::from_str(&text).context("Cannot parse the tickets configuration file.")?;
-    debug!("{:#?}", config);
+    log::debug!("{:#?}", config);
 
     let text =
         fs::read_to_string(trackers_file).context("Cannot read the tickets configuration file.")?;
     let trackers: tracker::Config =
         serde_yaml::from_str(&text).context("Cannot parse the tickets configuration file.")?;
-    debug!("{:#?}", trackers);
+    log::debug!("{:#?}", trackers);
 
     Ok((config, trackers))
 }
