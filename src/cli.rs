@@ -1,4 +1,5 @@
 use clap::builder::{PossibleValuesParser, ValueParser};
+use clap::ArgAction::Count;
 use clap::{arg, command, ArgMatches, Command};
 
 /// Define the command-line arguments of the tool.
@@ -6,7 +7,9 @@ pub fn arguments() -> ArgMatches {
     let app = command!()
         .arg(arg!(
             -v --verbose ... "Display more detailed progress messages."
-        ).global(true))
+            )
+            .action(Count)
+            .global(true))
         .subcommand(
             Command::new("build")
                 .about("Build release notes from a configuration directory.")

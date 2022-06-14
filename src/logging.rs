@@ -3,7 +3,7 @@ use simplelog::{ColorChoice, Config, LevelFilter, TermLogger, TerminalMode};
 
 /// This function initializes the `simplelog` logging system, which plugs into the `log`
 /// infrastructure. The function returns nothing. It only affects the global state when it runs.
-pub fn initialize_logger(verbose: u64) -> Result<()> {
+pub fn initialize_logger(verbose: u8) -> Result<()> {
     // Set the verbosity level based on the command-line options.
     // The `verbose` option captures the number of occurrences of `--verbose`.
     let verbosity = match verbose {
