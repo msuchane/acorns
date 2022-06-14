@@ -1,4 +1,4 @@
-use clap::builder::ValueParser;
+use clap::builder::{PossibleValuesParser, ValueParser};
 use clap::{arg, command, ArgMatches, Command};
 
 /// Define the command-line arguments of the tool.
@@ -40,7 +40,7 @@ pub fn arguments() -> ArgMatches {
                 ))
                 .arg(arg!(
                     -s --service <URL> "The URL to the host with a Bugzilla instance"
-                ).possible_values(["bugzilla", "jira"]))
+                ).value_parser(PossibleValuesParser::new(["bugzilla", "jira"])))
         // Require using at least one subcommand or some other argument.
         ).arg_required_else_help(true);
 
