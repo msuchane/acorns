@@ -2,7 +2,6 @@ use std::fs;
 use std::path::Path;
 
 use color_eyre::eyre::{Context, Result};
-use log;
 use serde::Deserialize;
 
 /// A request to query for a ticket in a tracker.

@@ -3,6 +3,7 @@ use clap::ArgAction::Count;
 use clap::{arg, command, ArgMatches, Command};
 
 /// Define the command-line arguments of the tool.
+#[must_use]
 pub fn arguments() -> ArgMatches {
     let app = command!()
         .arg(arg!(

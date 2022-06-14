@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 
 use clap::ArgMatches;
 use color_eyre::eyre::{Context, Result};
-use log;
 
 pub mod cli;
 mod config;
