@@ -111,10 +111,14 @@ fn form_modules(
 
 /// Write all the formatted RN modules as files to the output directory.
 fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
-    // By default, save the resulting document to the project directory.
+    // By default, save the resulting document to the project directory under `generated/`.
     // TODO: Make the output configurable.
+    let generated_dir = out_dir.join("generated");
+    // Make sure that the output directory exists.
+    fs::create_dir_all(&generated_dir)?;
+
     for module in modules {
-        let out_file = out_dir.join("generated").join(&module.file_name);
+        let out_file = &generated_dir.join(&module.file_name);
         log::debug!("Writing file: {}", out_file.display());
         fs::write(out_file, &module.text).context("Failed to write generated module.")?;
 
