@@ -238,6 +238,36 @@ pub fn from_queries(
     Ok(sorted_tickets)
 }
 
+// TODO: Move these two functions to a more appropriate place, possibly a new module.
+/// Prepare a client to access Bugzilla.
+fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance> {
+    let api_key = if let Some(key) = &trackers.bugzilla.api_key {
+        key.clone()
+    } else {
+        // TODO: Store the name of the variable in a constant, or make it configurable.
+        std::env::var("BZ_API_KEY").context("Set the BZ_API_KEY environment variable.")?
+    };
+
+    Ok(bugzilla_query::BzInstance {
+        host: trackers.bugzilla.host.clone(),
+        auth: bugzilla_query::Auth::ApiKey(api_key),
+    })
+}
+/// Prepare a client to access Jira.
+fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance> {
+    let api_key = if let Some(key) = &trackers.jira.api_key {
+        key.clone()
+    } else {
+        // TODO: Store the name of the variable in a constant, or make it configurable.
+        std::env::var("JIRA_API_KEY").context("Set the JIRA_API_KEY environment variable.")?
+    };
+
+    Ok(jira_query::JiraInstance {
+        host: trackers.jira.host.clone(),
+        auth: jira_query::Auth::ApiKey(api_key),
+    })
+}
+
 /// Process the configured ticket queries into abstract tickets,
 /// sorted in no particular order, which depends on the response from the issue tracker.
 fn unsorted_tickets(
@@ -251,10 +281,7 @@ fn unsorted_tickets(
         .iter()
         .filter(|t| t.tracker == tracker::Service::Jira);
 
-    let bz_instance = bugzilla_query::BzInstance {
-        host: trackers.bugzilla.host.clone(),
-        auth: bugzilla_query::Auth::ApiKey(trackers.bugzilla.api_key.clone()),
-    };
+    let bz_instance = bz_instance(trackers)?;
 
     let bugs = bz_instance
         .bugs(
@@ -264,10 +291,7 @@ fn unsorted_tickets(
         )
         .context("Failed to download tickets from Bugzilla.")?;
 
-    let jira_instance = jira_query::JiraInstance {
-        host: trackers.jira.host.clone(),
-        auth: jira_query::Auth::ApiKey(trackers.jira.api_key.clone()),
-    };
+    let jira_instance = jira_instance(trackers)?;
 
     let issues = jira_instance
         .issues(&jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>())

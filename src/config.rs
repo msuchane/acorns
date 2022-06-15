@@ -26,7 +26,7 @@ pub mod tracker {
     #[derive(Debug, PartialEq, Deserialize)]
     pub struct Instance {
         pub host: String,
-        pub api_key: String,
+        pub api_key: Option<String>,
     }
 
     /// The issue tracker instances configured in the current release notes project.
