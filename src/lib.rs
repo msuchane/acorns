@@ -84,7 +84,10 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 
     let modules = form_modules(&tickets_path, &trackers_path, &templates_path)?;
 
+    log::info!("Saving the generated release notes.");
     write_rns(&modules, project_dir)?;
+
+    log::info!("Done.");
 
     Ok(())
 }
@@ -108,14 +111,15 @@ fn form_modules(
 
 /// Write all the formatted RN modules as files to the output directory.
 fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
-    log::info!("Saving the generated release notes.");
-
     // By default, save the resulting document to the project directory.
     // TODO: Make the output configurable.
     for module in modules {
         let out_file = out_dir.join("generated").join(&module.file_name);
+        log::debug!("Writing file: {}", out_file.display());
         fs::write(out_file, &module.text).context("Failed to write generated module.")?;
 
+        // If the currently processed module is an assembly,
+        // recursively descend into the assembly and write its included modules.
         if let Some(included_modules) = &module.included_modules {
             write_rns(included_modules, out_dir)?;
         }
