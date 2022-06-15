@@ -6,12 +6,23 @@ use serde::Deserialize;
 
 use crate::ticket_abstraction::AbstractTicket;
 
+/// This struct models the template configuration file.
+/// It includes both `chapters` and `sections` because this is a way
+/// in YaML to create reusable section definitions that can then
+/// appear several times in different places. They have to be defined
+/// on the top level, outside the actual chapters.
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Template {
     pub chapters: Vec<Section>,
     pub sections: Option<Vec<Section>>,
 }
 
+/// This struct covers the necessary properties of a section, which can either
+/// turn into a module if it's a leaf, or into an assembly if it includes
+/// more sections.
+///
+/// The `filter` field narrows down the tickets that can appear in this module
+/// or in the modules that are included in this assembly.
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Section {
     pub title: String,
@@ -19,6 +30,8 @@ pub struct Section {
     pub sections: Option<Vec<Section>>,
 }
 
+/// The configuration of a filter, which narrows down the tickets
+/// that can appear in the section that the filter belongs to.
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Filter {
     pub doc_type: Option<Vec<String>>,
@@ -26,6 +39,7 @@ pub struct Filter {
     pub component: Option<Vec<String>>,
 }
 
+/// The representation of a module, before being finally rendered.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Module {
     pub file_name: String,
@@ -34,24 +48,32 @@ pub struct Module {
 }
 
 impl Module {
+    /// The AsciiDoc include statement to include this module elsewhere.
     pub fn include_statement(&self) -> String {
         format!("include::{}[leveloffset=+1]", &self.file_name)
     }
 }
 
 impl Section {
+    /// Convert the body of the section into AsciiDoc text that will serve
+    /// as the body of the resulting module.
     fn render(&self, id: &str, tickets: &[AbstractTicket]) -> String {
         let heading = format!("= {}", &self.title);
-        let matching_tickets = tickets.iter().filter(|&t| self.matches_ticket(t));
+        let matching_tickets = tickets.iter().filter(|t| self.matches_ticket(t));
         let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
         format!(
-            "[id=\"{}\"]\n{}\n\n{}",
+            "[id=\"{}\"]\n\
+            {}\n\
+            \n\
+            {}",
             id,
             heading,
             release_notes.join("\n\n")
         )
     }
 
+    /// Convert the section into either a leaf module, or into an assembly and all
+    /// the modules that it includes, recursively.
     fn modules(&self, tickets: &[AbstractTicket], prefix: Option<&str>) -> Module {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
@@ -79,7 +101,10 @@ impl Section {
                 .collect();
             let include_block = include_statements.join("\n\n");
             let text = format!(
-                "[id=\"{}\"]\n= {}\n\n{}",
+                "[id=\"{}\"]\n\
+                = {}\n\
+                \n\
+                {}",
                 &module_id, &self.title, include_block
             );
 
@@ -98,6 +123,7 @@ impl Section {
         }
     }
 
+    /// Checks whether this section, with its filter configuration, can include a particular ticket.
     fn matches_ticket(&self, ticket: &AbstractTicket) -> bool {
         let matches_doc_type = self
             .filter
@@ -120,6 +146,7 @@ impl Section {
     }
 }
 
+/// Parse the template configuration files into template structs, with chapter and section definitions.
 pub fn parse(template_file: &Path) -> Result<Template> {
     let text = fs::read_to_string(template_file).context("Cannot read the template file.")?;
     let templates: Template =
@@ -128,6 +155,7 @@ pub fn parse(template_file: &Path) -> Result<Template> {
     Ok(templates)
 }
 
+/// Form all modules that are recursively defined in the template configuration.
 pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<Module> {
     let chapters: Vec<_> = template
         .chapters
