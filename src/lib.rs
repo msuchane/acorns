@@ -37,7 +37,7 @@ pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
 /// and prints out the release note resulting from the ticket.
 fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
     log::info!("Downloading ticket information.");
-    let service = match *ticket_args.get_one("service").unwrap() {
+    let service = match *ticket_args.get_one::<&str>("service").unwrap() {
         "jira" => Service::Jira,
         "bugzilla" => Service::Bugzilla,
         _ => unreachable!(),
