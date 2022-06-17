@@ -134,18 +134,27 @@ impl Section {
             // If the filter doesn't configure a doc type, match by default
             None => true,
         };
-        let matches_subsystem = self
-            .filter
-            .subsystem
-            .as_ref()
-            // TODO: Also take into account additional subsystems.
-            .map_or(true, |sst| sst.contains(&ticket.subsystems[0]));
-        let matches_component = self
-            .filter
-            .component
-            .as_ref()
-            // TODO: Also take into account additional components.
-            .map_or(true, |c| c.contains(&ticket.components[0]));
+        let matches_subsystem = match &self.filter.subsystem {
+            Some(ssts) => ssts
+                .iter()
+                // Compare both subsystems in lower case
+                .map(|sst| sst.to_lowercase())
+                // TODO: Also take into account additional subsystems.
+                .any(|sst| sst == ticket.subsystems[0].to_lowercase()),
+            // If the filter doesn't configure a subsystem, match by default
+            None => true,
+        };
+        let matches_component = match &self.filter.component {
+            Some(components) => components
+                .iter()
+                // Compare both components in lower case
+                .map(|cmp| cmp.to_lowercase())
+                // TODO: Also take into account additional components.
+                .any(|cmp| cmp == ticket.components[0].to_lowercase()),
+            // If the filter doesn't configure a component, match by default
+            None => true,
+        };
+
         matches_doc_type && matches_subsystem && matches_component
     }
 }
