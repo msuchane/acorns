@@ -125,11 +125,15 @@ impl Section {
 
     /// Checks whether this section, with its filter configuration, can include a particular ticket.
     fn matches_ticket(&self, ticket: &AbstractTicket) -> bool {
-        let matches_doc_type = self
-            .filter
-            .doc_type
-            .as_ref()
-            .map_or(true, |dt| dt.contains(ticket.doc_type.as_ref().unwrap()));
+        let matches_doc_type = match &self.filter.doc_type {
+            Some(doc_types) => doc_types
+                .iter()
+                // Compare both doc types in lower case
+                .map(|dt| dt.to_lowercase())
+                .any(|dt| dt == ticket.doc_type.as_ref().unwrap().to_lowercase()),
+            // If the filter doesn't configure a doc type, match by default
+            None => true,
+        };
         let matches_subsystem = self
             .filter
             .subsystem
