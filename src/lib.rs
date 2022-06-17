@@ -17,8 +17,7 @@ use templating::Module;
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
     // Initialize the logging system based on the set verbosity
-    let verbosity = *cli_arguments.get_one::<u8>("verbose").unwrap();
-    logging::initialize_logger(verbosity)?;
+    logging::initialize_logger(cli_arguments.occurrences_of("verbose"))?;
 
     // If the user picked the `ticket` subcommand, fetch and display a single ticket
     if let Some(cli_arguments) = cli_arguments.subcommand_matches("ticket") {
