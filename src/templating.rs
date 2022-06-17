@@ -129,10 +129,9 @@ impl Section {
             Some(doc_types) => doc_types
                 .iter()
                 // Compare both doc types in lower case
-                .map(|dt| dt.to_lowercase())
                 // TODO: Turn the `expect` into proper error handling. See also the other variables below.
                 .any(|dt| {
-                    dt == ticket
+                    dt.to_lowercase() == ticket
                         .doc_type
                         .as_ref()
                         .expect("Ticket has no doc type.")
@@ -144,15 +143,13 @@ impl Section {
         let matches_subsystem = match &self.filter.subsystem {
             Some(ssts) => ssts
                 .iter()
-                // Compare both subsystems in lower case
-                .map(|sst| sst.to_lowercase())
-                // TODO: Also take into account additional subsystems.
+                // Compare both subsystems in lower case.
+                // Match if any of the ticket SSTs matches any of the template SSTs.
                 .any(|sst| {
-                    sst == ticket
+                    ticket
                         .subsystems
-                        .get(0)
-                        .expect("Ticket has no subsystem.")
-                        .to_lowercase()
+                        .iter()
+                        .any(|ticket_sst| sst.to_lowercase() == ticket_sst.to_lowercase())
                 }),
             // If the filter doesn't configure a subsystem, match by default
             None => true,
@@ -161,14 +158,12 @@ impl Section {
             Some(components) => components
                 .iter()
                 // Compare both components in lower case
-                .map(|cmp| cmp.to_lowercase())
-                // TODO: Also take into account additional components.
+                // Match if any of the ticket SSTs matches any of the template SSTs.
                 .any(|cmp| {
-                    cmp == ticket
+                    ticket
                         .components
-                        .get(0)
-                        .expect("Ticket has no component.")
-                        .to_lowercase()
+                        .iter()
+                        .any(|ticket_cmp| cmp.to_lowercase() == ticket_cmp.to_lowercase())
                 }),
             // If the filter doesn't configure a component, match by default
             None => true,
