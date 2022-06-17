@@ -1,4 +1,3 @@
-use clap::builder::{PossibleValuesParser, ValueParser};
 use clap::{arg, command, ArgMatches, Command};
 
 /// Define the command-line arguments of the tool.
@@ -41,7 +40,7 @@ pub fn arguments() -> ArgMatches {
                 ))
                 .arg(arg!(
                     -s --service <name> "The type of the issue tracker service."
-                ).value_parser(PossibleValuesParser::new(["bugzilla", "jira"])))
+                ).possible_values(["bugzilla", "jira"]))
         // Require using at least one subcommand or some other argument.
         ).arg_required_else_help(true);
 
