@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use clap::ArgMatches;
 use color_eyre::eyre::{Context, Result};
@@ -36,16 +36,16 @@ pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
 /// and prints out the release note resulting from the ticket.
 fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
     log::info!("Downloading ticket information.");
-    let service = match *ticket_args.get_one::<&str>("service").unwrap() {
+    let service = match ticket_args.value_of("service").unwrap() {
         "jira" => Service::Jira,
         "bugzilla" => Service::Bugzilla,
         _ => unreachable!(),
     };
     let ticket = ticket_abstraction::from_args(
         service,
-        *ticket_args.get_one("id").unwrap(),
-        *ticket_args.get_one("host").unwrap(),
-        *ticket_args.get_one("api_key").unwrap(),
+        ticket_args.value_of("id").unwrap(),
+        ticket_args.value_of("host").unwrap(),
+        ticket_args.value_of("api_key").unwrap(),
     )?;
     println!("{}", ticket.release_note());
 
@@ -56,7 +56,7 @@ fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
 /// in the project directory specified on the command line, or in the working directory.
 fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     // By default, build release notes in the current working directory.
-    let project_dir = match build_args.get_one::<PathBuf>("project") {
+    let project_dir = match build_args.value_of_os("project") {
         Some(dir) => Path::new(dir),
         None => Path::new("."),
     };

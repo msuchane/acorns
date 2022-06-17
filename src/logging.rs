@@ -1,5 +1,5 @@
-use color_eyre::eyre::{Context, Result};
 use simplelog::{ColorChoice, Config, LevelFilter, TermLogger, TerminalMode};
+use color_eyre::eyre::{Context, Result};
 
 /// This function initializes the `simplelog` logging system, which plugs into the `log`
 /// infrastructure. The function returns nothing. It only affects the global state when it runs.
