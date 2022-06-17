@@ -130,7 +130,14 @@ impl Section {
                 .iter()
                 // Compare both doc types in lower case
                 .map(|dt| dt.to_lowercase())
-                .any(|dt| dt == ticket.doc_type.as_ref().unwrap().to_lowercase()),
+                // TODO: Turn the `expect` into proper error handling. See also the other variables below.
+                .any(|dt| {
+                    dt == ticket
+                        .doc_type
+                        .as_ref()
+                        .expect("Ticket has no doc type.")
+                        .to_lowercase()
+                }),
             // If the filter doesn't configure a doc type, match by default
             None => true,
         };
@@ -140,7 +147,13 @@ impl Section {
                 // Compare both subsystems in lower case
                 .map(|sst| sst.to_lowercase())
                 // TODO: Also take into account additional subsystems.
-                .any(|sst| sst == ticket.subsystems[0].to_lowercase()),
+                .any(|sst| {
+                    sst == ticket
+                        .subsystems
+                        .get(0)
+                        .expect("Ticket has no subsystem.")
+                        .to_lowercase()
+                }),
             // If the filter doesn't configure a subsystem, match by default
             None => true,
         };
@@ -150,7 +163,13 @@ impl Section {
                 // Compare both components in lower case
                 .map(|cmp| cmp.to_lowercase())
                 // TODO: Also take into account additional components.
-                .any(|cmp| cmp == ticket.components[0].to_lowercase()),
+                .any(|cmp| {
+                    cmp == ticket
+                        .components
+                        .get(0)
+                        .expect("Ticket has no component.")
+                        .to_lowercase()
+                }),
             // If the filter doesn't configure a component, match by default
             None => true,
         };
