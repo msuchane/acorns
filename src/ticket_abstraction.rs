@@ -83,6 +83,7 @@ impl From<Bug> for AbstractTicket {
             description: None,
             doc_type: bug.doc_type(),
             doc_text: bug.doc_text(),
+            target_release: bug.target_release(),
             docs_contact: Some(bug.docs_contact),
             summary: bug.summary,
             status: bug.status,
@@ -101,10 +102,6 @@ impl From<Bug> for AbstractTicket {
                     .map(|flag| format!("{}: {}", flag.name, flag.status))
                     .collect()
             }),
-            target_release: bug
-                .extra
-                .get("cf_internal_target_release")
-                .map(|itr| itr.as_str().unwrap().to_string()),
             subsystems: bug
                 .extra
                 .get("pool")
@@ -126,6 +123,7 @@ impl From<Issue> for AbstractTicket {
         AbstractTicket {
             doc_type: issue.doc_type(),
             doc_text: issue.doc_text(),
+            target_release: issue.target_release(),
             docs_contact: issue
                 .fields
                 .extra
@@ -153,13 +151,6 @@ impl From<Issue> for AbstractTicket {
             labels: Some(issue.fields.labels),
             // Jira does not support flags
             flags: None,
-            // TODO: Is the first fix version in the list the one that we want?
-            target_release: issue
-                .fields
-                .fix_versions
-                .into_iter()
-                .next()
-                .map(|version| version.name),
             // TODO: Handle the errors more safely, without unwraps.
             subsystems: issue
                 .fields

@@ -6,6 +6,8 @@ pub trait ExtraFields {
     fn doc_type(&self) -> Option<String>;
     /// Extract the doc text from the ticket.
     fn doc_text(&self) -> Option<String>;
+    /// Extract the target release from the ticket.
+    fn target_release(&self) -> Option<String>;
 }
 
 impl ExtraFields for Bug {
@@ -22,6 +24,12 @@ impl ExtraFields for Bug {
         self.extra
             .get("cf_release_notes")
             .map(|rn| rn.as_str().unwrap().to_string())
+    }
+
+    fn target_release(&self) -> Option<String> {
+        self.extra
+            .get("cf_internal_target_release")
+            .map(|itr| itr.as_str().unwrap().to_string())
     }
 }
 
@@ -44,5 +52,14 @@ impl ExtraFields for Issue {
             .extra
             .get("customfield_12317322")
             .map(|value| value.as_str().unwrap().to_string())
+    }
+
+    fn target_release(&self) -> Option<String> {
+        self.fields
+            .fix_versions
+            // TODO: Is the first fix version in the list the one that we want?
+            .get(0)
+            // TODO: Get rid of the clone.
+            .map(|version| version.name.clone())
     }
 }
