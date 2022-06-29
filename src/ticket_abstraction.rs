@@ -7,6 +7,7 @@ use bugzilla_query::Bug;
 use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
+use crate::extra_fields::ExtraFields;
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
@@ -78,21 +79,12 @@ impl From<Bug> for AbstractTicket {
                 key: bug.id.to_string(),
                 tracker: tracker::Service::Bugzilla,
             },
-            summary: bug.summary,
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            // TODO: These two fields should be configurable by tracker.
-            // Also, handle the errors properly. For now, we're just assuming that the fields
-            // are strings, and panicking if not.
-            doc_type: bug
-                .extra
-                .get("cf_doc_type")
-                .map(|dt| dt.as_str().unwrap().to_string()),
-            doc_text: bug
-                .extra
-                .get("cf_release_notes")
-                .map(|rn| rn.as_str().unwrap().to_string()),
+            doc_type: bug.doc_type(),
+            doc_text: bug.doc_text(),
             docs_contact: Some(bug.docs_contact),
+            summary: bug.summary,
             status: bug.status,
             is_open: bug.is_open,
             priority: bug.priority,
@@ -132,34 +124,20 @@ impl From<Bug> for AbstractTicket {
 impl From<Issue> for AbstractTicket {
     fn from(issue: Issue) -> Self {
         AbstractTicket {
-            id: TicketId {
-                key: issue.key,
-                tracker: tracker::Service::Jira,
-            },
-            summary: issue.fields.summary,
-            description: issue.fields.description,
-            // TODO: These fields should be configurable by tracker.
-            // Also, handle the errors properly.
-            // This chain of `and_then` and `map` handles the two consecutive Options:
-            // The result is a String only when neither Option is None.
-            // The first method is `and_then` rather than `map` to avoid a nested Option.
-            doc_type: issue
-                .fields
-                .extra
-                .get("customfield_12317310")
-                .and_then(|cf| cf.get("value"))
-                .map(|v| v.as_str().unwrap().to_string()),
-            doc_text: issue
-                .fields
-                .extra
-                .get("customfield_12317322")
-                .map(|value| value.as_str().unwrap().to_string()),
+            doc_type: issue.doc_type(),
+            doc_text: issue.doc_text(),
             docs_contact: issue
                 .fields
                 .extra
                 .get("customfield_12317336")
                 .and_then(|cf| cf.get("emailAddress"))
                 .map(|value| value.as_str().unwrap().to_string()),
+            id: TicketId {
+                key: issue.key,
+                tracker: tracker::Service::Jira,
+            },
+            summary: issue.fields.summary,
+            description: issue.fields.description,
             is_open: &issue.fields.status.name != "Closed",
             status: issue.fields.status.name,
             priority: issue.fields.priority.name,

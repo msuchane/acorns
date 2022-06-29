@@ -6,6 +6,7 @@ use color_eyre::eyre::{Context, Result};
 
 pub mod cli;
 mod config;
+mod extra_fields;
 mod logging;
 mod note;
 mod templating;
