@@ -119,9 +119,9 @@ impl From<Bug> for AbstractTicket {
                 .and_then(|pool| pool.get("team"))
                 .and_then(|team| team.get("name"))
                 .map_or(Vec::new(), |name| vec![name.as_str().unwrap().to_string()]),
+            // A bug is public if no groups are set for it.
+            public: bug.groups.is_empty(),
             groups: Some(bug.groups),
-            // TODO: Implement public
-            public: false,
             // TODO: Implement RDT
             requires_doc_text: DocTextStatus::InProgress,
             duplicates: Vec::new(),

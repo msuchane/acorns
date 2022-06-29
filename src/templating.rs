@@ -131,11 +131,12 @@ impl Section {
                 // Compare both doc types in lower case
                 // TODO: Turn the `expect` into proper error handling. See also the other variables below.
                 .any(|dt| {
-                    dt.to_lowercase() == ticket
-                        .doc_type
-                        .as_ref()
-                        .expect("Ticket has no doc type.")
-                        .to_lowercase()
+                    dt.to_lowercase()
+                        == ticket
+                            .doc_type
+                            .as_ref()
+                            .expect("Ticket has no doc type.")
+                            .to_lowercase()
                 }),
             // If the filter doesn't configure a doc type, match by default
             None => true,

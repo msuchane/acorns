@@ -16,14 +16,14 @@ impl fmt::Display for Service {
 impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     pub fn release_note(&self) -> String {
-        let docs_contact_placeholder = "No docs contact".to_string();
+        let docs_contact_placeholder = "No docs contact";
         let empty = format!(
             ".🚧 {} | {} | {}\n\n**No release note.** link:{}[]",
             self.summary,
             self.docs_contact
                 .as_ref()
-                .map_or(&docs_contact_placeholder, |dc| if dc.trim() == "" {
-                    &docs_contact_placeholder
+                .map_or(docs_contact_placeholder, |dc| if dc.trim() == "" {
+                    docs_contact_placeholder
                 } else {
                     dc
                 }),
