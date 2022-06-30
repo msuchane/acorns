@@ -1,5 +1,7 @@
 use std::fmt;
 
+use serde_json::value::Value;
+
 use bugzilla_query::Bug;
 use jira_query::Issue;
 
@@ -125,7 +127,7 @@ impl ExtraFields for Issue {
             .extra
             // This is the "Pool Team" field.
             .get("customfield_12317259")
-            .and_then(|ssts| ssts.as_array())
+            .and_then(Value::as_array)
             .unwrap()
             .iter()
             // TODO: Handle the errors more safely, without unwraps.
@@ -142,7 +144,7 @@ impl ExtraFields for Issue {
 
         rdt_field
             .and_then(|rdt| rdt.get("value"))
-            .and_then(|rdt_value| rdt_value.as_str())
+            .and_then(Value::as_str)
             .map_or(DocTextStatus::NoDocumentation, DocTextStatus::from)
     }
 }
