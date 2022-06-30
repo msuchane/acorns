@@ -1,5 +1,7 @@
 use std::fmt;
+use std::string::ToString;
 
+use serde::Deserialize;
 use serde_json::value::Value;
 
 use bugzilla_query::Bug;
@@ -47,6 +49,16 @@ pub trait ExtraFields {
     fn doc_text_status(&self) -> DocTextStatus;
 }
 
+#[derive(Deserialize, Debug)]
+struct BzPool {
+    team: BzTeam,
+}
+
+#[derive(Deserialize, Debug)]
+struct BzTeam {
+    name: String,
+}
+
 impl ExtraFields for Bug {
     // TODO: The following two fields should be configurable by tracker.
     // Also, handle the errors properly. For now, we're just assuming that the fields
@@ -54,29 +66,32 @@ impl ExtraFields for Bug {
     fn doc_type(&self) -> Option<String> {
         self.extra
             .get("cf_doc_type")
-            .map(|dt| dt.as_str().unwrap().to_string())
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
     }
 
     fn doc_text(&self) -> Option<String> {
         self.extra
             .get("cf_release_notes")
-            .map(|rn| rn.as_str().unwrap().to_string())
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
     }
 
     fn target_release(&self) -> Option<String> {
         self.extra
             .get("cf_internal_target_release")
-            .map(|itr| itr.as_str().unwrap().to_string())
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
     }
 
     fn subsystems(&self) -> Vec<String> {
-        self.extra
-            .get("pool")
-            .and_then(|pool| pool.get("team"))
-            .and_then(|team| team.get("name"))
-            // In Bugzilla, the bug always has just one subsystem. Therefore,
-            // this returns a vector with a single item, or an empty vector.
-            .map_or_else(Vec::new, |name| vec![name.as_str().unwrap().to_string()])
+        let pool_field = self.extra.get("pool").expect("Bug has no pool field.");
+        let pool: BzPool = serde_json::from_value(pool_field.clone())
+            .expect("Pool field has an unexpected structure.");
+
+        // In Bugzilla, the bug always has just one subsystem. Therefore,
+        // this returns a vector with a single item, or an empty vector.
+        vec![pool.team.name]
     }
 
     fn doc_text_status(&self) -> DocTextStatus {
@@ -92,18 +107,20 @@ impl ExtraFields for Bug {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct JiraDocType {
+    value: String,
+}
+
 impl ExtraFields for Issue {
     // TODO: The following two fields should be configurable by tracker.
-    // Also, handle the errors properly.
     fn doc_type(&self) -> Option<String> {
-        self.fields
-            .extra
-            .get("customfield_12317310")
-            // This chain of `and_then` and `map` handles the two consecutive Options:
-            // The result is a String only when neither Option is None.
-            // The first method is `and_then` rather than `map` to avoid a nested Option.
-            .and_then(|cf| cf.get("value"))
-            .map(|v| v.as_str().unwrap().to_string())
+        let doc_type_field = self.fields.extra.get("customfield_12317310")?;
+        let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
+            // TODO: Consolidate the previous Option and this Result properly.
+            .expect("Doc type field has an unexpected structure.");
+
+        Some(doc_type.value)
     }
 
     fn doc_text(&self) -> Option<String> {
