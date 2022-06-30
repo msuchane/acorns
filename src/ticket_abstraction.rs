@@ -84,6 +84,7 @@ impl From<Bug> for AbstractTicket {
             doc_type: bug.doc_type(),
             doc_text: bug.doc_text(),
             target_release: bug.target_release(),
+            subsystems: bug.subsystems(),
             docs_contact: Some(bug.docs_contact),
             summary: bug.summary,
             status: bug.status,
@@ -102,12 +103,6 @@ impl From<Bug> for AbstractTicket {
                     .map(|flag| format!("{}: {}", flag.name, flag.status))
                     .collect()
             }),
-            subsystems: bug
-                .extra
-                .get("pool")
-                .and_then(|pool| pool.get("team"))
-                .and_then(|team| team.get("name"))
-                .map_or(Vec::new(), |name| vec![name.as_str().unwrap().to_string()]),
             // A bug is public if no groups are set for it.
             public: bug.groups.is_empty(),
             groups: Some(bug.groups),
@@ -130,6 +125,7 @@ impl From<Issue> for AbstractTicket {
                 .get("customfield_12317336")
                 .and_then(|cf| cf.get("emailAddress"))
                 .map(|value| value.as_str().unwrap().to_string()),
+            subsystems: issue.subsystems(),
             id: TicketId {
                 key: issue.key,
                 tracker: tracker::Service::Jira,
@@ -151,17 +147,6 @@ impl From<Issue> for AbstractTicket {
             labels: Some(issue.fields.labels),
             // Jira does not support flags
             flags: None,
-            // TODO: Handle the errors more safely, without unwraps.
-            subsystems: issue
-                .fields
-                .extra
-                // This is the "Pool Team" field.
-                .get("customfield_12317259")
-                .and_then(|ssts| ssts.as_array())
-                .unwrap()
-                .iter()
-                .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
-                .collect(),
             // Jira does not recognize groups in the Bugzilla way. This might change.
             groups: None,
             // TODO: Implement public

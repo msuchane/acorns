@@ -8,6 +8,8 @@ pub trait ExtraFields {
     fn doc_text(&self) -> Option<String>;
     /// Extract the target release from the ticket.
     fn target_release(&self) -> Option<String>;
+    /// Extract the subsystems from the ticket.
+    fn subsystems(&self) -> Vec<String>;
 }
 
 impl ExtraFields for Bug {
@@ -30,6 +32,16 @@ impl ExtraFields for Bug {
         self.extra
             .get("cf_internal_target_release")
             .map(|itr| itr.as_str().unwrap().to_string())
+    }
+
+    fn subsystems(&self) -> Vec<String> {
+        self.extra
+            .get("pool")
+            .and_then(|pool| pool.get("team"))
+            .and_then(|team| team.get("name"))
+            // In Bugzilla, the bug always has just one subsystem. Therefore,
+            // this returns a vector with a single item, or an empty vector.
+            .map_or_else(|| Vec::new(), |name| vec![name.as_str().unwrap().to_string()])
     }
 }
 
@@ -61,5 +73,18 @@ impl ExtraFields for Issue {
             .get(0)
             // TODO: Get rid of the clone.
             .map(|version| version.name.clone())
+    }
+
+    fn subsystems(&self) -> Vec<String> {
+        self.fields
+            .extra
+            // This is the "Pool Team" field.
+            .get("customfield_12317259")
+            .and_then(|ssts| ssts.as_array())
+            .unwrap()
+            .iter()
+            // TODO: Handle the errors more safely, without unwraps.
+            .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
+            .collect()
     }
 }
