@@ -67,13 +67,10 @@ impl From<Bug> for AbstractTicket {
             product: bug.product,
             // Bugzilla has no labels
             labels: None,
-            // TODO: Implement flags as strings
-            flags: bug.flags.map(|flags| {
-                flags
-                    .into_iter()
-                    .map(|flag| format!("{}: {}", flag.name, flag.status))
-                    .collect()
-            }),
+            // Convert all flags to `name: value` strings.
+            flags: bug
+                .flags
+                .map(|flags| flags.into_iter().map(|flag| flag.to_string()).collect()),
             // A bug is public if no groups are set for it.
             public: bug.groups.is_empty(),
             groups: Some(bug.groups),
