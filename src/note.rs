@@ -27,7 +27,7 @@ impl AbstractTicket {
                 } else {
                     dc
                 }),
-            self.requires_doc_text,
+            self.doc_text_status,
             self.url
         );
         if let Some(ref doc_text) = self.doc_text {

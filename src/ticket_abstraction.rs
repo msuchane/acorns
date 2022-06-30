@@ -1,5 +1,4 @@
 use std::convert::From;
-use std::fmt;
 
 use color_eyre::eyre::{eyre, Context, Result};
 
@@ -7,7 +6,7 @@ use bugzilla_query::Bug;
 use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
-use crate::extra_fields::ExtraFields;
+use crate::extra_fields::{DocTextStatus, ExtraFields};
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
@@ -32,7 +31,7 @@ pub struct AbstractTicket {
     pub subsystems: Vec<String>,
     pub groups: Option<Vec<String>>,
     pub public: bool,
-    pub requires_doc_text: DocTextStatus,
+    pub doc_text_status: DocTextStatus,
     pub duplicates: Vec<AbstractTicket>,
 }
 
@@ -41,35 +40,6 @@ pub struct AbstractTicket {
 pub struct TicketId {
     pub key: String,
     pub tracker: tracker::Service,
-}
-
-/// The status or progress of the release note.
-#[derive(Clone, Debug)]
-pub enum DocTextStatus {
-    Approved,
-    InProgress,
-    NoDocumentation,
-}
-
-impl From<&str> for DocTextStatus {
-    fn from(string: &str) -> Self {
-        match string {
-            "+" => Self::Approved,
-            "-" => Self::NoDocumentation,
-            _ => Self::InProgress,
-        }
-    }
-}
-
-impl fmt::Display for DocTextStatus {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let display = match self {
-            Self::Approved => "RDT+",
-            Self::InProgress => "RDT?",
-            Self::NoDocumentation => "RDT-",
-        };
-        write!(f, "{}", display)
-    }
 }
 
 impl From<Bug> for AbstractTicket {
@@ -85,6 +55,7 @@ impl From<Bug> for AbstractTicket {
             doc_text: bug.doc_text(),
             target_release: bug.target_release(),
             subsystems: bug.subsystems(),
+            doc_text_status: bug.doc_text_status(),
             docs_contact: Some(bug.docs_contact),
             summary: bug.summary,
             status: bug.status,
@@ -106,8 +77,6 @@ impl From<Bug> for AbstractTicket {
             // A bug is public if no groups are set for it.
             public: bug.groups.is_empty(),
             groups: Some(bug.groups),
-            // TODO: Implement RDT
-            requires_doc_text: DocTextStatus::InProgress,
             duplicates: Vec::new(),
         }
     }
@@ -119,6 +88,7 @@ impl From<Issue> for AbstractTicket {
             doc_type: issue.doc_type(),
             doc_text: issue.doc_text(),
             target_release: issue.target_release(),
+            doc_text_status: issue.doc_text_status(),
             docs_contact: issue
                 .fields
                 .extra
@@ -151,13 +121,6 @@ impl From<Issue> for AbstractTicket {
             groups: None,
             // TODO: Implement public
             public: false,
-            // TODO: This field should be configurable
-            requires_doc_text: issue
-                .fields
-                .extra
-                .get("customfield_12317337")
-                .and_then(|rdt| rdt.as_str())
-                .map_or(DocTextStatus::InProgress, DocTextStatus::from),
             duplicates: Vec::new(),
         }
     }
