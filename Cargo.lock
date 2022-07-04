@@ -457,9 +457,9 @@ checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "jira_query"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8f7a470ec99f352ae7c221bb1af3807b9a1964573e646a428065cfdb43cdbf9"
+checksum = "9defa2ea1f1bc55e00920ae396b58489f44de00c86fb32a08b7a23ea3baadabf"
 dependencies = [
  "log",
  "restson",

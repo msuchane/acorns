@@ -8,6 +8,12 @@ use jira_query::Issue;
 use crate::config::{tracker, TicketQuery};
 use crate::extra_fields::{DocTextStatus, ExtraFields};
 
+// The number of items in a single Jira query.
+// All Jira queries are processed in chunks of this size.
+// This prevents hitting the maximum allowed request size set in the Jira instance.
+// TODO: Make this configurable.
+const JIRA_CHUNK_SIZE: u32 = 30;
+
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
 pub struct AbstractTicket {
@@ -180,6 +186,7 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
     Ok(jira_query::JiraInstance {
         host: trackers.jira.host.clone(),
         auth: jira_query::Auth::ApiKey(api_key),
+        pagination: jira_query::Pagination::ChunkSize(JIRA_CHUNK_SIZE),
     })
 }
 
@@ -230,6 +237,7 @@ pub fn from_args(
             let jira_instance = jira_query::JiraInstance {
                 host: host.to_string(),
                 auth: jira_query::Auth::ApiKey(api_key.to_string()),
+                pagination: jira_query::Pagination::Default,
             };
 
             let issue = jira_instance.issue(id)?;
