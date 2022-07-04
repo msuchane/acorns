@@ -165,6 +165,7 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
     Ok(bugzilla_query::BzInstance {
         host: trackers.bugzilla.host.clone(),
         auth: bugzilla_query::Auth::ApiKey(api_key),
+        pagination: bugzilla_query::Pagination::Unlimited,
     })
 }
 /// Prepare a client to access Jira.
@@ -238,6 +239,7 @@ pub fn from_args(
             let bz_instance = bugzilla_query::BzInstance {
                 host: host.to_string(),
                 auth: bugzilla_query::Auth::ApiKey(api_key.to_string()),
+                pagination: bugzilla_query::Pagination::Default,
             };
 
             let bug = bz_instance.bug(id)?;
