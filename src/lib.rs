@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use clap::ArgMatches;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{eyre, Context, Result};
 
 pub mod cli;
 mod config;
@@ -14,6 +14,17 @@ mod ticket_abstraction;
 
 use config::tracker::Service;
 use templating::Module;
+
+/// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
+const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
+
+/// The sub-directory inside the release notes project that contains all Cizrna configuration and other files.
+/// The name of this sub-directory is the same as the name of this program.
+const DATA_PREFIX: &str = PROGRAM_NAME;
+
+// TODO: Make the output configurable. Enable saving to a separate Git repository.
+/// The sub-directory inside the data directory that contains all generated documents.
+const GENERATED_PREFIX: &str = "generated";
 
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
@@ -62,14 +73,26 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         None => Path::new("."),
     };
     let abs_path = project_dir.canonicalize()?;
+    let data_dir = abs_path.join(DATA_PREFIX);
+    let generated_dir = data_dir.join(GENERATED_PREFIX);
 
     log::info!("Building release notes in {}", abs_path.display());
 
-    let tickets_path = abs_path.join("tickets.yaml");
-    let trackers_path = abs_path.join("trackers.yaml");
-    let templates_path = abs_path.join("templates.yaml");
+    // If not even the main configuration directory exists, exit with an error.
+    if !data_dir.is_dir() {
+        return Err(eyre!(
+            "The configuration directory is missing: {}",
+            data_dir.display()
+        ));
+    }
+
+    // Prepare to access each configuration file.
+    let tickets_path = data_dir.join("tickets.yaml");
+    let trackers_path = data_dir.join("trackers.yaml");
+    let templates_path = data_dir.join("templates.yaml");
 
     // TODO: Enable overriding the default config paths.
+    //
     // Record the paths to the configuration files.
     // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
     // let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
@@ -85,7 +108,7 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     let modules = form_modules(&tickets_path, &trackers_path, &templates_path)?;
 
     log::info!("Saving the generated release notes.");
-    write_rns(&modules, project_dir)?;
+    write_rns(&modules, &generated_dir)?;
 
     log::info!("Done.");
 
@@ -110,10 +133,7 @@ fn form_modules(
 }
 
 /// Write all the formatted RN modules as files to the output directory.
-fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
-    // By default, save the resulting document to the project directory under `generated/`.
-    // TODO: Make the output configurable.
-    let generated_dir = out_dir.join("generated");
+fn write_rns(modules: &[Module], generated_dir: &Path) -> Result<()> {
     // Make sure that the output directory exists.
     fs::create_dir_all(&generated_dir)?;
 
@@ -125,7 +145,7 @@ fn write_rns(modules: &[Module], out_dir: &Path) -> Result<()> {
         // If the currently processed module is an assembly,
         // recursively descend into the assembly and write its included modules.
         if let Some(included_modules) = &module.included_modules {
-            write_rns(included_modules, out_dir)?;
+            write_rns(included_modules, generated_dir)?;
         }
     }
 
