@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::string::ToString;
 
 use color_eyre::eyre::{eyre, Context, Result};
 
@@ -13,6 +14,9 @@ use crate::extra_fields::{DocTextStatus, ExtraFields};
 // This prevents hitting the maximum allowed request size set in the Jira instance.
 // TODO: Make this configurable.
 const JIRA_CHUNK_SIZE: u32 = 30;
+
+// Always include these fields in Bugzilla requests. We process some of their content.
+const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
@@ -168,11 +172,12 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
         std::env::var("BZ_API_KEY").context("Set the BZ_API_KEY environment variable.")?
     };
 
-    Ok(bugzilla_query::BzInstance {
-        host: trackers.bugzilla.host.clone(),
-        auth: bugzilla_query::Auth::ApiKey(api_key),
-        pagination: bugzilla_query::Pagination::Unlimited,
-    })
+    Ok(
+        bugzilla_query::BzInstance::at(trackers.bugzilla.host.clone())?
+            .authenticate(bugzilla_query::Auth::ApiKey(api_key))?
+            .paginate(bugzilla_query::Pagination::Unlimited)
+            .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect()),
+    )
 }
 /// Prepare a client to access Jira.
 fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance> {
@@ -244,11 +249,10 @@ pub fn from_args(
             Ok(issue.into())
         }
         tracker::Service::Bugzilla => {
-            let bz_instance = bugzilla_query::BzInstance {
-                host: host.to_string(),
-                auth: bugzilla_query::Auth::ApiKey(api_key.to_string()),
-                pagination: bugzilla_query::Pagination::Default,
-            };
+            let bz_instance = bugzilla_query::BzInstance::at(host.to_string())?
+                .authenticate(bugzilla_query::Auth::ApiKey(api_key.to_string()))?
+                .paginate(bugzilla_query::Pagination::Default)
+                .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect());
 
             let bug = bz_instance.bug(id)?;
             Ok(bug.into())
