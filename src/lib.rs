@@ -119,11 +119,9 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         templates,
     };
 
-    let (internal, public) = form_modules(&project)?;
+    let document = Document::new(&project)?;
 
-    log::info!("Saving the generated release notes.");
-    write_rns(&internal, &generated_dir.join("internal"))?;
-    write_rns(&public, &generated_dir.join("public"))?;
+    document.write_variants(&generated_dir)?;
 
     log::info!("Done.");
 
@@ -138,45 +136,62 @@ struct Project {
     templates: Template,
 }
 
-/// Prepare all populated and formatted modules that result from the RN project configuration.
-/// Returns a tuple with the document generated in two variants: (Internal, Public).
-fn form_modules(project: &Project) -> Result<(Vec<Module>, Vec<Module>,)> {
-    log::info!("Downloading ticket information.");
-    let abstract_tickets = ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
-
-    log::info!("Formatting the document.");
-
-    let internal = templating::format_document(
-        &abstract_tickets,
-        &project.templates,
-        &DocumentVariant::Internal,
-    );
-    let public = templating::format_document(
-        &abstract_tickets,
-        &project.templates,
-        &DocumentVariant::Public,
-    );
-
-    // TODO: Make this interface nicer than a tuple.
-    Ok((internal, public))
+/// Holds all the data generated from the project configuration before writing them to disk.
+struct Document {
+    internal: Vec<Module>,
+    public: Vec<Module>,
 }
 
-/// Write all the formatted RN modules as files to the output directory.
-fn write_rns(modules: &[Module], generated_dir: &Path) -> Result<()> {
-    // Make sure that the output directory exists.
-    fs::create_dir_all(&generated_dir)?;
+impl Document {
+    /// Prepare all populated and formatted modules that result from the RN project configuration.
+    /// Returns a tuple with the document generated in two variants: (Internal, Public).
+    fn new(project: &Project) -> Result<Self> {
+        log::info!("Downloading ticket information.");
+        let abstract_tickets =
+            ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
 
-    for module in modules {
-        let out_file = &generated_dir.join(&module.file_name);
-        log::debug!("Writing file: {}", out_file.display());
-        fs::write(out_file, &module.text).context("Failed to write generated module.")?;
+        log::info!("Formatting the document.");
 
-        // If the currently processed module is an assembly,
-        // recursively descend into the assembly and write its included modules.
-        if let Some(included_modules) = &module.included_modules {
-            write_rns(included_modules, generated_dir)?;
-        }
+        let internal = templating::format_document(
+            &abstract_tickets,
+            &project.templates,
+            &DocumentVariant::Internal,
+        );
+        let public = templating::format_document(
+            &abstract_tickets,
+            &project.templates,
+            &DocumentVariant::Public,
+        );
+
+        Ok(Self { internal, public })
     }
 
-    Ok(())
+    /// Write the formatted RN modules of a document variant as files to the output directory.
+    fn write_variant(modules: &[Module], generated_dir: &Path) -> Result<()> {
+        // Make sure that the output directory exists.
+        fs::create_dir_all(&generated_dir)?;
+
+        for module in modules {
+            let out_file = &generated_dir.join(&module.file_name);
+            log::debug!("Writing file: {}", out_file.display());
+            fs::write(out_file, &module.text).context("Failed to write generated module.")?;
+
+            // If the currently processed module is an assembly,
+            // recursively descend into the assembly and write its included modules.
+            if let Some(included_modules) = &module.included_modules {
+                Self::write_variant(included_modules, generated_dir)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Write the formatted RN modules of both document variants as files to the output directory.
+    fn write_variants(&self, generated_dir: &Path) -> Result<()> {
+        log::info!("Saving the generated release notes.");
+        Self::write_variant(&self.internal, &generated_dir.join("internal"))?;
+        Self::write_variant(&self.public, &generated_dir.join("public"))?;
+
+        Ok(())
+    }
 }
