@@ -119,10 +119,11 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         templates,
     };
 
-    let modules = form_modules(&project)?;
+    let (internal, public) = form_modules(&project)?;
 
     log::info!("Saving the generated release notes.");
-    write_rns(&modules, &generated_dir)?;
+    write_rns(&internal, &generated_dir.join("internal"))?;
+    write_rns(&public, &generated_dir.join("public"))?;
 
     log::info!("Done.");
 
@@ -138,17 +139,26 @@ struct Project {
 }
 
 /// Prepare all populated and formatted modules that result from the RN project configuration.
-fn form_modules(project: &Project) -> Result<Vec<Module>> {
+/// Returns a tuple with the document generated in two variants: (Internal, Public).
+fn form_modules(project: &Project) -> Result<(Vec<Module>, Vec<Module>,)> {
     log::info!("Downloading ticket information.");
     let abstract_tickets = ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
 
     log::info!("Formatting the document.");
-    let variant = DocumentVariant::Internal;
-    Ok(templating::format_document(
+
+    let internal = templating::format_document(
         &abstract_tickets,
         &project.templates,
-        &variant,
-    ))
+        &DocumentVariant::Internal,
+    );
+    let public = templating::format_document(
+        &abstract_tickets,
+        &project.templates,
+        &DocumentVariant::Public,
+    );
+
+    // TODO: Make this interface nicer than a tuple.
+    Ok((internal, public))
 }
 
 /// Write all the formatted RN modules as files to the output directory.
