@@ -13,7 +13,10 @@ mod templating;
 mod ticket_abstraction;
 
 use config::tracker::Service;
-use templating::Module;
+use templating::{DocumentVariant, Module, Template};
+
+use crate::config::tracker::Config;
+use crate::config::TicketQuery;
 
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
@@ -59,7 +62,8 @@ fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
         ticket_args.value_of("host").unwrap(),
         ticket_args.value_of("api_key").unwrap(),
     )?;
-    println!("{}", ticket.release_note());
+    let variant = DocumentVariant::Internal;
+    println!("{}", ticket.release_note(&variant));
 
     Ok(())
 }
@@ -105,7 +109,17 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         templates_path.display()
     );
 
-    let modules = form_modules(&tickets_path, &trackers_path, &templates_path)?;
+    // Parse the configuration files specified on the command line.
+    let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
+    let templates = templating::parse(&templates_path)?;
+
+    let project = Project {
+        tickets,
+        trackers,
+        templates,
+    };
+
+    let modules = form_modules(&project)?;
 
     log::info!("Saving the generated release notes.");
     write_rns(&modules, &generated_dir)?;
@@ -115,21 +129,26 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-/// Prepare all populated and formatted modules that result from the RN project configuration.
-fn form_modules(
-    tickets_path: &Path,
-    trackers_path: &Path,
-    templates_path: &Path,
-) -> Result<Vec<Module>> {
-    // Parse the configuration files specified on the command line.
-    let (tickets, trackers) = config::parse(tickets_path, trackers_path)?;
-    let templates = templating::parse(templates_path)?;
+// TODO: Move this to a more appropriate place, likely the config module.
+/// Parsed input metadata that represent the configuration of a release notes project
+struct Project {
+    tickets: Vec<TicketQuery>,
+    trackers: Config,
+    templates: Template,
+}
 
+/// Prepare all populated and formatted modules that result from the RN project configuration.
+fn form_modules(project: &Project) -> Result<Vec<Module>> {
     log::info!("Downloading ticket information.");
-    let abstract_tickets = ticket_abstraction::from_queries(&tickets, &trackers)?;
+    let abstract_tickets = ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
 
     log::info!("Formatting the document.");
-    Ok(templating::format_document(&abstract_tickets, &templates))
+    let variant = DocumentVariant::Internal;
+    Ok(templating::format_document(
+        &abstract_tickets,
+        &project.templates,
+        &variant,
+    ))
 }
 
 /// Write all the formatted RN modules as files to the output directory.

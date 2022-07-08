@@ -8,7 +8,7 @@ use bugzilla_query::Bug;
 use jira_query::Issue;
 
 /// The status or progress of the release note.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DocTextStatus {
     Approved,
     InProgress,

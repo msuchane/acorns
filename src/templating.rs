@@ -4,7 +4,7 @@ use std::path::Path;
 use color_eyre::eyre::{Context, Result};
 use serde::Deserialize;
 
-use crate::ticket_abstraction::AbstractTicket;
+use crate::{extra_fields::DocTextStatus, ticket_abstraction::AbstractTicket};
 
 /// This struct models the template configuration file.
 /// It includes both `chapters` and `sections` because this is a way
@@ -39,6 +39,16 @@ pub struct Filter {
     pub component: Option<Vec<String>>,
 }
 
+/// The variant of the generated, output document:
+///
+/// * `Public`: The external variant intended for publishing teh release notes.
+/// * `Internal`: The debugging variant intended for preparing the release notes.
+#[derive(PartialEq)]
+pub enum DocumentVariant {
+    Public,
+    Internal,
+}
+
 /// The representation of a module, before being finally rendered.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Module {
@@ -57,10 +67,22 @@ impl Module {
 impl Section {
     /// Convert the body of the section into AsciiDoc text that will serve
     /// as the body of the resulting module.
-    fn render(&self, id: &str, tickets: &[AbstractTicket]) -> String {
+    fn render(&self, id: &str, tickets: &[AbstractTicket], variant: &DocumentVariant) -> String {
         let heading = format!("= {}", &self.title);
-        let matching_tickets = tickets.iter().filter(|t| self.matches_ticket(t));
-        let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note()).collect();
+
+        // Select only those tickets that belong in the Internal or Public variant.
+        let variant_tickets: Vec<&AbstractTicket> = match variant {
+            // The internal variant accepts all tickets.
+            DocumentVariant::Internal => tickets.iter().collect(),
+            // The public variant accepts only finished and approved tickets.
+            DocumentVariant::Public => tickets
+                .iter()
+                .filter(|t| t.doc_text_status == DocTextStatus::Approved)
+                .collect(),
+        };
+
+        let matching_tickets = variant_tickets.iter().filter(|t| self.matches_ticket(t));
+        let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note(variant)).collect();
         format!(
             "[id=\"{}\"]\n\
             {}\n\
@@ -74,7 +96,12 @@ impl Section {
 
     /// Convert the section into either a leaf module, or into an assembly and all
     /// the modules that it includes, recursively.
-    fn modules(&self, tickets: &[AbstractTicket], prefix: Option<&str>) -> Module {
+    fn modules(
+        &self,
+        tickets: &[AbstractTicket],
+        prefix: Option<&str>,
+        variant: &DocumentVariant,
+    ) -> Module {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
             .filter(|&t| self.matches_ticket(t))
@@ -93,7 +120,7 @@ impl Section {
             let file_name = format!("assembly_{}.adoc", module_id);
             let included_modules: Vec<Module> = sections
                 .iter()
-                .map(|s| s.modules(&matching_tickets, Some(&module_id)))
+                .map(|s| s.modules(&matching_tickets, Some(&module_id), variant))
                 .collect();
             let include_statements: Vec<String> = included_modules
                 .iter()
@@ -117,7 +144,7 @@ impl Section {
         } else {
             Module {
                 file_name: format!("ref_{}.adoc", module_id),
-                text: self.render(&module_id, tickets),
+                text: self.render(&module_id, tickets, variant),
                 included_modules: None,
             }
         }
@@ -184,11 +211,15 @@ pub fn parse(template_file: &Path) -> Result<Template> {
 }
 
 /// Form all modules that are recursively defined in the template configuration.
-pub fn format_document(tickets: &[AbstractTicket], template: &Template) -> Vec<Module> {
+pub fn format_document(
+    tickets: &[AbstractTicket],
+    template: &Template,
+    variant: &DocumentVariant,
+) -> Vec<Module> {
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .map(|section| section.modules(tickets, None))
+        .map(|section| section.modules(tickets, None, variant))
         .collect();
     log::debug!("Chapters: {:#?}", chapters);
 

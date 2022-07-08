@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::config::tracker::Service;
+use crate::templating::DocumentVariant;
 use crate::ticket_abstraction::AbstractTicket;
 
 impl fmt::Display for Service {
@@ -15,21 +16,32 @@ impl fmt::Display for Service {
 
 impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
-    pub fn release_note(&self) -> String {
+    pub fn release_note(&self, variant: &DocumentVariant) -> String {
         let docs_contact_placeholder = "No docs contact";
-        let empty = format!(
-            ".🚧 {} | {} | {}\n\n**No release note.** link:{}[]",
-            self.summary,
-            self.docs_contact
-                .as_ref()
-                .map_or(docs_contact_placeholder, |dc| if dc.trim() == "" {
+        let docs_contact = self
+            .docs_contact
+            .as_ref()
+            .map_or(docs_contact_placeholder, |dc| {
+                if dc.trim() == "" {
                     docs_contact_placeholder
                 } else {
                     dc
-                }),
-            self.doc_text_status,
-            self.url
+                }
+            });
+
+        // This debug information line appears at empty release notes
+        // and everywhere in the Internal document variant.
+        let debug_info = format!(
+            "| {} | {} | link:{}[]",
+            docs_contact, self.doc_text_status, self.url
         );
+
+        // A placeholder for release notes with an empty doc text.
+        let empty = format!(
+            ".🚧 {} {} \n\n**No release note.**",
+            self.summary, debug_info,
+        );
+
         if let Some(ref doc_text) = self.doc_text {
             if doc_text.trim() == "" {
                 empty
@@ -37,7 +49,19 @@ impl AbstractTicket {
                 // If the doc text contains DOS line endings (`\r`), remove them
                 // and keep just UNIX endings (`\n`).
                 let doc_text_unix = doc_text.replace('\r', "");
-                format!("{}\n\n({})", doc_text_unix, self.format_signature())
+
+                // This is the resulting release note:
+                format!(
+                    "{}\n\n({}) {}",
+                    doc_text_unix,
+                    self.format_signature(),
+                    // In the internal variant, add the debug information line.
+                    if *variant == DocumentVariant::Internal {
+                        debug_info
+                    } else {
+                        String::new()
+                    },
+                )
             }
         } else {
             empty
