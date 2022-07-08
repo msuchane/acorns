@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use clap::ArgMatches;
-use color_eyre::eyre::{eyre, Context, Result};
+use color_eyre::eyre::{bail, Context, Result};
 
 pub mod cli;
 mod config;
@@ -80,10 +80,10 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 
     // If not even the main configuration directory exists, exit with an error.
     if !data_dir.is_dir() {
-        return Err(eyre!(
+        bail!(
             "The configuration directory is missing: {}",
             data_dir.display()
-        ));
+        );
     }
 
     // Prepare to access each configuration file.
