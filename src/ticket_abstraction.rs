@@ -188,11 +188,9 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
         std::env::var("JIRA_API_KEY").context("Set the JIRA_API_KEY environment variable.")?
     };
 
-    Ok(jira_query::JiraInstance {
-        host: trackers.jira.host.clone(),
-        auth: jira_query::Auth::ApiKey(api_key),
-        pagination: jira_query::Pagination::ChunkSize(JIRA_CHUNK_SIZE),
-    })
+    Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?
+        .authenticate(jira_query::Auth::ApiKey(api_key))?
+        .paginate(jira_query::Pagination::ChunkSize(JIRA_CHUNK_SIZE)))
 }
 
 /// Process the configured ticket queries into abstract tickets,
@@ -239,11 +237,8 @@ pub fn from_args(
 ) -> Result<AbstractTicket> {
     match service {
         tracker::Service::Jira => {
-            let jira_instance = jira_query::JiraInstance {
-                host: host.to_string(),
-                auth: jira_query::Auth::ApiKey(api_key.to_string()),
-                pagination: jira_query::Pagination::Default,
-            };
+            let jira_instance = jira_query::JiraInstance::at(host.to_string())?
+                .authenticate(jira_query::Auth::ApiKey(api_key.to_string()))?;
 
             let issue = jira_instance.issue(id)?;
             Ok(issue.into())
@@ -251,7 +246,6 @@ pub fn from_args(
         tracker::Service::Bugzilla => {
             let bz_instance = bugzilla_query::BzInstance::at(host.to_string())?
                 .authenticate(bugzilla_query::Auth::ApiKey(api_key.to_string()))?
-                .paginate(bugzilla_query::Pagination::Default)
                 .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect());
 
             let bug = bz_instance.bug(id)?;
