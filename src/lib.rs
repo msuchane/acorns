@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use clap::ArgMatches;
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{Context, Result};
 
 pub mod cli;
 mod config;
@@ -13,21 +13,9 @@ mod templating;
 mod ticket_abstraction;
 
 use config::tracker::Service;
-use templating::{DocumentVariant, Module, Template};
+use templating::{DocumentVariant, Module};
 
-use crate::config::tracker::Config;
-use crate::config::TicketQuery;
-
-/// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
-const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
-
-/// The sub-directory inside the release notes project that contains all Cizrna configuration and other files.
-/// The name of this sub-directory is the same as the name of this program.
-const DATA_PREFIX: &str = PROGRAM_NAME;
-
-// TODO: Make the output configurable. Enable saving to a separate Git repository.
-/// The sub-directory inside the data directory that contains all generated documents.
-const GENERATED_PREFIX: &str = "generated";
+use crate::config::Project;
 
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
@@ -76,64 +64,18 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
         Some(dir) => Path::new(dir),
         None => Path::new("."),
     };
-    let abs_path = project_dir.canonicalize()?;
-    let data_dir = abs_path.join(DATA_PREFIX);
-    let generated_dir = data_dir.join(GENERATED_PREFIX);
 
-    log::info!("Building release notes in {}", abs_path.display());
+    let project = Project::new(project_dir)?;
 
-    // If not even the main configuration directory exists, exit with an error.
-    if !data_dir.is_dir() {
-        bail!(
-            "The configuration directory is missing: {}",
-            data_dir.display()
-        );
-    }
-
-    // Prepare to access each configuration file.
-    let tickets_path = data_dir.join("tickets.yaml");
-    let trackers_path = data_dir.join("trackers.yaml");
-    let templates_path = data_dir.join("templates.yaml");
-
-    // TODO: Enable overriding the default config paths.
-    //
-    // Record the paths to the configuration files.
-    // The `value_of_os` method handles cases where a file name is nto valid UTF-8.
-    // let tickets_path = Path::new(cli_arguments.value_of_os("tickets").unwrap());
-    // let trackers_path = Path::new(cli_arguments.value_of_os("trackers").unwrap());
-
-    log::debug!(
-        "Configuration files:\n* {}\n* {}\n* {}",
-        tickets_path.display(),
-        trackers_path.display(),
-        templates_path.display()
-    );
-
-    // Parse the configuration files specified on the command line.
-    let (tickets, trackers) = config::parse(&tickets_path, &trackers_path)?;
-    let templates = templating::parse(&templates_path)?;
-
-    let project = Project {
-        tickets,
-        trackers,
-        templates,
-    };
+    log::info!("Building release notes in {}", &project.base_dir.display());
 
     let document = Document::new(&project)?;
 
-    document.write_variants(&generated_dir)?;
+    document.write_variants(&project.generated_dir)?;
 
     log::info!("Done.");
 
     Ok(())
-}
-
-// TODO: Move this to a more appropriate place, likely the config module.
-/// Parsed input metadata that represent the configuration of a release notes project
-struct Project {
-    tickets: Vec<TicketQuery>,
-    trackers: Config,
-    templates: Template,
 }
 
 /// Holds all the data generated from the project configuration before writing them to disk.

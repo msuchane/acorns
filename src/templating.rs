@@ -1,43 +1,7 @@
-use std::fs;
-use std::path::Path;
+// use color_eyre::eyre::{Context, Result};
 
-use color_eyre::eyre::{Context, Result};
-use serde::Deserialize;
-
+use crate::config::{Section, Template};
 use crate::{extra_fields::DocTextStatus, ticket_abstraction::AbstractTicket};
-
-/// This struct models the template configuration file.
-/// It includes both `chapters` and `sections` because this is a way
-/// in YaML to create reusable section definitions that can then
-/// appear several times in different places. They have to be defined
-/// on the top level, outside the actual chapters.
-#[derive(Debug, PartialEq, Deserialize)]
-pub struct Template {
-    pub chapters: Vec<Section>,
-    pub sections: Option<Vec<Section>>,
-}
-
-/// This struct covers the necessary properties of a section, which can either
-/// turn into a module if it's a leaf, or into an assembly if it includes
-/// more sections.
-///
-/// The `filter` field narrows down the tickets that can appear in this module
-/// or in the modules that are included in this assembly.
-#[derive(Debug, PartialEq, Deserialize)]
-pub struct Section {
-    pub title: String,
-    pub filter: Filter,
-    pub sections: Option<Vec<Section>>,
-}
-
-/// The configuration of a filter, which narrows down the tickets
-/// that can appear in the section that the filter belongs to.
-#[derive(Debug, PartialEq, Deserialize)]
-pub struct Filter {
-    pub doc_type: Option<Vec<String>>,
-    pub subsystem: Option<Vec<String>>,
-    pub component: Option<Vec<String>>,
-}
 
 /// The variant of the generated, output document:
 ///
@@ -50,7 +14,7 @@ pub enum DocumentVariant {
 }
 
 /// The representation of a module, before being finally rendered.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Module {
     pub file_name: String,
     pub text: String,
@@ -199,15 +163,6 @@ impl Section {
 
         matches_doc_type && matches_subsystem && matches_component
     }
-}
-
-/// Parse the template configuration files into template structs, with chapter and section definitions.
-pub fn parse(template_file: &Path) -> Result<Template> {
-    let text = fs::read_to_string(template_file).context("Cannot read the template file.")?;
-    let templates: Template =
-        serde_yaml::from_str(&text).context("Cannot parse the template file.")?;
-    log::debug!("{:#?}", templates);
-    Ok(templates)
 }
 
 /// Form all modules that are recursively defined in the template configuration.
