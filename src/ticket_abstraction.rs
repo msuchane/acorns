@@ -193,6 +193,10 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
         .paginate(jira_query::Pagination::ChunkSize(JIRA_CHUNK_SIZE)))
 }
 
+// TODO: Consider adding progress bars here. Investigate these libraries:
+// * https://crates.io/crates/progressing
+// * https://crates.io/crates/linya
+// * https://crates.io/crates/indicatif
 /// Process the configured ticket queries into abstract tickets,
 /// sorted in no particular order, which depends on the response from the issue tracker.
 fn unsorted_tickets(
