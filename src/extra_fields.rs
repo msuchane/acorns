@@ -7,6 +7,8 @@ use serde_json::value::Value;
 use bugzilla_query::Bug;
 use jira_query::Issue;
 
+use crate::config::tracker;
+
 /// The status or progress of the release note.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DocTextStatus {
@@ -38,15 +40,15 @@ impl fmt::Display for DocTextStatus {
 
 pub trait ExtraFields {
     /// Extract the doc type from the ticket.
-    fn doc_type(&self) -> Option<String>;
+    fn doc_type(&self, config: &tracker::Fields) -> Option<String>;
     /// Extract the doc text from the ticket.
-    fn doc_text(&self) -> Option<String>;
+    fn doc_text(&self, config: &tracker::Fields) -> Option<String>;
     /// Extract the target release from the ticket.
-    fn target_release(&self) -> Option<String>;
+    fn target_release(&self, config: &tracker::Fields) -> Option<String>;
     /// Extract the subsystems from the ticket.
-    fn subsystems(&self) -> Vec<String>;
+    fn subsystems(&self, config: &tracker::Fields) -> Vec<String>;
     /// Extract the doc text status ("requires doc text") from the ticket.
-    fn doc_text_status(&self) -> DocTextStatus;
+    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus;
 }
 
 #[derive(Deserialize, Debug)]
@@ -63,28 +65,28 @@ impl ExtraFields for Bug {
     // TODO: The following two fields should be configurable by tracker.
     // Also, handle the errors properly. For now, we're just assuming that the fields
     // are strings, and panicking if not.
-    fn doc_type(&self) -> Option<String> {
+    fn doc_type(&self, config: &tracker::Fields) -> Option<String> {
         self.extra
             .get("cf_doc_type")
             .and_then(Value::as_str)
             .map(ToString::to_string)
     }
 
-    fn doc_text(&self) -> Option<String> {
+    fn doc_text(&self, config: &tracker::Fields) -> Option<String> {
         self.extra
             .get("cf_release_notes")
             .and_then(Value::as_str)
             .map(ToString::to_string)
     }
 
-    fn target_release(&self) -> Option<String> {
+    fn target_release(&self, config: &tracker::Fields) -> Option<String> {
         self.extra
             .get("cf_internal_target_release")
             .and_then(Value::as_str)
             .map(ToString::to_string)
     }
 
-    fn subsystems(&self) -> Vec<String> {
+    fn subsystems(&self, config: &tracker::Fields) -> Vec<String> {
         let pool_field = self.extra.get("pool").expect("Bug has no pool field.");
         let pool: BzPool = serde_json::from_value(pool_field.clone())
             .expect("Pool field has an unexpected structure.");
@@ -94,7 +96,7 @@ impl ExtraFields for Bug {
         vec![pool.team.name]
     }
 
-    fn doc_text_status(&self) -> DocTextStatus {
+    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
         let rdt = self.get_flag("requires_doc_text");
 
         if let Some(rdt) = rdt {
@@ -114,7 +116,7 @@ struct JiraDocType {
 
 impl ExtraFields for Issue {
     // TODO: The following two fields should be configurable by tracker.
-    fn doc_type(&self) -> Option<String> {
+    fn doc_type(&self, config: &tracker::Fields) -> Option<String> {
         let doc_type_field = self.fields.extra.get("customfield_12317310")?;
         let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
             // TODO: Consolidate the previous Option and this Result properly.
@@ -123,14 +125,14 @@ impl ExtraFields for Issue {
         Some(doc_type.value)
     }
 
-    fn doc_text(&self) -> Option<String> {
+    fn doc_text(&self, config: &tracker::Fields) -> Option<String> {
         self.fields
             .extra
             .get("customfield_12317322")
             .map(|value| value.as_str().unwrap().to_string())
     }
 
-    fn target_release(&self) -> Option<String> {
+    fn target_release(&self, config: &tracker::Fields) -> Option<String> {
         self.fields
             .fix_versions
             // TODO: Is the first fix version in the list the one that we want?
@@ -139,7 +141,7 @@ impl ExtraFields for Issue {
             .map(|version| version.name.clone())
     }
 
-    fn subsystems(&self) -> Vec<String> {
+    fn subsystems(&self, config: &tracker::Fields) -> Vec<String> {
         self.fields
             .extra
             // This is the "Pool Team" field.
@@ -152,7 +154,7 @@ impl ExtraFields for Issue {
             .collect()
     }
 
-    fn doc_text_status(&self) -> DocTextStatus {
+    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
         let rdt_field = self
             .fields
             .extra

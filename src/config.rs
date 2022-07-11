@@ -32,12 +32,23 @@ pub mod tracker {
         Jira,
     }
 
+    #[derive(Debug, PartialEq, Deserialize)]
+    pub struct Fields {
+        pub doc_type: String,
+        pub doc_text: String,
+        pub doc_text_status: String,
+        pub docs_contact: String,
+        pub target_release: String,
+        pub subsystems: String,
+    }
+
     /// The particular instance of an issue tracker,
     /// with a host URL and access credentials.
     #[derive(Debug, PartialEq, Deserialize)]
     pub struct Instance {
         pub host: String,
         pub api_key: Option<String>,
+        pub fields: Fields,
     }
 
     /// The issue tracker instances configured in the current release notes project.

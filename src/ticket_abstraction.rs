@@ -43,76 +43,75 @@ pub struct TicketId {
     pub tracker: tracker::Service,
 }
 
-impl From<Bug> for AbstractTicket {
-    fn from(bug: Bug) -> Self {
+pub trait IntoAbstract {
+    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket;
+}
+
+impl IntoAbstract for Bug {
+    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket {
         AbstractTicket {
             id: TicketId {
-                key: bug.id.to_string(),
+                key: self.id.to_string(),
                 tracker: tracker::Service::Bugzilla,
             },
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: bug.doc_type(),
-            doc_text: bug.doc_text(),
-            target_release: bug.target_release(),
-            subsystems: bug.subsystems(),
-            doc_text_status: bug.doc_text_status(),
-            docs_contact: Some(bug.docs_contact),
-            summary: bug.summary,
-            status: bug.status,
-            is_open: bug.is_open,
-            priority: bug.priority,
-            url: bug.url,
-            assignee: bug.assigned_to,
-            components: bug.component,
-            product: bug.product,
+            doc_type: self.doc_type(config),
+            doc_text: self.doc_text(config),
+            target_release: self.target_release(config),
+            subsystems: self.subsystems(config),
+            doc_text_status: self.doc_text_status(config),
+            docs_contact: Some(self.docs_contact),
+            summary: self.summary,
+            status: self.status,
+            is_open: self.is_open,
+            priority: self.priority,
+            url: self.url,
+            assignee: self.assigned_to,
+            components: self.component,
+            product: self.product,
             // Bugzilla has no labels
             labels: None,
             // Convert all flags to `name: value` strings.
-            flags: bug
+            flags: self
                 .flags
                 .map(|flags| flags.into_iter().map(|flag| flag.to_string()).collect()),
             // A bug is public if no groups are set for it.
-            public: bug.groups.is_empty(),
-            groups: Some(bug.groups),
+            public: self.groups.is_empty(),
+            groups: Some(self.groups),
             duplicates: Vec::new(),
         }
     }
 }
 
-impl From<Issue> for AbstractTicket {
-    fn from(issue: Issue) -> Self {
+impl IntoAbstract for Issue {
+    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket {
         AbstractTicket {
-            doc_type: issue.doc_type(),
-            doc_text: issue.doc_text(),
-            target_release: issue.target_release(),
-            doc_text_status: issue.doc_text_status(),
-            docs_contact: issue
+            doc_type: self.doc_type(&config),
+            doc_text: self.doc_text(&config),
+            target_release: self.target_release(&config),
+            doc_text_status: self.doc_text_status(&config),
+            docs_contact: self
                 .fields
                 .extra
                 .get("customfield_12317336")
                 .and_then(|cf| cf.get("emailAddress"))
                 .map(|value| value.as_str().unwrap().to_string()),
-            subsystems: issue.subsystems(),
+            subsystems: self.subsystems(&config),
             id: TicketId {
-                key: issue.key,
+                key: self.key,
                 tracker: tracker::Service::Jira,
             },
-            summary: issue.fields.summary,
-            description: issue.fields.description,
-            is_open: &issue.fields.status.name != "Closed",
-            status: issue.fields.status.name,
-            priority: issue.fields.priority.name,
-            url: issue.self_link,
-            assignee: issue.fields.assignee.name,
-            components: issue
-                .fields
-                .components
-                .into_iter()
-                .map(|c| c.name)
-                .collect(),
-            product: issue.fields.project.name,
-            labels: Some(issue.fields.labels),
+            summary: self.fields.summary,
+            description: self.fields.description,
+            is_open: &self.fields.status.name != "Closed",
+            status: self.fields.status.name,
+            priority: self.fields.priority.name,
+            url: self.self_link,
+            assignee: self.fields.assignee.name,
+            components: self.fields.components.into_iter().map(|c| c.name).collect(),
+            product: self.fields.project.name,
+            labels: Some(self.fields.labels),
             // Jira does not support flags
             flags: None,
             // Jira does not recognize groups in the Bugzilla way. This might change.

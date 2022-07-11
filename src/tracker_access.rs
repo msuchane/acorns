@@ -6,7 +6,7 @@ use color_eyre::eyre::{Context, Result};
 use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
-use crate::ticket_abstraction::AbstractTicket;
+use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
 // The number of items in a single Jira query.
 // All Jira queries are processed in chunks of this size.
@@ -69,8 +69,12 @@ pub async fn unsorted_tickets(
     let (bugs, issues) = tokio::join!(bugs, issues);
 
     // Convert bugs and issues into abstract tickets:
-    let tickets_from_bugzilla = bugs?.into_iter().map(AbstractTicket::from);
-    let tickets_from_jira = issues?.into_iter().map(AbstractTicket::from);
+    let tickets_from_bugzilla = bugs?
+        .into_iter()
+        .map(|b| b.into_abstract(&trackers.bugzilla.fields));
+    let tickets_from_jira = issues?
+        .into_iter()
+        .map(|i| i.into_abstract(&trackers.jira.fields));
 
     Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
 }
@@ -129,13 +133,16 @@ pub async fn ticket(
     host: &str,
     api_key: &str,
 ) -> Result<AbstractTicket> {
+    // Temporarily disable this function while converting to configurable fields.
+    todo!()
+    /*
     match service {
         tracker::Service::Jira => {
             let jira_instance = jira_query::JiraInstance::at(host.to_string())?
                 .authenticate(jira_query::Auth::ApiKey(api_key.to_string()))?;
 
             let issue = jira_instance.issue(id).await?;
-            Ok(issue.into())
+            Ok(issue.into_abstract())
         }
         tracker::Service::Bugzilla => {
             let bz_instance = bugzilla_query::BzInstance::at(host.to_string())?
@@ -143,7 +150,8 @@ pub async fn ticket(
                 .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect());
 
             let bug = bz_instance.bug(id).await?;
-            Ok(bug.into())
+            Ok(bug.into_abstract())
         }
     }
+    */
 }
