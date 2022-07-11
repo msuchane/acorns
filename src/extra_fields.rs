@@ -1,6 +1,10 @@
 use std::fmt;
 use std::string::ToString;
 
+use color_eyre::{
+    eyre::{eyre, Context},
+    Result,
+};
 use serde::Deserialize;
 use serde_json::value::Value;
 
@@ -40,17 +44,17 @@ impl fmt::Display for DocTextStatus {
 
 pub trait ExtraFields {
     /// Extract the doc type from the ticket.
-    fn doc_type(&self, config: &tracker::Fields) -> Option<String>;
+    fn doc_type(&self, config: &tracker::Fields) -> Result<String>;
     /// Extract the doc text from the ticket.
-    fn doc_text(&self, config: &tracker::Fields) -> Option<String>;
+    fn doc_text(&self, config: &tracker::Fields) -> Result<String>;
     /// Extract the target release from the ticket.
-    fn target_release(&self, config: &tracker::Fields) -> Option<String>;
+    fn target_release(&self, config: &tracker::Fields) -> Result<String>;
     /// Extract the subsystems from the ticket.
     fn subsystems(&self, config: &tracker::Fields) -> Vec<String>;
     /// Extract the doc text status ("requires doc text") from the ticket.
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus;
     /// Extract the docs contact from the ticket.
-    fn docs_contact(&self, config: &tracker::Fields) -> Option<String>;
+    fn docs_contact(&self, config: &tracker::Fields) -> Result<String>;
 }
 
 #[derive(Deserialize, Debug)]
@@ -63,32 +67,35 @@ struct BzTeam {
     name: String,
 }
 
+/// A helper function to handle and report errors when extracting a string value
+/// from a custom Bugzilla or Jira field.
+///
+/// Returns an error is the field is missing or if it is not a string.
+fn extract_field(extra: &Value, field: &str) -> Result<String> {
+    extra
+        .get(field)
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
+        .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
+}
+
 impl ExtraFields for Bug {
     // TODO: The following two fields should be configurable by tracker.
     // Also, handle the errors properly. For now, we're just assuming that the fields
     // are strings, and panicking if not.
-    fn doc_type(&self, config: &tracker::Fields) -> Option<String> {
+    fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
-        self.extra
-            .get(field)
-            .and_then(Value::as_str)
-            .map(ToString::to_string)
+        extract_field(&self.extra, field)
     }
 
-    fn doc_text(&self, config: &tracker::Fields) -> Option<String> {
+    fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        self.extra
-            .get(field)
-            .and_then(Value::as_str)
-            .map(ToString::to_string)
+        extract_field(&self.extra, field)
     }
 
-    fn target_release(&self, config: &tracker::Fields) -> Option<String> {
+    fn target_release(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.target_release;
-        self.extra
-            .get(field)
-            .and_then(Value::as_str)
-            .map(ToString::to_string)
+        extract_field(&self.extra, field)
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Vec<String> {
@@ -115,10 +122,10 @@ impl ExtraFields for Bug {
         }
     }
 
-    fn docs_contact(&self, _config: &tracker::Fields) -> Option<String> {
+    fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
         // TODO: There's probably a way to avoid this clone.
         // Besides, this function exists only to satisfy the trait. It's very short and simple.
-        Some(self.docs_contact.clone())
+        Ok(self.docs_contact.clone())
     }
 }
 
@@ -128,30 +135,31 @@ struct JiraDocType {
 }
 
 impl ExtraFields for Issue {
-    // TODO: The following two fields should be configurable by tracker.
-    fn doc_type(&self, config: &tracker::Fields) -> Option<String> {
+    fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
-        let doc_type_field = self.fields.extra.get(field)?;
-        let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
-            // TODO: Consolidate the previous Option and this Result properly.
-            .expect("Doc type field has an unexpected structure.");
-
-        Some(doc_type.value)
-    }
-
-    fn doc_text(&self, config: &tracker::Fields) -> Option<String> {
-        let field = &config.doc_text;
-        self.fields
+        let doc_type_field = self
+            .fields
             .extra
             .get(field)
-            .map(|value| value.as_str().unwrap().to_string())
+            .ok_or_else(|| eyre!("Field {} is missing.", field))?;
+        let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
+            .context("Jira doc type field has an unexpected structure.")?;
+
+        Ok(doc_type.value)
     }
 
-    fn target_release(&self, _config: &tracker::Fields) -> Option<String> {
+    fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
+        let field = &config.doc_text;
+        extract_field(&self.extra, field)
+    }
+
+    fn target_release(&self, _config: &tracker::Fields) -> Result<String> {
         self.fields
             .fix_versions
             // TODO: Is the first fix version in the list the one that we want?
             .get(0)
+            // This error is not serious. Recover from it in the higher layers.
+            .ok_or_else(|| eyre!("Issue {} has no fix version.", &self.key))
             // TODO: Get rid of the clone.
             .map(|version| version.name.clone())
     }
@@ -184,12 +192,14 @@ impl ExtraFields for Issue {
             .map_or(DocTextStatus::NoDocumentation, DocTextStatus::from)
     }
 
-    fn docs_contact(&self, config: &tracker::Fields) -> Option<String> {
+    fn docs_contact(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.docs_contact;
         self.fields
             .extra
             .get(field)
             .and_then(|cf| cf.get("emailAddress"))
-            .map(|value| value.as_str().unwrap().to_string())
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
+            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
     }
 }

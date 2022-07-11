@@ -18,16 +18,13 @@ impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     pub fn release_note(&self, variant: &DocumentVariant) -> String {
         let docs_contact_placeholder = "No docs contact";
-        let docs_contact = self
-            .docs_contact
-            .as_ref()
-            .map_or(docs_contact_placeholder, |dc| {
-                if dc.trim() == "" {
-                    docs_contact_placeholder
-                } else {
-                    dc
-                }
-            });
+
+        // TODO: Handle the empty docs contact earlier as an error.
+        let docs_contact = if self.docs_contact.is_empty() {
+            docs_contact_placeholder
+        } else {
+            &self.docs_contact
+        };
 
         // This debug information line appears at empty release notes
         // and everywhere in the Internal document variant.
@@ -42,29 +39,26 @@ impl AbstractTicket {
             self.summary, debug_info,
         );
 
-        if let Some(ref doc_text) = self.doc_text {
-            if doc_text.trim() == "" {
-                empty
-            } else {
-                // If the doc text contains DOS line endings (`\r`), remove them
-                // and keep just UNIX endings (`\n`).
-                let doc_text_unix = doc_text.replace('\r', "");
-
-                // This is the resulting release note:
-                format!(
-                    "{}\n\n({}) {}",
-                    doc_text_unix,
-                    self.format_signature(),
-                    // In the internal variant, add the debug information line.
-                    if *variant == DocumentVariant::Internal {
-                        debug_info
-                    } else {
-                        String::new()
-                    },
-                )
-            }
-        } else {
+        // TODO: Handle the empty doc text earlier as an error.
+        if self.doc_text.is_empty() {
             empty
+        } else {
+            // If the doc text contains DOS line endings (`\r`), remove them
+            // and keep just UNIX endings (`\n`).
+            let doc_text_unix = self.doc_text.replace('\r', "");
+
+            // This is the resulting release note:
+            format!(
+                "{}\n\n({}) {}",
+                doc_text_unix,
+                self.format_signature(),
+                // In the internal variant, add the debug information line.
+                if *variant == DocumentVariant::Internal {
+                    debug_info
+                } else {
+                    String::new()
+                },
+            )
         }
     }
 

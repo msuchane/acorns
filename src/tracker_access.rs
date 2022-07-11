@@ -67,15 +67,20 @@ pub async fn unsorted_tickets(
     // Wait until both downloads have finished:
     let (bugs, issues) = tokio::join!(bugs, issues);
 
-    // Convert bugs and issues into abstract tickets:
-    let tickets_from_bugzilla = bugs?
-        .into_iter()
-        .map(|b| b.into_abstract(&trackers.bugzilla.fields));
-    let tickets_from_jira = issues?
-        .into_iter()
-        .map(|i| i.into_abstract(&trackers.jira.fields));
+    let mut results = Vec::new();
 
-    Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
+    // Convert bugs and issues into abstract tickets.
+    // Using an imperative style so that each `into_abstract` call can return an error.
+    for bug in bugs? {
+        let ticket = bug.into_abstract(&trackers.bugzilla.fields)?;
+        results.push(ticket);
+    }
+    for issue in issues? {
+        let ticket = issue.into_abstract(&trackers.jira.fields)?;
+        results.push(ticket);
+    }
+
+    Ok(results)
 }
 
 /// Download all configured bugs from Bugzilla.

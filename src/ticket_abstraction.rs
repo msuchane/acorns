@@ -15,9 +15,9 @@ pub struct AbstractTicket {
     pub summary: String,
     // TODO: Find out how to get the bug description from comment#0 with Bugzilla
     pub description: Option<String>,
-    pub doc_type: Option<String>,
-    pub doc_text: Option<String>,
-    pub docs_contact: Option<String>,
+    pub doc_type: String,
+    pub doc_text: String,
+    pub docs_contact: String,
     pub status: String,
     pub is_open: bool,
     pub priority: String,
@@ -45,24 +45,24 @@ pub struct TicketId {
 pub trait IntoAbstract {
     /// Converts a Bugzilla bug or a Jira ticket to `AbstractTicket`.
     /// Consumes the original ticket.
-    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket;
+    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket>;
 }
 
 impl IntoAbstract for Bug {
-    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket {
-        AbstractTicket {
+    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket> {
+        let ticket = AbstractTicket {
             id: TicketId {
                 key: self.id.to_string(),
                 tracker: tracker::Service::Bugzilla,
             },
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: self.doc_type(config),
-            doc_text: self.doc_text(config),
-            target_release: self.target_release(config),
+            doc_type: self.doc_type(config)?,
+            doc_text: self.doc_text(config)?,
+            target_release: self.target_release(config).ok(),
             subsystems: self.subsystems(config),
             doc_text_status: self.doc_text_status(config),
-            docs_contact: self.docs_contact(config),
+            docs_contact: self.docs_contact(config)?,
             summary: self.summary,
             status: self.status,
             is_open: self.is_open,
@@ -81,18 +81,20 @@ impl IntoAbstract for Bug {
             public: self.groups.is_empty(),
             groups: Some(self.groups),
             duplicates: Vec::new(),
-        }
+        };
+
+        Ok(ticket)
     }
 }
 
 impl IntoAbstract for Issue {
-    fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket {
-        AbstractTicket {
-            doc_type: self.doc_type(config),
-            doc_text: self.doc_text(config),
-            target_release: self.target_release(config),
+    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket> {
+        let ticket = AbstractTicket {
+            doc_type: self.doc_type(config)?,
+            doc_text: self.doc_text(config)?,
+            target_release: self.target_release(config).ok(),
             doc_text_status: self.doc_text_status(config),
-            docs_contact: self.docs_contact(config),
+            docs_contact: self.docs_contact(config)?,
             subsystems: self.subsystems(config),
             id: TicketId {
                 key: self.key,
@@ -115,7 +117,9 @@ impl IntoAbstract for Issue {
             // TODO: Implement public
             public: false,
             duplicates: Vec::new(),
-        }
+        };
+
+        Ok(ticket)
     }
 }
 
