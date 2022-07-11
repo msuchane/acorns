@@ -50,7 +50,7 @@ pub trait ExtraFields {
     /// Extract the target release from the ticket.
     fn target_release(&self, config: &tracker::Fields) -> Result<String>;
     /// Extract the subsystems from the ticket.
-    fn subsystems(&self, config: &tracker::Fields) -> Vec<String>;
+    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus;
     /// Extract the docs contact from the ticket.
@@ -80,9 +80,6 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
 }
 
 impl ExtraFields for Bug {
-    // TODO: The following two fields should be configurable by tracker.
-    // Also, handle the errors properly. For now, we're just assuming that the fields
-    // are strings, and panicking if not.
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
         extract_field(&self.extra, field)
@@ -98,15 +95,16 @@ impl ExtraFields for Bug {
         extract_field(&self.extra, field)
     }
 
-    fn subsystems(&self, config: &tracker::Fields) -> Vec<String> {
+    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
-        let pool_field = self.extra.get(field).expect("Bug has no pool field.");
+        let pool_field = self.extra.get(field)
+            .ok_or_else(|| eyre!("Field {} is missing.", field))?;
         let pool: BzPool = serde_json::from_value(pool_field.clone())
-            .expect("Pool field has an unexpected structure.");
+            .context("Pool field has an unexpected structure.")?;
 
         // In Bugzilla, the bug always has just one subsystem. Therefore,
         // this returns a vector with a single item, or an empty vector.
-        vec![pool.team.name]
+        Ok(vec![pool.team.name])
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
@@ -164,18 +162,25 @@ impl ExtraFields for Issue {
             .map(|version| version.name.clone())
     }
 
-    fn subsystems(&self, config: &tracker::Fields) -> Vec<String> {
+    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
-        self.fields
+        let pool_team = self.fields
             .extra
             // This is the "Pool Team" field.
             .get(field)
             .and_then(Value::as_array)
-            .unwrap()
-            .iter()
-            // TODO: Handle the errors more safely, without unwraps.
-            .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
-            .collect()
+            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))?;
+            
+        let ssts = pool_team.iter()
+            .map(|sst| sst.get("value")
+                .and_then(Value::as_str)
+                .map(ToString::to_string)
+                .ok_or_else(|| eyre!("Items in field {} are not strings.", field))
+            )
+            // This `collect` call automatically converts from Vec<Result<_>> to Result<Vec<_>> for us.
+            .collect();
+        
+        ssts
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
@@ -183,7 +188,6 @@ impl ExtraFields for Issue {
         let rdt_field = self
             .fields
             .extra
-            // TODO: This field should be configurable.
             .get(field);
 
         rdt_field
