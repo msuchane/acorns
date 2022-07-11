@@ -140,6 +140,11 @@ struct JiraDocType {
     value: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct JiraSST {
+    value: String,
+}
+
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
@@ -178,16 +183,17 @@ impl ExtraFields for Issue {
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
 
-        Ok(self
-            .fields
-            .extra
-            .get(field)
-            .and_then(Value::as_array)
-            .unwrap()
-            .iter()
-            // TODO: Handle the errors more safely, without unwraps.
-            .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
-            .collect())
+        let pool =
+            self.fields.extra.get(field).ok_or_else(|| {
+                eyre!("Field {} is missing or has an unexpected structure.", field)
+            })?;
+
+        let ssts: Vec<JiraSST> = serde_json::from_value(pool.clone())
+            .context("Jira subsystems field has an unexpected structure.")?;
+
+        let sst_names = ssts.into_iter().map(|sst| sst.value).collect();
+
+        Ok(sst_names)
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
