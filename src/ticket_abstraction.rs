@@ -199,18 +199,36 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
 // * https://crates.io/crates/indicatif
 /// Process the configured ticket queries into abstract tickets,
 /// sorted in no particular order, which depends on the response from the issue tracker.
-fn unsorted_tickets(
+///
+/// Downloads from Bugzilla and from Jira in parallel.
+#[tokio::main]
+async fn unsorted_tickets(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
 ) -> Result<Vec<AbstractTicket>> {
+    // Download from Bugzilla and from Jira in parallel:
+    let bugs = bugs(queries, trackers);
+    let issues = issues(queries, trackers);
+
+    // Wait until both downloads have finished:
+    let (bugs, issues) = tokio::join!(bugs, issues);
+
+    // Convert bugs and issues into abstract tickets:
+    let tickets_from_bugzilla = bugs?.into_iter().map(AbstractTicket::from);
+    let tickets_from_jira = issues?.into_iter().map(AbstractTicket::from);
+
+    Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
+}
+
+/// Download all configured bugs from Bugzilla.
+async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Bug>> {
     let bugzilla_queries = queries
         .iter()
-        .filter(|t| t.tracker == tracker::Service::Bugzilla);
-    let jira_queries = queries
-        .iter()
-        .filter(|t| t.tracker == tracker::Service::Jira);
+        .filter(|&t| t.tracker == tracker::Service::Bugzilla);
 
     let bz_instance = bz_instance(trackers)?;
+
+    log::info!("Downloading bugs from Bugzilla.");
 
     let bugs = bz_instance
         .bugs(
@@ -218,22 +236,39 @@ fn unsorted_tickets(
                 .map(|q| q.key.as_str())
                 .collect::<Vec<&str>>(),
         )
+        // This enables the download concurrency:
+        .await
         .context("Failed to download tickets from Bugzilla.")?;
+
+    log::info!("Finished downloading from Bugzilla.");
+
+    Ok(bugs)
+}
+
+/// Download all configured issues from Jira.
+async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Issue>> {
+    let jira_queries = queries
+        .iter()
+        .filter(|&t| t.tracker == tracker::Service::Jira);
 
     let jira_instance = jira_instance(trackers)?;
 
+    log::info!("Downloading issues from Jira.");
+
     let issues = jira_instance
         .issues(&jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>())
+        // This enables the download concurrency:
+        .await
         .context("Failed to download tickets from Jira.")?;
 
-    let tickets_from_bugzilla = bugs.into_iter().map(AbstractTicket::from);
-    let tickets_from_jira = issues.into_iter().map(AbstractTicket::from);
+    log::info!("Finished downloading from Jira.");
 
-    Ok(tickets_from_bugzilla.chain(tickets_from_jira).collect())
+    Ok(issues)
 }
 
 /// Process a single ticket specified using the `ticket` subcommand.
-pub fn from_args(
+#[tokio::main]
+pub async fn from_args(
     service: tracker::Service,
     id: &str,
     host: &str,
@@ -244,7 +279,7 @@ pub fn from_args(
             let jira_instance = jira_query::JiraInstance::at(host.to_string())?
                 .authenticate(jira_query::Auth::ApiKey(api_key.to_string()))?;
 
-            let issue = jira_instance.issue(id)?;
+            let issue = jira_instance.issue(id).await?;
             Ok(issue.into())
         }
         tracker::Service::Bugzilla => {
@@ -252,7 +287,7 @@ pub fn from_args(
                 .authenticate(bugzilla_query::Auth::ApiKey(api_key.to_string()))?
                 .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect());
 
-            let bug = bz_instance.bug(id)?;
+            let bug = bz_instance.bug(id).await?;
             Ok(bug.into())
         }
     }

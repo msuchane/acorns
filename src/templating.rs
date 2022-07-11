@@ -5,7 +5,7 @@ use crate::{extra_fields::DocTextStatus, ticket_abstraction::AbstractTicket};
 
 /// The variant of the generated, output document:
 ///
-/// * `Public`: The external variant intended for publishing teh release notes.
+/// * `Public`: The external variant intended for publishing the release notes.
 /// * `Internal`: The debugging variant intended for preparing the release notes.
 #[derive(PartialEq)]
 pub enum DocumentVariant {
