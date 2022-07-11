@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::string::ToString;
 
 use bugzilla_query::Bug;
@@ -128,10 +127,10 @@ async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<V
 /// Process a single ticket specified using the `ticket` subcommand.
 #[tokio::main]
 pub async fn ticket(
-    service: tracker::Service,
-    id: &str,
-    host: &str,
-    api_key: &str,
+    _service: tracker::Service,
+    _id: &str,
+    _host: &str,
+    _api_key: &str,
 ) -> Result<AbstractTicket> {
     // Temporarily disable this function while converting to configurable fields.
     todo!()

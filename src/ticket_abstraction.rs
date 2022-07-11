@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::string::ToString;
 
 use bugzilla_query::Bug;
@@ -44,6 +43,8 @@ pub struct TicketId {
 }
 
 pub trait IntoAbstract {
+    /// Converts a Bugzilla bug or a Jira ticket to `AbstractTicket`.
+    /// Consumes the original ticket.
     fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket;
 }
 
@@ -61,7 +62,7 @@ impl IntoAbstract for Bug {
             target_release: self.target_release(config),
             subsystems: self.subsystems(config),
             doc_text_status: self.doc_text_status(config),
-            docs_contact: Some(self.docs_contact),
+            docs_contact: self.docs_contact(config),
             summary: self.summary,
             status: self.status,
             is_open: self.is_open,
@@ -87,17 +88,12 @@ impl IntoAbstract for Bug {
 impl IntoAbstract for Issue {
     fn into_abstract(self, config: &tracker::Fields) -> AbstractTicket {
         AbstractTicket {
-            doc_type: self.doc_type(&config),
-            doc_text: self.doc_text(&config),
-            target_release: self.target_release(&config),
-            doc_text_status: self.doc_text_status(&config),
-            docs_contact: self
-                .fields
-                .extra
-                .get("customfield_12317336")
-                .and_then(|cf| cf.get("emailAddress"))
-                .map(|value| value.as_str().unwrap().to_string()),
-            subsystems: self.subsystems(&config),
+            doc_type: self.doc_type(config),
+            doc_text: self.doc_text(config),
+            target_release: self.target_release(config),
+            doc_text_status: self.doc_text_status(config),
+            docs_contact: self.docs_contact(config),
+            subsystems: self.subsystems(config),
             id: TicketId {
                 key: self.key,
                 tracker: tracker::Service::Jira,
