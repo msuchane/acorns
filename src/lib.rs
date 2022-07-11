@@ -11,6 +11,7 @@ mod logging;
 mod note;
 mod templating;
 mod ticket_abstraction;
+mod tracker_access;
 
 use config::tracker::Service;
 use templating::{DocumentVariant, Module};
@@ -44,7 +45,7 @@ fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
         "bugzilla" => Service::Bugzilla,
         _ => unreachable!(),
     };
-    let ticket = ticket_abstraction::from_args(
+    let ticket = tracker_access::ticket(
         service,
         ticket_args.value_of("id").unwrap(),
         ticket_args.value_of("host").unwrap(),
