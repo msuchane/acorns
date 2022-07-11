@@ -76,7 +76,13 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
         .get(field)
         .and_then(Value::as_str)
         .map(ToString::to_string)
-        .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure:\n{:#?}", field, extra.get(field)))
+        .ok_or_else(|| {
+            eyre!(
+                "Field {} is missing or has an unexpected structure:\n{:#?}",
+                field,
+                extra.get(field)
+            )
+        })
 }
 
 impl ExtraFields for Bug {
@@ -150,7 +156,12 @@ impl ExtraFields for Issue {
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        extract_field(&self.extra, field)
+        Ok(self
+            .fields
+            .extra
+            .get(field)
+            .map(|value| value.as_str().unwrap().to_string())
+            .unwrap())
     }
 
     fn target_release(&self, _config: &tracker::Fields) -> Result<String> {
@@ -167,17 +178,16 @@ impl ExtraFields for Issue {
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
 
-        // Take the "Pool Team" field.
-        let pool_team =
-            self.fields.extra.get(field).ok_or_else(|| {
-                eyre!("Field {} is missing or has an unexpected structure.", field)
-            })?;
-
-        // Pull out all items from the "Pool Team" list.
-        let ssts: Vec<String> = serde_json::from_value(pool_team.clone())
-            .context("Jira subsystems field has an unexpected structure.")?;
-
-        Ok(ssts)
+        Ok(self
+            .fields
+            .extra
+            .get(field)
+            .and_then(Value::as_array)
+            .unwrap()
+            .iter()
+            // TODO: Handle the errors more safely, without unwraps.
+            .map(|sst| sst.get("value").unwrap().as_str().unwrap().to_string())
+            .collect())
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
