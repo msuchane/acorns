@@ -31,7 +31,12 @@ impl Module {
 impl Section {
     /// Convert the body of the section into AsciiDoc text that will serve
     /// as the body of the resulting module.
-    fn render(&self, id: &str, tickets: &[AbstractTicket], variant: &DocumentVariant) -> String {
+    fn render(
+        &self,
+        id: &str,
+        tickets: &[AbstractTicket],
+        variant: &DocumentVariant,
+    ) -> Option<String> {
         let heading = format!("= {}", &self.title);
 
         // Select only those tickets that belong in the Internal or Public variant.
@@ -45,27 +50,40 @@ impl Section {
                 .collect(),
         };
 
-        let matching_tickets = variant_tickets.iter().filter(|t| self.matches_ticket(t));
-        let release_notes: Vec<_> = matching_tickets.map(|t| t.release_note(variant)).collect();
-        format!(
-            "[id=\"{}\"]\n\
+        let matching_tickets: Vec<_> = variant_tickets
+            .iter()
+            .filter(|t| self.matches_ticket(t))
+            .collect();
+
+        if matching_tickets.is_empty() {
+            None
+        } else {
+            let release_notes: Vec<_> = matching_tickets
+                .iter()
+                .map(|t| t.release_note(variant))
+                .collect();
+            Some(format!(
+                "[id=\"{}\"]\n\
             {}\n\
             \n\
             {}",
-            id,
-            heading,
-            release_notes.join("\n\n")
-        )
+                id,
+                heading,
+                release_notes.join("\n\n")
+            ))
+        }
     }
 
     /// Convert the section into either a leaf module, or into an assembly and all
     /// the modules that it includes, recursively.
+    ///
+    /// Returns `None` if the module or assembly captured no release notes at all.
     fn modules(
         &self,
         tickets: &[AbstractTicket],
         prefix: Option<&str>,
         variant: &DocumentVariant,
-    ) -> Module {
+    ) -> Option<Module> {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
             .filter(|&t| self.matches_ticket(t))
@@ -84,33 +102,41 @@ impl Section {
             let file_name = format!("assembly_{}.adoc", module_id);
             let included_modules: Vec<Module> = sections
                 .iter()
-                .map(|s| s.modules(&matching_tickets, Some(&module_id), variant))
+                .filter_map(|s| s.modules(&matching_tickets, Some(&module_id), variant))
                 .collect();
-            let include_statements: Vec<String> = included_modules
-                .iter()
-                .map(|m| m.include_statement())
-                .collect();
-            let include_block = include_statements.join("\n\n");
-            let text = format!(
-                "[id=\"{}\"]\n\
+            // If the assembly receives no modules, because all its modules are empty, return None.
+            if included_modules.is_empty() {
+                None
+            } else {
+                let include_statements: Vec<String> = included_modules
+                    .iter()
+                    .map(|m| m.include_statement())
+                    .collect();
+                let include_block = include_statements.join("\n\n");
+                let text = format!(
+                    "[id=\"{}\"]\n\
                 = {}\n\
                 \n\
                 {}",
-                &module_id, &self.title, include_block
-            );
+                    &module_id, &self.title, include_block
+                );
 
-            Module {
-                file_name,
-                text,
-                included_modules: Some(included_modules),
+                Some(Module {
+                    file_name,
+                    text,
+                    included_modules: Some(included_modules),
+                })
             }
         // If the section includes no sections, treat it as a leaf, reference module.
         } else {
-            Module {
-                file_name: format!("ref_{}.adoc", module_id),
-                text: self.render(&module_id, tickets, variant),
-                included_modules: None,
-            }
+            // If the module receives no release notes and its body is empty, return None.
+            // Otherwise, return the module formatted with its release notes.
+            self.render(&module_id, tickets, variant)
+                .map(|text| Module {
+                    file_name: format!("ref_{}.adoc", module_id),
+                    text,
+                    included_modules: None,
+                })
         }
     }
 
@@ -171,10 +197,13 @@ pub fn format_document(
     template: &Template,
     variant: &DocumentVariant,
 ) -> Vec<Module> {
+    // TODO: If no release notes trickle down into a chapter, the chapter is simply skipped.
+    // However, includes from the manual RN content tend to target all chapters.
+    // Figure out a solution. Perhaps an empty file to appease the include from outside?
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .map(|section| section.modules(tickets, None, variant))
+        .filter_map(|section| section.modules(tickets, None, variant))
         .collect();
     log::debug!("Chapters: {:#?}", chapters);
 
