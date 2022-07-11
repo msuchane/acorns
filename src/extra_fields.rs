@@ -156,12 +156,12 @@ impl ExtraFields for Issue {
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        Ok(self
-            .fields
+        self.fields
             .extra
             .get(field)
-            .map(|value| value.as_str().unwrap().to_string())
-            .unwrap())
+            .and_then(Value::as_str)
+            .map(ToString::to_string)
+            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
     }
 
     fn target_release(&self, _config: &tracker::Fields) -> Result<String> {
