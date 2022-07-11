@@ -76,7 +76,7 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
         .get(field)
         .and_then(Value::as_str)
         .map(ToString::to_string)
-        .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
+        .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure:\n{:#?}", field, extra.get(field)))
 }
 
 impl ExtraFields for Bug {
@@ -97,7 +97,9 @@ impl ExtraFields for Bug {
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
-        let pool_field = self.extra.get(field)
+        let pool_field = self
+            .extra
+            .get(field)
             .ok_or_else(|| eyre!("Field {} is missing.", field))?;
         let pool: BzPool = serde_json::from_value(pool_field.clone())
             .context("Pool field has an unexpected structure.")?;
@@ -164,31 +166,23 @@ impl ExtraFields for Issue {
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
-        let pool_team = self.fields
-            .extra
-            // This is the "Pool Team" field.
-            .get(field)
-            .and_then(Value::as_array)
-            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))?;
-            
-        let ssts = pool_team.iter()
-            .map(|sst| sst.get("value")
-                .and_then(Value::as_str)
-                .map(ToString::to_string)
-                .ok_or_else(|| eyre!("Items in field {} are not strings.", field))
-            )
-            // This `collect` call automatically converts from Vec<Result<_>> to Result<Vec<_>> for us.
-            .collect();
-        
-        ssts
+
+        // Take the "Pool Team" field.
+        let pool_team =
+            self.fields.extra.get(field).ok_or_else(|| {
+                eyre!("Field {} is missing or has an unexpected structure.", field)
+            })?;
+
+        // Pull out all items from the "Pool Team" list.
+        let ssts: Vec<String> = serde_json::from_value(pool_team.clone())
+            .context("Jira subsystems field has an unexpected structure.")?;
+
+        Ok(ssts)
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
         let field = &config.doc_text_status;
-        let rdt_field = self
-            .fields
-            .extra
-            .get(field);
+        let rdt_field = self.fields.extra.get(field);
 
         rdt_field
             .and_then(|rdt| rdt.get("value"))
