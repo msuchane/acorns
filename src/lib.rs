@@ -132,6 +132,7 @@ impl Document {
     /// Write the formatted RN modules of both document variants as files to the output directory.
     fn write_variants(&self, generated_dir: &Path) -> Result<()> {
         log::info!("Saving the generated release notes.");
+        // TODO: Remove previously existing generated files found in the directory.
         Self::write_variant(&self.internal, &generated_dir.join("internal"))?;
         Self::write_variant(&self.public, &generated_dir.join("public"))?;
 
