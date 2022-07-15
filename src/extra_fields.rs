@@ -1,5 +1,6 @@
 use std::fmt;
 use std::string::ToString;
+use std::convert::TryFrom;
 
 use color_eyre::{
     eyre::{eyre, Context},
@@ -21,12 +22,16 @@ pub enum DocTextStatus {
     NoDocumentation,
 }
 
-impl From<&str> for DocTextStatus {
-    fn from(string: &str) -> Self {
+impl TryFrom<&str> for DocTextStatus {
+    type Error = color_eyre::eyre::Error;
+
+    fn try_from(string: &str) -> Result<Self> {
         match string {
-            "+" => Self::Approved,
-            "?" => Self::InProgress,
-            _ => Self::NoDocumentation,
+            "+" | "Done" => Ok(Self::Approved),
+            "?" | "Proposed" | "In progress" => Ok(Self::InProgress),
+            // TODO: Does "Upstream only" really mean to skip this RN?
+            "-" | "Rejected" | "Upstream only" => Ok(Self::NoDocumentation),
+            _ => Err(eyre!("Unrecognized doc text status value: {:?}", string))
         }
     }
 }
@@ -52,7 +57,7 @@ pub trait ExtraFields {
     /// Extract the subsystems from the ticket.
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
-    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus;
+    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus>;
     /// Extract the docs contact from the ticket.
     fn docs_contact(&self, config: &tracker::Fields) -> Result<String>;
 }
@@ -115,17 +120,13 @@ impl ExtraFields for Bug {
         Ok(vec![pool.team.name])
     }
 
-    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
+    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
         let flag = &config.doc_text_status;
-        let rdt = self.get_flag(flag);
+        let rdt = self.get_flag(flag)
+            // TODO: Make sure it's okay to quit with an error if RDT is missing.
+            .ok_or_else(|| eyre!("Flag {} is missing in bug {}.", flag, self.id))?;
 
-        if let Some(rdt) = rdt {
-            DocTextStatus::from(rdt)
-        } else {
-            // If the RDT flag is completely missing, use `-` as the default.
-            log::warn!("Bug {} is missing the `requires_doc_text` flag.", self.id);
-            DocTextStatus::NoDocumentation
-        }
+        DocTextStatus::try_from(rdt)
     }
 
     fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
@@ -196,14 +197,14 @@ impl ExtraFields for Issue {
         Ok(sst_names)
     }
 
-    fn doc_text_status(&self, config: &tracker::Fields) -> DocTextStatus {
+    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
         let field = &config.doc_text_status;
-        let rdt_field = self.fields.extra.get(field);
-
-        rdt_field
+        let rdt_field = self.fields.extra.get(field)
             .and_then(|rdt| rdt.get("value"))
             .and_then(Value::as_str)
-            .map_or(DocTextStatus::NoDocumentation, DocTextStatus::from)
+            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))?;
+
+        DocTextStatus::try_from(rdt_field)
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> Result<String> {
