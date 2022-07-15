@@ -1,7 +1,7 @@
 use std::string::ToString;
 
 use bugzilla_query::Bug;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{bail, Context, Result};
 use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
@@ -60,6 +60,13 @@ pub async fn unsorted_tickets(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
 ) -> Result<Vec<AbstractTicket>> {
+    // If no queries were found in the project configuration, quit with an error.
+    // Such a situation should never occur because our config parsing requires at least
+    // some items in the tickets file, but better make sure.
+    if queries.is_empty() {
+        bail!("No tickets are configured in this project.");
+    }
+
     // Download from Bugzilla and from Jira in parallel:
     let bugs = bugs(queries, trackers);
     let issues = issues(queries, trackers);
@@ -85,48 +92,66 @@ pub async fn unsorted_tickets(
 
 /// Download all configured bugs from Bugzilla.
 async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Bug>> {
-    let bugzilla_queries = queries
+    let bugzilla_queries: Vec<&TicketQuery> = queries
         .iter()
-        .filter(|&t| t.tracker == tracker::Service::Bugzilla);
+        .filter(|&t| t.tracker == tracker::Service::Bugzilla)
+        .collect();
 
-    let bz_instance = bz_instance(trackers)?;
+    // If no tickets target Bugzilla, skip the download and return an empty vector.
+    if bugzilla_queries.is_empty() {
+        Ok(Vec::new())
+    } else {
+        let bz_instance = bz_instance(trackers)?;
 
-    log::info!("Downloading bugs from Bugzilla.");
+        log::info!("Downloading bugs from Bugzilla.");
 
-    let bugs = bz_instance
-        .bugs(
-            &bugzilla_queries
-                .map(|q| q.key.as_str())
-                .collect::<Vec<&str>>(),
-        )
-        // This enables the download concurrency:
-        .await
-        .context("Failed to download tickets from Bugzilla.")?;
+        let bugs = bz_instance
+            .bugs(
+                &bugzilla_queries
+                    .iter()
+                    .map(|q| q.key.as_str())
+                    .collect::<Vec<&str>>(),
+            )
+            // This enables the download concurrency:
+            .await
+            .context("Failed to download tickets from Bugzilla.")?;
 
-    log::info!("Finished downloading from Bugzilla.");
+        log::info!("Finished downloading from Bugzilla.");
 
-    Ok(bugs)
+        Ok(bugs)
+    }
 }
 
 /// Download all configured issues from Jira.
 async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Issue>> {
-    let jira_queries = queries
+    let jira_queries: Vec<&TicketQuery> = queries
         .iter()
-        .filter(|&t| t.tracker == tracker::Service::Jira);
+        .filter(|&t| t.tracker == tracker::Service::Jira)
+        .collect();
 
-    let jira_instance = jira_instance(trackers)?;
+    // If no tickets target Jira, skip the download and return an empty vector.
+    if jira_queries.is_empty() {
+        Ok(Vec::new())
+    } else {
+        let jira_instance = jira_instance(trackers)?;
 
-    log::info!("Downloading issues from Jira.");
+        log::info!("Downloading issues from Jira.");
 
-    let issues = jira_instance
-        .issues(&jira_queries.map(|q| q.key.as_str()).collect::<Vec<&str>>())
-        // This enables the download concurrency:
-        .await
-        .context("Failed to download tickets from Jira.")?;
+        let issues = jira_instance
+            .issues(
+                &jira_queries
+                    .iter()
+                    .map(|q| q.key.as_str())
+                    .collect::<Vec<&str>>(),
+            )
+            // This enables the download concurrency:
+            .await
+            .context("Failed to download tickets from Jira.")?;
 
-    log::info!("Finished downloading from Jira.");
+        log::info!("Finished downloading from Jira.");
 
-    Ok(issues)
+        Ok(issues)
+    }
 }
 
 /// Process a single ticket specified using the `ticket` subcommand.
