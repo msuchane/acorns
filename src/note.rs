@@ -14,7 +14,7 @@ impl fmt::Display for Service {
     }
 }
 
-impl<'a> AbstractTicket<'a> {
+impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     pub fn release_note(&self, variant: &DocumentVariant) -> String {
         let docs_contact_placeholder = "No docs contact";

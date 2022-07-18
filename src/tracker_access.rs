@@ -57,10 +57,10 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
 ///
 /// Downloads from Bugzilla and from Jira in parallel.
 #[tokio::main]
-pub async fn unsorted_tickets<'a>(
+pub async fn unsorted_tickets(
     queries: &[TicketQuery],
-    trackers: &'a tracker::Config,
-) -> Result<Vec<AbstractTicket<'a>>> {
+    trackers: &tracker::Config,
+) -> Result<Vec<AbstractTicket>> {
     // If no queries were found in the project configuration, quit with an error.
     // Such a situation should never occur because our config parsing requires at least
     // some items in the tickets file, but better make sure.

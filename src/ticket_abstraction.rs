@@ -10,7 +10,7 @@ use crate::tracker_access;
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
-pub struct AbstractTicket<'a> {
+pub struct AbstractTicket {
     pub id: TicketId,
     pub summary: String,
     // TODO: Find out how to get the bug description from comment#0 with Bugzilla
@@ -32,8 +32,7 @@ pub struct AbstractTicket<'a> {
     pub groups: Option<Vec<String>>,
     pub public: bool,
     pub doc_text_status: DocTextStatus,
-    pub duplicates: Vec<AbstractTicket<'a>>,
-    pub tracker: &'a tracker::Instance,
+    pub duplicates: Vec<AbstractTicket>,
 }
 
 /// An identification of the original ticket on the issue tracker.
@@ -83,7 +82,6 @@ impl IntoAbstract for Bug {
             public: self.groups.is_empty(),
             groups: Some(self.groups),
             duplicates: Vec::new(),
-            tracker,
         };
 
         Ok(ticket)
@@ -121,7 +119,6 @@ impl IntoAbstract for Issue {
             // TODO: Implement public
             public: false,
             duplicates: Vec::new(),
-            tracker,
         };
 
         Ok(ticket)
@@ -130,10 +127,10 @@ impl IntoAbstract for Issue {
 
 /// Process the configured ticket queries into abstract tickets,
 /// sorted in the original order as found in the config file.
-pub fn from_queries<'a>(
+pub fn from_queries(
     queries: &[TicketQuery],
-    trackers: &'a tracker::Config,
-) -> Result<Vec<AbstractTicket<'a>>> {
+    trackers: &tracker::Config,
+) -> Result<Vec<AbstractTicket>> {
     let tickets = tracker_access::unsorted_tickets(queries, trackers)?;
 
     // Sort tickets to the order in the config file:
