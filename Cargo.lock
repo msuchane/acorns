@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "cizrna"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "bugzilla_query",
  "clap",
