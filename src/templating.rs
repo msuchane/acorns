@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // use color_eyre::eyre::{Context, Result};
 
 use crate::config::{Section, Template};
@@ -36,6 +38,7 @@ impl Section {
         id: &str,
         tickets: &[AbstractTicket],
         variant: &DocumentVariant,
+        ticket_stats: &mut HashMap<String, u32>,
     ) -> Option<String> {
         // Select only those tickets that belong in the Internal or Public variant.
         let variant_tickets: Vec<&AbstractTicket> = match variant {
@@ -52,6 +55,12 @@ impl Section {
             .iter()
             .filter(|t| self.matches_ticket(t))
             .collect();
+
+        // Record usage statistics for this leaf module
+        for ticket in &matching_tickets {
+            let counter = ticket_stats.entry(ticket.id.to_string()).or_insert(1);
+            *counter += 1;
+        }
 
         if matching_tickets.is_empty() {
             None
@@ -95,6 +104,7 @@ impl Section {
         tickets: &[AbstractTicket],
         prefix: Option<&str>,
         variant: &DocumentVariant,
+        ticket_stats: &mut HashMap<String, u32>,
     ) -> Option<Module> {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
@@ -114,7 +124,9 @@ impl Section {
             let file_name = format!("assembly_{}.adoc", module_id);
             let included_modules: Vec<Module> = sections
                 .iter()
-                .filter_map(|s| s.modules(&matching_tickets, Some(&module_id), variant))
+                .filter_map(|s| {
+                    s.modules(&matching_tickets, Some(&module_id), variant, ticket_stats)
+                })
                 .collect();
             // If the assembly receives no modules, because all its modules are empty, return None.
             if included_modules.is_empty() {
@@ -155,7 +167,7 @@ impl Section {
         } else {
             // If the module receives no release notes and its body is empty, return None.
             // Otherwise, return the module formatted with its release notes.
-            self.render(&module_id, tickets, variant)
+            self.render(&module_id, tickets, variant, ticket_stats)
                 .map(|text| Module {
                     file_name: format!("ref_{}.adoc", module_id),
                     text,
@@ -214,15 +226,27 @@ pub fn format_document(
     template: &Template,
     variant: &DocumentVariant,
 ) -> Vec<Module> {
+    let mut ticket_stats = HashMap::new();
+
+    for ticket in tickets.iter() {
+        ticket_stats.insert(ticket.id.to_string(), 0);
+    }
+
     // TODO: If no release notes trickle down into a chapter, the chapter is simply skipped.
     // However, includes from the manual RN content tend to target all chapters.
     // Figure out a solution. Perhaps an empty file to appease the include from outside?
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .filter_map(|section| section.modules(tickets, None, variant))
+        .filter_map(|section| section.modules(tickets, None, variant, &mut ticket_stats))
         .collect();
     log::debug!("Chapters: {:#?}", chapters);
+
+    // A crude way to ensure that the statistics are only printed once, and not twice.
+    // TODO: Revisit, maybe return the value instead.
+    if variant == &DocumentVariant::Internal {
+        log::info!("Ticket usage statistics:\n{:#?}", ticket_stats);
+    }
 
     chapters
 }

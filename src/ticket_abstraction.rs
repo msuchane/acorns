@@ -37,7 +37,7 @@ pub struct AbstractTicket {
 }
 
 /// An identification of the original ticket on the issue tracker.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct TicketId {
     pub key: String,
     pub tracker: tracker::Service,
