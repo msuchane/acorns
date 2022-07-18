@@ -79,11 +79,11 @@ pub async fn unsorted_tickets(
     // Convert bugs and issues into abstract tickets.
     // Using an imperative style so that each `into_abstract` call can return an error.
     for bug in bugs? {
-        let ticket = bug.into_abstract(&trackers.bugzilla.fields)?;
+        let ticket = bug.into_abstract(&trackers.bugzilla)?;
         results.push(ticket);
     }
     for issue in issues? {
-        let ticket = issue.into_abstract(&trackers.jira.fields)?;
+        let ticket = issue.into_abstract(&trackers.jira)?;
         results.push(ticket);
     }
 

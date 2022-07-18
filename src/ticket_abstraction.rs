@@ -45,11 +45,11 @@ pub struct TicketId {
 pub trait IntoAbstract {
     /// Converts a Bugzilla bug or a Jira ticket to `AbstractTicket`.
     /// Consumes the original ticket.
-    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket>;
+    fn into_abstract(self, config: &tracker::Instance) -> Result<AbstractTicket>;
 }
 
 impl IntoAbstract for Bug {
-    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket> {
+    fn into_abstract(self, tracker: &tracker::Instance) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
             id: TicketId {
                 key: self.id.to_string(),
@@ -57,13 +57,13 @@ impl IntoAbstract for Bug {
             },
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: self.doc_type(config)?,
-            doc_text: self.doc_text(config)?,
+            doc_type: self.doc_type(&tracker.fields)?,
+            doc_text: self.doc_text(&tracker.fields)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_release: self.target_release(config).ok(),
-            subsystems: self.subsystems(config)?,
-            doc_text_status: self.doc_text_status(config)?,
-            docs_contact: self.docs_contact(config)?,
+            target_release: self.target_release(&tracker.fields).ok(),
+            subsystems: self.subsystems(&tracker.fields)?,
+            doc_text_status: self.doc_text_status(&tracker.fields)?,
+            docs_contact: self.docs_contact(&tracker.fields)?,
             summary: self.summary,
             status: self.status,
             is_open: self.is_open,
@@ -89,15 +89,15 @@ impl IntoAbstract for Bug {
 }
 
 impl IntoAbstract for Issue {
-    fn into_abstract(self, config: &tracker::Fields) -> Result<AbstractTicket> {
+    fn into_abstract(self, tracker: &tracker::Instance) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
-            doc_type: self.doc_type(config)?,
-            doc_text: self.doc_text(config)?,
+            doc_type: self.doc_type(&tracker.fields)?,
+            doc_text: self.doc_text(&tracker.fields)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_release: self.target_release(config).ok(),
-            doc_text_status: self.doc_text_status(config)?,
-            docs_contact: self.docs_contact(config)?,
-            subsystems: self.subsystems(config)?,
+            target_release: self.target_release(&tracker.fields).ok(),
+            doc_text_status: self.doc_text_status(&tracker.fields)?,
+            docs_contact: self.docs_contact(&tracker.fields)?,
+            subsystems: self.subsystems(&tracker.fields)?,
             id: TicketId {
                 key: self.key,
                 tracker: tracker::Service::Jira,
