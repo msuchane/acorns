@@ -1,6 +1,6 @@
+use std::convert::TryFrom;
 use std::fmt;
 use std::string::ToString;
-use std::convert::TryFrom;
 
 use color_eyre::{
     eyre::{eyre, Context},
@@ -31,7 +31,7 @@ impl TryFrom<&str> for DocTextStatus {
             "?" | "Proposed" | "In progress" => Ok(Self::InProgress),
             // TODO: Does "Upstream only" really mean to skip this RN?
             "-" | "Rejected" | "Upstream only" => Ok(Self::NoDocumentation),
-            _ => Err(eyre!("Unrecognized doc text status value: {:?}", string))
+            _ => Err(eyre!("Unrecognized doc text status value: {:?}", string)),
         }
     }
 }
@@ -122,7 +122,8 @@ impl ExtraFields for Bug {
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
         let flag = &config.doc_text_status;
-        let rdt = self.get_flag(flag)
+        let rdt = self
+            .get_flag(flag)
             // TODO: Make sure it's okay to quit with an error if RDT is missing.
             .ok_or_else(|| eyre!("Flag {} is missing in bug {}.", flag, self.id))?;
 
@@ -199,7 +200,10 @@ impl ExtraFields for Issue {
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
         let field = &config.doc_text_status;
-        let rdt_field = self.fields.extra.get(field)
+        let rdt_field = self
+            .fields
+            .extra
+            .get(field)
             .and_then(|rdt| rdt.get("value"))
             .and_then(Value::as_str)
             .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))?;

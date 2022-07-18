@@ -13,7 +13,7 @@ mod templating;
 mod ticket_abstraction;
 mod tracker_access;
 
-use config::tracker::Service;
+// use config::tracker::Service;
 use templating::{DocumentVariant, Module};
 
 use crate::config::Project;
@@ -38,23 +38,29 @@ pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
 
 /// Run the `ticket` subcommand, which downloads information about the single specified ticket
 /// and prints out the release note resulting from the ticket.
-fn display_single_ticket(ticket_args: &ArgMatches) -> Result<()> {
+fn display_single_ticket(_ticket_args: &ArgMatches) -> Result<()> {
+    // TODO: Tie in the ticket subcommand with the new tracker configuration.
+    todo!();
+    /*
     log::info!("Downloading ticket information.");
     let service = match ticket_args.value_of("service").unwrap() {
         "jira" => Service::Jira,
         "bugzilla" => Service::Bugzilla,
         _ => unreachable!(),
     };
-    let ticket = tracker_access::ticket(
-        service,
+
+    let _ticket = tracker_access::ticket(
         ticket_args.value_of("id").unwrap(),
-        ticket_args.value_of("host").unwrap(),
         ticket_args.value_of("api_key").unwrap(),
+        service,
+        todo!(),
     )?;
+
     let variant = DocumentVariant::Internal;
     println!("{}", ticket.release_note(&variant));
 
     Ok(())
+    */
 }
 
 /// Run the `build` subcommand, which build the release notes project that's configured

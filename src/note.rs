@@ -14,7 +14,7 @@ impl fmt::Display for Service {
     }
 }
 
-impl AbstractTicket {
+impl<'a> AbstractTicket<'a> {
     /// Compose a release note from an abstract ticket.
     pub fn release_note(&self, variant: &DocumentVariant) -> String {
         let docs_contact_placeholder = "No docs contact";
@@ -71,5 +71,10 @@ impl AbstractTicket {
         } else {
             label
         }
+    }
+
+    /// Construct a URL back to the original ticket online.
+    pub fn url(&self) -> String {
+        todo!()
     }
 }

@@ -4,6 +4,7 @@ use bugzilla_query::Bug;
 use color_eyre::eyre::{bail, Context, Result};
 use jira_query::Issue;
 
+// use crate::config::tracker::Service;
 use crate::config::{tracker, TicketQuery};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
@@ -56,10 +57,10 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
 ///
 /// Downloads from Bugzilla and from Jira in parallel.
 #[tokio::main]
-pub async fn unsorted_tickets(
+pub async fn unsorted_tickets<'a>(
     queries: &[TicketQuery],
-    trackers: &tracker::Config,
-) -> Result<Vec<AbstractTicket>> {
+    trackers: &'a tracker::Config,
+) -> Result<Vec<AbstractTicket<'a>>> {
     // If no queries were found in the project configuration, quit with an error.
     // Such a situation should never occur because our config parsing requires at least
     // some items in the tickets file, but better make sure.
@@ -154,17 +155,16 @@ async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<V
     }
 }
 
+// Temporarily disable this function while converting to configurable fields.
+/*
 /// Process a single ticket specified using the `ticket` subcommand.
 #[tokio::main]
-pub async fn ticket(
-    _service: tracker::Service,
-    _id: &str,
-    _host: &str,
-    _api_key: &str,
-) -> Result<AbstractTicket> {
-    // Temporarily disable this function while converting to configurable fields.
-    todo!()
-    /*
+pub async fn ticket<'a>(
+    id: &str,
+    api_key: &str,
+    service: Service,
+    tracker: &'a tracker::Instance,
+) -> Result<AbstractTicket<'a>> {
     match service {
         tracker::Service::Jira => {
             let jira_instance = jira_query::JiraInstance::at(host.to_string())?
@@ -182,5 +182,5 @@ pub async fn ticket(
             Ok(bug.into_abstract())
         }
     }
-    */
 }
+*/
