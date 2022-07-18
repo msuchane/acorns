@@ -30,7 +30,7 @@ impl<'a> AbstractTicket<'a> {
         // and everywhere in the Internal document variant.
         let debug_info = format!(
             "| {} | {} | link:{}[]",
-            docs_contact, self.doc_text_status, self.url
+            docs_contact, self.doc_text_status, &self.url
         );
 
         // A placeholder for release notes with an empty doc text.
@@ -67,14 +67,9 @@ impl<'a> AbstractTicket<'a> {
     fn format_signature(&self) -> String {
         let label = format!("{}:{}", self.id.tracker, self.id.key);
         if self.public {
-            format!("link:{}[{}]", self.url, label)
+            format!("link:{}[{}]", &self.url, label)
         } else {
             label
         }
-    }
-
-    /// Construct a URL back to the original ticket online.
-    pub fn url(&self) -> String {
-        todo!()
     }
 }

@@ -60,6 +60,8 @@ pub trait ExtraFields {
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus>;
     /// Extract the docs contact from the ticket.
     fn docs_contact(&self, config: &tracker::Fields) -> Result<String>;
+    /// Construct a URL back to the original ticket online.
+    fn url(&self, tracker: &tracker::Instance) -> String;
 }
 
 #[derive(Deserialize, Debug)]
@@ -134,6 +136,10 @@ impl ExtraFields for Bug {
         // TODO: There's probably a way to avoid this clone.
         // Besides, this function exists only to satisfy the trait. It's very short and simple.
         Ok(self.docs_contact.clone())
+    }
+
+    fn url(&self, tracker: &tracker::Instance) -> String {
+        format!("{}/show_bug.cgi?id={}", tracker.host, &self.id)
     }
 }
 
@@ -220,5 +226,9 @@ impl ExtraFields for Issue {
             .and_then(Value::as_str)
             .map(ToString::to_string)
             .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
+    }
+
+    fn url(&self, tracker: &tracker::Instance) -> String {
+        format!("{}/browse/{}", tracker.host, &self.id)
     }
 }
