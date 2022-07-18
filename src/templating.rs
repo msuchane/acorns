@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 
 // use color_eyre::eyre::{Context, Result};
 
 use crate::config::{Section, Template};
+use crate::ticket_abstraction::TicketId;
 use crate::{extra_fields::DocTextStatus, ticket_abstraction::AbstractTicket};
 
 /// The variant of the generated, output document:
@@ -38,7 +40,7 @@ impl Section {
         id: &str,
         tickets: &[AbstractTicket],
         variant: &DocumentVariant,
-        ticket_stats: &mut HashMap<String, u32>,
+        ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<String> {
         // Select only those tickets that belong in the Internal or Public variant.
         let variant_tickets: Vec<&AbstractTicket> = match variant {
@@ -58,8 +60,9 @@ impl Section {
 
         // Record usage statistics for this leaf module
         for ticket in &matching_tickets {
-            let counter = ticket_stats.entry(ticket.id.to_string()).or_insert(1);
-            *counter += 1;
+            ticket_stats
+                .entry(Rc::clone(&ticket.id))
+                .and_modify(|counter| *counter += 1);
         }
 
         if matching_tickets.is_empty() {
@@ -104,7 +107,7 @@ impl Section {
         tickets: &[AbstractTicket],
         prefix: Option<&str>,
         variant: &DocumentVariant,
-        ticket_stats: &mut HashMap<String, u32>,
+        ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<Module> {
         let matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
@@ -232,7 +235,7 @@ pub fn format_document(
     // Initialize every ticket in the statistics with 0 usage.
     // Later, the number increases each time that the ticket is used.
     for ticket in tickets.iter() {
-        ticket_stats.insert(ticket.id.to_string(), 0);
+        ticket_stats.insert(Rc::clone(&ticket.id), 0);
     }
 
     // TODO: If no release notes trickle down into a chapter, the chapter is simply skipped.
@@ -256,17 +259,17 @@ pub fn format_document(
 
 /// Log statistics about tickets that haven't been used anywhere in the templates,
 /// or have been used more than once. Log both as warnings.
-fn report_usage_statistics(ticket_stats: &HashMap<String, u32>) {
-    let unused: Vec<&str> = ticket_stats
+fn report_usage_statistics(ticket_stats: &HashMap<Rc<TicketId>, u32>) {
+    let unused: Vec<String> = ticket_stats
         .iter()
         .filter(|&(_k, &v)| v == 0)
-        .map(|(k, _v)| k.as_str())
+        .map(|(k, _v)| Rc::clone(k).to_string())
         .collect();
 
-    let overused: Vec<&str> = ticket_stats
+    let overused: Vec<String> = ticket_stats
         .iter()
         .filter(|&(_k, &v)| v > 1)
-        .map(|(k, _v)| k.as_str())
+        .map(|(k, _v)| Rc::clone(k).to_string())
         .collect();
 
     if !unused.is_empty() {

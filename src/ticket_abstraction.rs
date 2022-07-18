@@ -1,4 +1,5 @@
 use std::fmt;
+use std::rc::Rc;
 use std::string::ToString;
 
 use bugzilla_query::Bug;
@@ -12,7 +13,7 @@ use crate::tracker_access;
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
 pub struct AbstractTicket {
-    pub id: TicketId,
+    pub id: Rc<TicketId>,
     pub summary: String,
     // TODO: Find out how to get the bug description from comment#0 with Bugzilla
     pub description: Option<String>,
@@ -58,10 +59,10 @@ pub trait IntoAbstract {
 impl IntoAbstract for Bug {
     fn into_abstract(self, tracker: &tracker::Instance) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
-            id: TicketId {
+            id: Rc::new(TicketId {
                 key: self.id.to_string(),
                 tracker: tracker::Service::Bugzilla,
-            },
+            }),
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
             doc_type: self.doc_type(&tracker.fields)?,
@@ -106,10 +107,12 @@ impl IntoAbstract for Issue {
             docs_contact: self.docs_contact(&tracker.fields)?,
             subsystems: self.subsystems(&tracker.fields)?,
             url: self.url(tracker),
-            id: TicketId {
+            // The ID in particular is wrapped in Rc because it's involved in various filters
+            // and comparisons where ownership is complicated.
+            id: Rc::new(TicketId {
                 key: self.key,
                 tracker: tracker::Service::Jira,
-            },
+            }),
             summary: self.fields.summary,
             description: self.fields.description,
             is_open: &self.fields.status.name != "Closed",
