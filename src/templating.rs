@@ -226,8 +226,11 @@ pub fn format_document(
     template: &Template,
     variant: &DocumentVariant,
 ) -> Vec<Module> {
+    // Prepare a container for ticket usage statistics.
     let mut ticket_stats = HashMap::new();
 
+    // Initialize every ticket in the statistics with 0 usage.
+    // Later, the number increases each time that the ticket is used.
     for ticket in tickets.iter() {
         ticket_stats.insert(ticket.id.to_string(), 0);
     }
@@ -245,8 +248,35 @@ pub fn format_document(
     // A crude way to ensure that the statistics are only printed once, and not twice.
     // TODO: Revisit, maybe return the value instead.
     if variant == &DocumentVariant::Internal {
-        log::info!("Ticket usage statistics:\n{:#?}", ticket_stats);
+        report_usage_statistics(&ticket_stats);
     }
 
     chapters
+}
+
+/// Log statistics about tickets that haven't been used anywhere in the templates,
+/// or have been used more than once. Log both as warnings.
+fn report_usage_statistics(ticket_stats: &HashMap<String, u32>) {
+    let unused: Vec<&str> = ticket_stats
+        .iter()
+        .filter(|&(_k, &v)| v == 0)
+        .map(|(k, _v)| k.as_str())
+        .collect();
+
+    let overused: Vec<&str> = ticket_stats
+        .iter()
+        .filter(|&(_k, &v)| v > 1)
+        .map(|(k, _v)| k.as_str())
+        .collect();
+
+    if !unused.is_empty() {
+        log::warn!("Tickets unused in the templates:\t\t{}", unused.join(", "));
+    }
+
+    if !overused.is_empty() {
+        log::warn!(
+            "Tickets used more than once in the templates:\t{}",
+            overused.join(", ")
+        );
+    }
 }
