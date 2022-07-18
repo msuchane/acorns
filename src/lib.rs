@@ -134,7 +134,9 @@ impl Document {
         log::info!("Saving the generated release notes.");
 
         // Remove all previously generated content so that it doesn't interfere with the new build.
-        fs::remove_dir_all(&generated_dir)?;
+        if generated_dir.exists() {
+            fs::remove_dir_all(&generated_dir)?;
+        }
 
         // Save the newly generated files.
         Self::write_variant(&self.internal, &generated_dir.join("internal"))?;
