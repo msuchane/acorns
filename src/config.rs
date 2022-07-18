@@ -24,12 +24,23 @@ pub struct TicketQuery {
 
 pub mod tracker {
     use serde::Deserialize;
+    use std::fmt;
 
     /// An issue-tracking service, as in the platform.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize)]
     pub enum Service {
         Bugzilla,
         Jira,
+    }
+
+    impl fmt::Display for Service {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            let name = match self {
+                Self::Bugzilla => "Bugzilla",
+                Self::Jira => "Jira",
+            };
+            write!(f, "{}", name)
+        }
     }
 
     #[derive(Debug, PartialEq, Deserialize)]

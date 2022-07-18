@@ -1,18 +1,5 @@
-use std::fmt;
-
-use crate::config::tracker::Service;
 use crate::templating::DocumentVariant;
 use crate::ticket_abstraction::AbstractTicket;
-
-impl fmt::Display for Service {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match self {
-            Self::Bugzilla => "Bugzilla",
-            Self::Jira => "Jira",
-        };
-        write!(f, "{}", name)
-    }
-}
 
 impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
@@ -65,11 +52,10 @@ impl AbstractTicket {
     /// Prepare the link or the non-clickable signature that marks the ticket
     /// belonging to this release note.
     fn format_signature(&self) -> String {
-        let label = format!("{}:{}", self.id.tracker, self.id.key);
         if self.public {
-            format!("link:{}[{}]", &self.url, label)
+            format!("link:{}[{}]", &self.url, self.id)
         } else {
-            label
+            self.id.to_string()
         }
     }
 }

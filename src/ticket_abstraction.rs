@@ -1,3 +1,4 @@
+use std::fmt;
 use std::string::ToString;
 
 use bugzilla_query::Bug;
@@ -40,6 +41,12 @@ pub struct AbstractTicket {
 pub struct TicketId {
     pub key: String,
     pub tracker: tracker::Service,
+}
+
+impl fmt::Display for TicketId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}:{}", &self.tracker, &self.key)
+    }
 }
 
 pub trait IntoAbstract {
