@@ -37,8 +37,6 @@ impl Section {
         tickets: &[AbstractTicket],
         variant: &DocumentVariant,
     ) -> Option<String> {
-        let heading = format!("= {}", &self.title);
-
         // Select only those tickets that belong in the Internal or Public variant.
         let variant_tickets: Vec<&AbstractTicket> = match variant {
             // The internal variant accepts all tickets.
@@ -58,17 +56,31 @@ impl Section {
         if matching_tickets.is_empty() {
             None
         } else {
+            let heading = format!("= {}", &self.title);
+
             let release_notes: Vec<_> = matching_tickets
                 .iter()
                 .map(|t| t.release_note(variant))
                 .collect();
+
+            // If an introductory abstract is configured for this section, add it below the heading,
+            // followed by a newline separator.
+            let intro = if let Some(intro_abstract) = &self.intro_abstract {
+                format!("{}\n", intro_abstract)
+            } else {
+                String::new()
+            };
+
             Some(format!(
                 "[id=\"{}\"]\n\
-            {}\n\
-            \n\
-            {}",
+                {}\n\
+                \n\
+                {}\
+                \n\
+                {}\n",
                 id,
                 heading,
+                intro,
                 release_notes.join("\n\n")
             ))
         }
@@ -112,13 +124,25 @@ impl Section {
                     .iter()
                     .map(|m| m.include_statement())
                     .collect();
+
                 let include_block = include_statements.join("\n\n");
+
+                // If an introductory abstract is configured for this section, add it below the heading,
+                // followed by a newline separator.
+                let intro = if let Some(intro_abstract) = &self.intro_abstract {
+                    format!("{}\n", intro_abstract)
+                } else {
+                    String::new()
+                };
+
                 let text = format!(
                     "[id=\"{}\"]\n\
-                = {}\n\
-                \n\
-                {}",
-                    &module_id, &self.title, include_block
+                    = {}\n\
+                    \n\
+                    {}\
+                    \n\
+                    {}\n",
+                    &module_id, &self.title, intro, include_block
                 );
 
                 Some(Module {

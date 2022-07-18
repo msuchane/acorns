@@ -79,6 +79,7 @@ pub struct Template {
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Section {
     pub title: String,
+    pub intro_abstract: Option<String>,
     pub filter: Filter,
     pub sections: Option<Vec<Section>>,
 }
