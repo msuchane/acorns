@@ -95,7 +95,7 @@ pub async fn unsorted_tickets(
 async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Bug>> {
     let bugzilla_queries: Vec<&TicketQuery> = queries
         .iter()
-        .filter(|&t| t.tracker == tracker::Service::Bugzilla)
+        .filter(|&t| t.tracker() == &tracker::Service::Bugzilla)
         .collect();
 
     // If no tickets target Bugzilla, skip the download and return an empty vector.
@@ -110,7 +110,7 @@ async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec
             .bugs(
                 &bugzilla_queries
                     .iter()
-                    .map(|q| q.key.as_str())
+                    .filter_map(|q| q.key())
                     .collect::<Vec<&str>>(),
             )
             // This enables the download concurrency:
@@ -127,7 +127,7 @@ async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec
 async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Issue>> {
     let jira_queries: Vec<&TicketQuery> = queries
         .iter()
-        .filter(|&t| t.tracker == tracker::Service::Jira)
+        .filter(|&t| t.tracker() == &tracker::Service::Jira)
         .collect();
 
     // If no tickets target Jira, skip the download and return an empty vector.
@@ -142,7 +142,7 @@ async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<V
             .issues(
                 &jira_queries
                     .iter()
-                    .map(|q| q.key.as_str())
+                    .filter_map(|q| q.key())
                     .collect::<Vec<&str>>(),
             )
             // This enables the download concurrency:

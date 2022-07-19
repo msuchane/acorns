@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 use color_eyre::eyre::{bail, Context, Result};
 use serde::Deserialize;
 
+use crate::ticket_abstraction::TicketId;
+
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -15,11 +17,50 @@ const DATA_PREFIX: &str = PROGRAM_NAME;
 /// The sub-directory inside the data directory that contains all generated documents.
 const GENERATED_PREFIX: &str = "generated";
 
-/// A request to query for a ticket in a tracker.
+/// Variants of the ticket query that the user can configure in `tickets.yaml`.
+///
+/// * `Key`: Requests a specific ticket by its key.
+/// * `Free`: Requests all tickets that match a free-form query.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
-pub struct TicketQuery {
-    pub tracker: tracker::Service,
-    pub key: String,
+#[serde(untagged)]
+pub enum TicketQuery {
+    Key {
+        tracker: tracker::Service,
+        key: String,
+    },
+    Query {
+        tracker: tracker::Service,
+        query: String,
+    },
+}
+
+impl TicketQuery {
+    /// Returns the ticket key if this instance is `TicketQuery::Key`. Otherwise, returns `None`.
+    pub fn key(&self) -> Option<&str> {
+        match self {
+            Self::Key { tracker: _, key } => Some(key.as_str()),
+            Self::Query { .. } => None,
+        }
+    }
+    /// Returns the ticket query if this instance is `TicketQuery::Query`. Otherwise, returns `None`.
+    pub fn _free(&self) -> Option<&str> {
+        match self {
+            Self::Key { .. } => None,
+            Self::Query { tracker: _, query } => Some(query.as_str()),
+        }
+    }
+    /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.
+    /// The tracker is common to all variants.
+    pub fn tracker(&self) -> &tracker::Service {
+        match self {
+            Self::Key { tracker, .. } | Self::Query { tracker, .. } => tracker,
+        }
+    }
+    /// Compares if a `TicketQuery` and a `TicketId` are equal, in that they both identify
+    /// the same ticket by ID on the same tracker service.
+    pub fn equivalent_to(&self, id: &TicketId) -> bool {
+        self.tracker() == &id.tracker && self.key() == Some(&id.key)
+    }
 }
 
 pub mod tracker {

@@ -149,7 +149,7 @@ pub fn from_queries(
     for query in queries {
         let mut matching_tickets: Vec<AbstractTicket> = tickets
             .iter()
-            .filter(|t| query.tracker == t.id.tracker && query.key == t.id.key)
+            .filter(|t| query.equivalent_to(&t.id))
             // TODO: Try to avoid the cloning.
             .cloned()
             .collect();
