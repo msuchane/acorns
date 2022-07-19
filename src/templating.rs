@@ -273,12 +273,12 @@ fn report_usage_statistics(ticket_stats: &HashMap<Rc<TicketId>, u32>) {
         .collect();
 
     if !unused.is_empty() {
-        log::warn!("Tickets unused in the templates:\t\t{}", unused.join(", "));
+        log::warn!("Tickets unused in the templates:\n\t {}", unused.join(", "));
     }
 
     if !overused.is_empty() {
         log::warn!(
-            "Tickets used more than once in the templates:\t{}",
+            "Tickets used more than once in the templates:\n\t {}",
             overused.join(", ")
         );
     }

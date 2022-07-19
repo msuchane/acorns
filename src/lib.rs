@@ -80,8 +80,6 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 
     document.write_variants(&project.generated_dir)?;
 
-    log::info!("Done.");
-
     Ok(())
 }
 
@@ -95,11 +93,8 @@ impl Document {
     /// Prepare all populated and formatted modules that result from the RN project configuration.
     /// Returns a tuple with the document generated in two variants: (Internal, Public).
     fn new(project: &Project) -> Result<Self> {
-        log::info!("Downloading ticket information.");
         let abstract_tickets =
             ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
-
-        log::info!("Formatting the document.");
 
         let internal = templating::format_document(
             &abstract_tickets,
