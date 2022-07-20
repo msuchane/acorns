@@ -41,10 +41,13 @@ impl TicketQuery {
         }
     }
     /// Returns the ticket query if this instance is `TicketQuery::Query`. Otherwise, returns `None`.
-    pub fn _search(&self) -> Option<&str> {
+    pub fn search(&self) -> Option<&str> {
         match self {
             Self::Key { .. } => None,
-            Self::Search { tracker: _, search: query } => Some(query.as_str()),
+            Self::Search {
+                tracker: _,
+                search: query,
+            } => Some(query.as_str()),
         }
     }
     /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.

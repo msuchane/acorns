@@ -1,7 +1,7 @@
 use std::string::ToString;
 
 use bugzilla_query::Bug;
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{bail, eyre, Context, Result};
 use jira_query::Issue;
 
 // use crate::config::tracker::Service;
@@ -103,26 +103,31 @@ async fn bugs<'a>(
     queries: &'a [TicketQuery],
     trackers: &tracker::Config,
 ) -> Result<Vec<(&'a TicketQuery, Bug)>> {
-    let bugzilla_queries: Vec<&TicketQuery> = queries
+    let bugzilla_queries_by_id: Vec<&str> = queries
         .iter()
-        .filter(|&t| t.tracker() == &tracker::Service::Bugzilla)
+        .filter(|&tq| tq.tracker() == &tracker::Service::Bugzilla)
+        .filter_map(|tq| tq.key())
+        .collect();
+
+    let bugzilla_queries_by_search: Vec<&TicketQuery> = queries
+        .iter()
+        .filter(|&tq| tq.tracker() == &tracker::Service::Bugzilla)
+        .filter(|&tq| tq.search().is_some())
         .collect();
 
     // If no tickets target Bugzilla, skip the download and return an empty vector.
-    if bugzilla_queries.is_empty() {
-        Ok(Vec::new())
-    } else {
-        let bz_instance = bz_instance(trackers)?;
+    if bugzilla_queries_by_id.is_empty() && bugzilla_queries_by_search.is_empty() {
+        return Ok(Vec::new());
+    }
 
-        log::info!("Downloading bugs from Bugzilla.");
+    log::info!("Downloading bugs from Bugzilla.");
+    let bz_instance = bz_instance(trackers)?;
 
+    let mut all_bugs = Vec::new();
+
+    if !bugzilla_queries_by_id.is_empty() {
         let bugs = bz_instance
-            .bugs(
-                &bugzilla_queries
-                    .iter()
-                    .filter_map(|q| q.key())
-                    .collect::<Vec<&str>>(),
-            )
+            .bugs(&bugzilla_queries_by_id)
             // This enables the download concurrency:
             .await
             .context("Failed to download tickets from Bugzilla.")?;
@@ -137,10 +142,30 @@ async fn bugs<'a>(
             annotated_bugs.push((matching_query, bug));
         }
 
-        log::info!("Finished downloading from Bugzilla.");
-
-        Ok(annotated_bugs)
+        all_bugs.append(&mut annotated_bugs);
     }
+
+    if !bugzilla_queries_by_search.is_empty() {
+        let mut annotated_bugs: Vec<(&TicketQuery, Bug)> = Vec::new();
+
+        for query in &bugzilla_queries_by_search {
+            let bugs = bz_instance
+                .query(query.search().unwrap())
+                // This enables the download concurrency:
+                .await
+                .context("Failed to download tickets from Bugzilla.")?;
+
+            for bug in bugs {
+                annotated_bugs.push((query, bug));
+            }
+        }
+
+        all_bugs.append(&mut annotated_bugs);
+    }
+
+    log::info!("Finished downloading from Bugzilla.");
+
+    Ok(all_bugs)
 }
 
 /// Download all configured issues from Jira.
@@ -178,8 +203,8 @@ async fn issues<'a>(
         for issue in issues {
             let matching_query = queries
                 .iter()
-                .find(|query| query.key() == Some(issue.id.as_str()))
-                .expect("Issue doesn't match any configured query.");
+                .find(|query| query.key() == Some(issue.key.as_str()))
+                .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
             annotated_issues.push((matching_query, issue));
         }
 
