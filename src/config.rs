@@ -26,9 +26,9 @@ pub enum TicketQuery {
         tracker: tracker::Service,
         key: String,
     },
-    Query {
+    Search {
         tracker: tracker::Service,
-        query: String,
+        search: String,
     },
 }
 
@@ -37,21 +37,21 @@ impl TicketQuery {
     pub fn key(&self) -> Option<&str> {
         match self {
             Self::Key { tracker: _, key } => Some(key.as_str()),
-            Self::Query { .. } => None,
+            Self::Search { .. } => None,
         }
     }
     /// Returns the ticket query if this instance is `TicketQuery::Query`. Otherwise, returns `None`.
-    pub fn _free(&self) -> Option<&str> {
+    pub fn _search(&self) -> Option<&str> {
         match self {
             Self::Key { .. } => None,
-            Self::Query { tracker: _, query } => Some(query.as_str()),
+            Self::Search { tracker: _, search: query } => Some(query.as_str()),
         }
     }
     /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.
     /// The tracker is common to all variants.
     pub fn tracker(&self) -> &tracker::Service {
         match self {
-            Self::Key { tracker, .. } | Self::Query { tracker, .. } => tracker,
+            Self::Key { tracker, .. } | Self::Search { tracker, .. } => tracker,
         }
     }
 }
