@@ -4,8 +4,6 @@ use std::path::{Path, PathBuf};
 use color_eyre::eyre::{bail, Context, Result};
 use serde::Deserialize;
 
-use crate::ticket_abstraction::TicketId;
-
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -55,11 +53,6 @@ impl TicketQuery {
         match self {
             Self::Key { tracker, .. } | Self::Query { tracker, .. } => tracker,
         }
-    }
-    /// Compares if a `TicketQuery` and a `TicketId` are equal, in that they both identify
-    /// the same ticket by ID on the same tracker service.
-    pub fn equivalent_to(&self, id: &TicketId) -> bool {
-        self.tracker() == &id.tracker && self.key() == Some(&id.key)
     }
 }
 

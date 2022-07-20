@@ -141,17 +141,17 @@ pub fn from_queries(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
 ) -> Result<Vec<AbstractTicket>> {
-    let tickets = tracker_access::unsorted_tickets(queries, trackers)?;
+    let annotated_tickets = tracker_access::unsorted_tickets(queries, trackers)?;
 
     // Sort tickets to the order in the config file:
     let mut sorted_tickets: Vec<AbstractTicket> = Vec::new();
 
     for query in queries {
-        let mut matching_tickets: Vec<AbstractTicket> = tickets
+        let mut matching_tickets: Vec<AbstractTicket> = annotated_tickets
             .iter()
-            .filter(|t| query.equivalent_to(&t.id))
+            .filter(|at| query == at.query)
             // TODO: Try to avoid the cloning.
-            .cloned()
+            .map(|at| at.ticket.clone())
             .collect();
         // A query might result in no tickets. For example, Bugzilla silently ignores nonexistent IDs.
         // In that case, report the error and immediately exit the program.

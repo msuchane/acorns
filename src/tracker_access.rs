@@ -17,7 +17,11 @@ const JIRA_CHUNK_SIZE: u32 = 30;
 // Always include these fields in Bugzilla requests. We process some of their content.
 const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
 
-// TODO: Move these two functions to a more appropriate place, possibly a new module.
+pub struct AnnotatedTicket<'a> {
+    pub ticket: AbstractTicket,
+    pub query: &'a TicketQuery,
+}
+
 /// Prepare a client to access Bugzilla.
 fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance> {
     let api_key = if let Some(key) = &trackers.bugzilla.api_key {
@@ -57,10 +61,10 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
 ///
 /// Downloads from Bugzilla and from Jira in parallel.
 #[tokio::main]
-pub async fn unsorted_tickets(
-    queries: &[TicketQuery],
+pub async fn unsorted_tickets<'a>(
+    queries: &'a [TicketQuery],
     trackers: &tracker::Config,
-) -> Result<Vec<AbstractTicket>> {
+) -> Result<Vec<AnnotatedTicket<'a>>> {
     // If no queries were found in the project configuration, quit with an error.
     // Such a situation should never occur because our config parsing requires at least
     // some items in the tickets file, but better make sure.
@@ -79,20 +83,26 @@ pub async fn unsorted_tickets(
 
     // Convert bugs and issues into abstract tickets.
     // Using an imperative style so that each `into_abstract` call can return an error.
-    for bug in bugs? {
+    for (query, bug) in bugs? {
         let ticket = bug.into_abstract(&trackers.bugzilla)?;
-        results.push(ticket);
+        let annotated = AnnotatedTicket { ticket, query };
+        results.push(annotated);
     }
-    for issue in issues? {
+    for (query, issue) in issues? {
         let ticket = issue.into_abstract(&trackers.jira)?;
-        results.push(ticket);
+        let annotated = AnnotatedTicket { ticket, query };
+        results.push(annotated);
     }
 
     Ok(results)
 }
 
 /// Download all configured bugs from Bugzilla.
-async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Bug>> {
+/// Returns every bug in a tuple, annotated with the query that it came from.
+async fn bugs<'a>(
+    queries: &'a [TicketQuery],
+    trackers: &tracker::Config,
+) -> Result<Vec<(&'a TicketQuery, Bug)>> {
     let bugzilla_queries: Vec<&TicketQuery> = queries
         .iter()
         .filter(|&t| t.tracker() == &tracker::Service::Bugzilla)
@@ -117,14 +127,28 @@ async fn bugs(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec
             .await
             .context("Failed to download tickets from Bugzilla.")?;
 
+        let mut annotated_bugs: Vec<(&TicketQuery, Bug)> = Vec::new();
+
+        for bug in bugs {
+            let matching_query = queries
+                .iter()
+                .find(|query| query.key() == Some(bug.id.to_string().as_str()))
+                .expect("Bug doesn't match any configured query.");
+            annotated_bugs.push((matching_query, bug));
+        }
+
         log::info!("Finished downloading from Bugzilla.");
 
-        Ok(bugs)
+        Ok(annotated_bugs)
     }
 }
 
 /// Download all configured issues from Jira.
-async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<Vec<Issue>> {
+/// Returns every issue in a tuple, annotated with the query that it came from.
+async fn issues<'a>(
+    queries: &'a [TicketQuery],
+    trackers: &tracker::Config,
+) -> Result<Vec<(&'a TicketQuery, Issue)>> {
     let jira_queries: Vec<&TicketQuery> = queries
         .iter()
         .filter(|&t| t.tracker() == &tracker::Service::Jira)
@@ -149,9 +173,19 @@ async fn issues(queries: &[TicketQuery], trackers: &tracker::Config) -> Result<V
             .await
             .context("Failed to download tickets from Jira.")?;
 
+        let mut annotated_issues: Vec<(&TicketQuery, Issue)> = Vec::new();
+
+        for issue in issues {
+            let matching_query = queries
+                .iter()
+                .find(|query| query.key() == Some(issue.id.as_str()))
+                .expect("Issue doesn't match any configured query.");
+            annotated_issues.push((matching_query, issue));
+        }
+
         log::info!("Finished downloading from Jira.");
 
-        Ok(issues)
+        Ok(annotated_issues)
     }
 }
 
