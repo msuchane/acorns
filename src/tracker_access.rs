@@ -219,38 +219,47 @@ async fn issues(
 
     // If no tickets target Jira, skip the download and return an empty vector.
     if jira_queries.is_empty() {
-        Ok(Vec::new())
-    } else {
-        let jira_instance = jira_instance(trackers)?;
-
-        log::info!("Downloading issues from Jira.");
-
-        let issues = jira_instance
-            .issues(
-                &jira_queries
-                    .iter()
-                    .filter_map(|q| q.key())
-                    .collect::<Vec<&str>>(),
-            )
-            // This enables the download concurrency:
-            .await
-            .context("Failed to download tickets from Jira.")?;
-
-        let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
-
-        for issue in issues {
-            let matching_query = queries
-                .iter()
-                .find(|query| query.key() == Some(issue.key.as_str()))
-                .map(Arc::clone)
-                .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
-            annotated_issues.push((matching_query, issue));
-        }
-
-        log::info!("Finished downloading from Jira.");
-
-        Ok(annotated_issues)
+        return Ok(Vec::new());
     }
+
+    log::info!("Downloading issues from Jira.");
+
+    let jira_instance = jira_instance(trackers)?;
+
+    let issues_from_ids = issues_from_ids(&jira_queries, &jira_instance).await?;
+
+    log::info!("Finished downloading from Jira.");
+
+    Ok(issues_from_ids)
+}
+
+async fn issues_from_ids(
+    queries: &[Arc<TicketQuery>],
+    jira_instance: &jira_query::JiraInstance,
+) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
+    let issues = jira_instance
+        .issues(
+            &queries
+                .iter()
+                .filter_map(|q| q.key())
+                .collect::<Vec<&str>>(),
+        )
+        // This enables the download concurrency:
+        .await
+        .context("Failed to download tickets from Jira.")?;
+
+    let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
+
+    for issue in issues {
+        let matching_query = queries
+            .iter()
+            .find(|query| query.key() == Some(issue.key.as_str()))
+            .map(Arc::clone)
+            .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
+        annotated_issues.push((matching_query, issue));
+    }
+
+    Ok(annotated_issues)
 }
 
 // Temporarily disable this function while converting to configurable fields.
