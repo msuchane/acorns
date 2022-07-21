@@ -1,7 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
 use std::string::ToString;
-use std::sync::Arc;
 
 use bugzilla_query::Bug;
 use color_eyre::eyre::{bail, Result};
@@ -141,7 +140,7 @@ impl IntoAbstract for Issue {
 /// Process the configured ticket queries into abstract tickets,
 /// sorted in the original order as found in the config file.
 pub fn from_queries(
-    queries: &[Arc<TicketQuery>],
+    queries: &[Rc<TicketQuery>],
     trackers: &tracker::Config,
 ) -> Result<Vec<AbstractTicket>> {
     let annotated_tickets = tracker_access::unsorted_tickets(queries, trackers)?;
