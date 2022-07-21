@@ -29,3 +29,5 @@ Generate an AsciiDoc release notes document from tracking tickets
         ```
         $ cargo install --path ./cizrna
         ```
+
+        If the build fails due to a missing dependency, install the missing dependency on your system and start the build again.
