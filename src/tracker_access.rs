@@ -170,22 +170,16 @@ async fn bugs_from_ids(
             .iter()
             .find(|query| query.key() == Some(bug.id.to_string().as_str()))
             .ok_or_else(|| eyre!("Bug {} doesn't match any configured query.", bug.id))?;
-        // TODO: Try to avoid the clone.
         annotated_bugs.push((Arc::clone(matching_query), bug));
     }
 
     Ok(annotated_bugs)
 }
 
-async fn bugs_from_searches<'a>(
+async fn bugs_from_searches(
     queries: &[Arc<TicketQuery>],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
-    // If there are no search queries, return early. This enables async parallelism.
-    if queries.is_empty() {
-        return Ok(Vec::new());
-    }
-
     let mut annotated_bugs: Vec<(Arc<TicketQuery>, Bug)> = Vec::new();
 
     for query in queries.iter() {
@@ -195,7 +189,6 @@ async fn bugs_from_searches<'a>(
             .await
             .context("Failed to download tickets from Bugzilla.")?
             .into_iter()
-            // TODO: Try to avoid the clone.
             .map(|bug| (Arc::clone(query), bug))
             .collect();
 
@@ -222,15 +215,35 @@ async fn issues(
         return Ok(Vec::new());
     }
 
+    let queries_by_id: Vec<Arc<TicketQuery>> = jira_queries
+        .iter()
+        .filter(|&tq| tq.key().is_some())
+        .map(Arc::clone)
+        .collect();
+
+    let queries_by_search: Vec<Arc<TicketQuery>> = jira_queries
+        .iter()
+        .filter(|&tq| tq.search().is_some())
+        .map(Arc::clone)
+        .collect();
+
     log::info!("Downloading issues from Jira.");
 
     let jira_instance = jira_instance(trackers)?;
 
-    let issues_from_ids = issues_from_ids(&jira_queries, &jira_instance).await?;
+    let mut all_issues = Vec::new();
+
+    let issues_from_ids = issues_from_ids(&queries_by_id, &jira_instance);
+    let issues_from_searches = issues_from_searches(&queries_by_search, &jira_instance);
+
+    let (issues_from_ids, issues_from_searches) = tokio::join!(issues_from_ids, issues_from_searches);
+
+    all_issues.append(&mut issues_from_ids?);
+    all_issues.append(&mut issues_from_searches?);
 
     log::info!("Finished downloading from Jira.");
 
-    Ok(issues_from_ids)
+    Ok(all_issues)
 }
 
 async fn issues_from_ids(
@@ -257,6 +270,28 @@ async fn issues_from_ids(
             .map(Arc::clone)
             .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
         annotated_issues.push((matching_query, issue));
+    }
+
+    Ok(annotated_issues)
+}
+
+async fn issues_from_searches(
+    queries: &[Arc<TicketQuery>],
+    jira_instance: &jira_query::JiraInstance,
+) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
+    let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
+
+    for query in queries.iter() {
+        let mut issues = jira_instance
+            .search(query.search().unwrap())
+            // This enables the download concurrency:
+            .await
+            .context("Failed to download tickets from Bugzilla.")?
+            .into_iter()
+            .map(|issue| (Arc::clone(query), issue))
+            .collect();
+
+        annotated_issues.append(&mut issues);
     }
 
     Ok(annotated_issues)
