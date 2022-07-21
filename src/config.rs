@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use color_eyre::eyre::{bail, Context, Result};
 use serde::Deserialize;
@@ -177,7 +177,7 @@ fn parse_templates(template_file: &Path) -> Result<Template> {
 pub struct Project {
     pub base_dir: PathBuf,
     pub generated_dir: PathBuf,
-    pub tickets: Vec<Rc<TicketQuery>>,
+    pub tickets: Vec<Arc<TicketQuery>>,
     pub trackers: tracker::Config,
     pub templates: Template,
 }
@@ -213,7 +213,7 @@ impl Project {
 
         let tickets = parse_tickets(&tickets_path)?
             .into_iter()
-            .map(Rc::new)
+            .map(Arc::new)
             .collect();
         let trackers = parse_trackers(&trackers_path)?;
         let templates = parse_templates(&templates_path)?;
