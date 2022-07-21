@@ -24,7 +24,7 @@ pub struct AbstractTicket {
     pub is_open: bool,
     pub priority: String,
     pub url: String,
-    pub assignee: String,
+    pub assignee: Option<String>,
     pub components: Vec<String>,
     pub product: String,
     pub labels: Option<Vec<String>>,
@@ -77,7 +77,8 @@ impl IntoAbstract for Bug {
             status: self.status,
             is_open: self.is_open,
             priority: self.priority,
-            assignee: self.assigned_to,
+            // Bugs are always assigned to someone.
+            assignee: Some(self.assigned_to),
             components: self.component,
             product: self.product,
             // Bugzilla has no labels
@@ -118,7 +119,8 @@ impl IntoAbstract for Issue {
             is_open: &self.fields.status.name != "Closed",
             status: self.fields.status.name,
             priority: self.fields.priority.name,
-            assignee: self.fields.assignee.name,
+            // Issues might not be assigned to anyone.
+            assignee: self.fields.assignee.map(|a| a.name),
             components: self.fields.components.into_iter().map(|c| c.name).collect(),
             product: self.fields.project.name,
             labels: Some(self.fields.labels),

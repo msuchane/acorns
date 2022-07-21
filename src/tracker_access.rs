@@ -150,7 +150,7 @@ async fn bugs<'a>(
 
         for query in &bugzilla_queries_by_search {
             let bugs = bz_instance
-                .query(query.search().unwrap())
+                .search(query.search().unwrap())
                 // This enables the download concurrency:
                 .await
                 .context("Failed to download tickets from Bugzilla.")?;
