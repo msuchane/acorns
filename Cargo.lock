@@ -63,9 +63,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bugzilla_query"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f737c3be82f8a01b24095a012f9982c8e95940fad14d3bf8e9949c3afc319b1"
+checksum = "0f80a872055f5fac2e05b0e0a94dcc41327f485f00c808cbb95a95860e57ffc7"
 dependencies = [
  "chrono",
  "log",
@@ -473,9 +473,9 @@ checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "jira_query"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be93447904953ca6f7e8314246d0933625083ef5f00c639a9831abc76d0268e8"
+checksum = "223d6f436b57a999dbb1a46fd0cc607be69df042e9f7eceb4e6a65a5976c1819"
 dependencies = [
  "chrono",
  "log",

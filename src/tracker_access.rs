@@ -147,18 +147,18 @@ async fn bugs(
     Ok(all_bugs)
 }
 
+/// Download bugs that come from ID queries.
 async fn bugs_from_ids(
     queries: &[Arc<TicketQuery>],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
-    // If there are no ID queries, return early. This enables async parallelism.
-    if queries.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    let ids: Vec<&str> = queries.iter().filter_map(|query| query.key()).collect();
     let bugs = bz_instance
-        .bugs(&ids)
+        .bugs(
+            &queries
+                .iter()
+                .filter_map(|q| q.key())
+                .collect::<Vec<&str>>(),
+        )
         // This enables the download concurrency:
         .await
         .context("Failed to download tickets from Bugzilla.")?;
@@ -176,6 +176,7 @@ async fn bugs_from_ids(
     Ok(annotated_bugs)
 }
 
+/// Download bugs that come from search queries.
 async fn bugs_from_searches(
     queries: &[Arc<TicketQuery>],
     bz_instance: &bugzilla_query::BzInstance,
@@ -246,6 +247,7 @@ async fn issues(
     Ok(all_issues)
 }
 
+/// Download issues that come from ID queries.
 async fn issues_from_ids(
     queries: &[Arc<TicketQuery>],
     jira_instance: &jira_query::JiraInstance,
@@ -275,6 +277,7 @@ async fn issues_from_ids(
     Ok(annotated_issues)
 }
 
+/// Download issues that come from search queries.
 async fn issues_from_searches(
     queries: &[Arc<TicketQuery>],
     jira_instance: &jira_query::JiraInstance,
