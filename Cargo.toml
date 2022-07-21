@@ -5,7 +5,7 @@ version = "0.8.1"
 edition = "2021"
 description = "Generate an AsciiDoc release notes document from tracking tickets."
 license = "GPL-3.0-or-later"
-readme = "README.adoc"
+readme = "README.md"
 categories = ["command-line-utilities", "text-processing", "template-engine"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
