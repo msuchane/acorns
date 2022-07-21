@@ -143,24 +143,35 @@ pub fn from_queries(
     queries: &[TicketQuery],
     trackers: &tracker::Config,
 ) -> Result<Vec<AbstractTicket>> {
-    let annotated_tickets = tracker_access::unsorted_tickets(queries, trackers)?;
+    let mut annotated_tickets = tracker_access::unsorted_tickets(queries, trackers)?;
 
     // Sort tickets to the order in the config file:
     let mut sorted_tickets: Vec<AbstractTicket> = Vec::new();
 
+    // Go query by query. Queries are still sorted the same as in the config file. Use their order.
     for query in queries {
-        let mut matching_tickets: Vec<AbstractTicket> = annotated_tickets
+        // Find the indices of all tickets that match this query.
+        // We're dealing with indices because that enables us to move a ticket from one Vec to another
+        // using the Vec::swap_remove method, which takes an index as its argument.
+        let matching_tickets: Vec<usize> = annotated_tickets
             .iter()
-            .filter(|at| query == at.query)
-            // TODO: Try to avoid the cloning.
-            .map(|at| at.ticket.clone())
+            .enumerate()
+            .filter(|(_index, at)| query == at.query)
+            .map(|(index, _at)| index)
             .collect();
+
         // A query might result in no tickets. For example, Bugzilla silently ignores nonexistent IDs.
         // In that case, report the error and immediately exit the program.
         if matching_tickets.is_empty() {
             bail!("Query produced no tickets: {:#?}", query);
         }
-        sorted_tickets.append(&mut matching_tickets);
+
+        // Insert tickets that match this query into the sorted Vec.
+        // At the same time, remove them from the unsorted Vec.
+        for index in &matching_tickets {
+            let at = annotated_tickets.swap_remove(*index);
+            sorted_tickets.push(at.ticket);
+        }
     }
 
     Ok(sorted_tickets)
