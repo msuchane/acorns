@@ -80,18 +80,18 @@ pub async fn unsorted_tickets(
     let issues = issues(&queries, trackers);
 
     // Wait until both downloads have finished:
-    let (bugs, issues) = tokio::join!(bugs, issues);
+    let (bugs, issues) = tokio::try_join!(bugs, issues)?;
 
     let mut results = Vec::new();
 
     // Convert bugs and issues into abstract tickets.
     // Using an imperative style so that each `into_abstract` call can return an error.
-    for (query, bug) in bugs? {
+    for (query, bug) in bugs {
         let ticket = bug.into_abstract(&trackers.bugzilla)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
     }
-    for (query, issue) in issues? {
+    for (query, issue) in issues {
         let ticket = issue.into_abstract(&trackers.jira)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
@@ -137,10 +137,10 @@ async fn bugs(
     let bugs_from_ids = bugs_from_ids(&queries_by_id, &bz_instance);
     let bugs_from_searches = bugs_from_searches(&queries_by_search, &bz_instance);
 
-    let (bugs_from_ids, bugs_from_searches) = tokio::join!(bugs_from_ids, bugs_from_searches);
+    let (mut bugs_from_ids, mut bugs_from_searches) = tokio::try_join!(bugs_from_ids, bugs_from_searches)?;
 
-    all_bugs.append(&mut bugs_from_ids?);
-    all_bugs.append(&mut bugs_from_searches?);
+    all_bugs.append(&mut bugs_from_ids);
+    all_bugs.append(&mut bugs_from_searches);
 
     log::info!("Finished downloading from Bugzilla.");
 
@@ -237,10 +237,10 @@ async fn issues(
     let issues_from_ids = issues_from_ids(&queries_by_id, &jira_instance);
     let issues_from_searches = issues_from_searches(&queries_by_search, &jira_instance);
 
-    let (issues_from_ids, issues_from_searches) = tokio::join!(issues_from_ids, issues_from_searches);
+    let (mut issues_from_ids, mut issues_from_searches) = tokio::try_join!(issues_from_ids, issues_from_searches)?;
 
-    all_issues.append(&mut issues_from_ids?);
-    all_issues.append(&mut issues_from_searches?);
+    all_issues.append(&mut issues_from_ids);
+    all_issues.append(&mut issues_from_searches);
 
     log::info!("Finished downloading from Jira.");
 
