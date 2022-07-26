@@ -26,18 +26,27 @@ pub enum TicketQuery {
     Key {
         tracker: tracker::Service,
         key: String,
+        overrides: Option<Overrides>,
     },
     Search {
         tracker: tracker::Service,
         search: String,
+        overrides: Option<Overrides>,
     },
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
+pub struct Overrides {
+    doc_type: Option<String>,
+    components: Option<Vec<String>>,
+    subsystems: Option<Vec<String>>,
 }
 
 impl TicketQuery {
     /// Returns the ticket key if this instance is `TicketQuery::Key`. Otherwise, returns `None`.
     pub fn key(&self) -> Option<&str> {
         match self {
-            Self::Key { tracker: _, key } => Some(key.as_str()),
+            Self::Key { key, .. } => Some(key.as_str()),
             Self::Search { .. } => None,
         }
     }
@@ -45,10 +54,7 @@ impl TicketQuery {
     pub fn search(&self) -> Option<&str> {
         match self {
             Self::Key { .. } => None,
-            Self::Search {
-                tracker: _,
-                search: query,
-            } => Some(query.as_str()),
+            Self::Search { search, .. } => Some(search.as_str()),
         }
     }
     /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.
