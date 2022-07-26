@@ -179,12 +179,8 @@ impl ExtraFields for Issue {
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        self.fields
-            .extra
-            .get(field)
-            .and_then(Value::as_str)
-            .map(ToString::to_string)
-            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
+        extract_field(&self.fields.extra, field)
+            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", self.id))
     }
 
     fn target_release(&self, _config: &tracker::Fields) -> Result<String> {
