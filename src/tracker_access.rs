@@ -137,7 +137,8 @@ async fn bugs(
     let bugs_from_ids = bugs_from_ids(&queries_by_id, &bz_instance);
     let bugs_from_searches = bugs_from_searches(&queries_by_search, &bz_instance);
 
-    let (mut bugs_from_ids, mut bugs_from_searches) = tokio::try_join!(bugs_from_ids, bugs_from_searches)?;
+    let (mut bugs_from_ids, mut bugs_from_searches) =
+        tokio::try_join!(bugs_from_ids, bugs_from_searches)?;
 
     all_bugs.append(&mut bugs_from_ids);
     all_bugs.append(&mut bugs_from_searches);
@@ -237,7 +238,8 @@ async fn issues(
     let issues_from_ids = issues_from_ids(&queries_by_id, &jira_instance);
     let issues_from_searches = issues_from_searches(&queries_by_search, &jira_instance);
 
-    let (mut issues_from_ids, mut issues_from_searches) = tokio::try_join!(issues_from_ids, issues_from_searches)?;
+    let (mut issues_from_ids, mut issues_from_searches) =
+        tokio::try_join!(issues_from_ids, issues_from_searches)?;
 
     all_issues.append(&mut issues_from_ids);
     all_issues.append(&mut issues_from_searches);

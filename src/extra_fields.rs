@@ -85,7 +85,7 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
         .map(ToString::to_string)
         .ok_or_else(|| {
             eyre!(
-                "Field {} is missing or has an unexpected structure:\n{:#?}",
+                "The `{}` field is missing or has an unexpected structure:\n{:#?}",
                 field,
                 extra.get(field)
             )
@@ -96,16 +96,19 @@ impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
         extract_field(&self.extra, field)
+            .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
         extract_field(&self.extra, field)
+            .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
     fn target_release(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.target_release;
         extract_field(&self.extra, field)
+            .wrap_err_with(|| eyre!("Failed to extract the target release of bug {}.", self.id))
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
@@ -127,9 +130,10 @@ impl ExtraFields for Bug {
         let rdt = self
             .get_flag(flag)
             // TODO: Make sure it's okay to quit with an error if RDT is missing.
-            .ok_or_else(|| eyre!("Flag {} is missing in bug {}.", flag, self.id))?;
+            .ok_or_else(|| eyre!("The `{}` flag is missing.", flag));
 
-        DocTextStatus::try_from(rdt)
+        rdt.map(DocTextStatus::try_from)
+            .wrap_err_with(|| eyre!("Failed to extract the doc text status of bug {}.", self.id))?
     }
 
     fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
@@ -160,7 +164,7 @@ impl ExtraFields for Issue {
             .fields
             .extra
             .get(field)
-            .ok_or_else(|| eyre!("Field {} is missing.", field))?;
+            .ok_or_else(|| eyre!("The `{}` field is missing.", field))?;
         let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
             .context("Jira doc type field has an unexpected structure.")?;
 
