@@ -9,7 +9,7 @@ use jira_query::Issue;
 
 use crate::config::{tracker, TicketQuery};
 use crate::extra_fields::{DocTextStatus, ExtraFields};
-use crate::tracker_access;
+use crate::tracker_access::{self, AnnotatedTicket};
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
 #[derive(Clone, Debug)]
@@ -146,18 +146,28 @@ pub fn from_queries(
 ) -> Result<Vec<AbstractTicket>> {
     let annotated_tickets = tracker_access::unsorted_tickets(queries, trackers)?;
 
-    // Sort tickets to the order in the config file:
-    let mut sorted_tickets: Vec<AbstractTicket> = Vec::new();
+    // Sort the tickets according to the order in the config file.
+    let sorted_tickets = sort_tickets(queries, &annotated_tickets)?;
+
+    // Strip the query from the ticket. The query has served its full purpose.
+    Ok(sorted_tickets.into_iter().map(|at| at.ticket).collect())
+}
+
+/// Sort tickets to the order specified in the tickets configuration file.
+pub fn sort_tickets(
+    queries: &[Arc<TicketQuery>],
+    tickets: &[AnnotatedTicket],
+) -> Result<Vec<AnnotatedTicket>> {
+    let mut sorted_tickets: Vec<AnnotatedTicket> = Vec::new();
 
     // Go query by query. Queries are still sorted the same as in the config file. Use their order.
     for query in queries {
         // Find the indices of all tickets that match this query.
         // We're dealing with indices because that enables us to move a ticket from one Vec to another
         // using the Vec::swap_remove method, which takes an index as its argument.
-        let mut matching_tickets: Vec<AbstractTicket> = annotated_tickets
+        let mut matching_tickets: Vec<AnnotatedTicket> = tickets
             .iter()
             .filter(|at| query == &at.query)
-            .map(|at| &at.ticket)
             // TODO: Revisit whether this clone is necessary.
             // Note to self: Do not use Vec::swap_remove, it changes the Vec ordering and size at runtime.
             .cloned()

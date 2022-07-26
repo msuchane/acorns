@@ -18,9 +18,30 @@ const JIRA_CHUNK_SIZE: u32 = 30;
 // Always include these fields in Bugzilla requests. We process some of their content.
 const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
 
+#[derive(Clone)]
 pub struct AnnotatedTicket {
     pub ticket: AbstractTicket,
     pub query: Arc<TicketQuery>,
+}
+
+impl AnnotatedTicket {
+    /// Modify the ticket by applying the overrides configured for it.
+    /// The overrides might edit several specific fields of `AbstractTicket`.
+    pub fn override_fields(&mut self) {
+        // The overrides configuration entry is optional.
+        if let Some(overrides) = self.query.overrides() {
+            // Each part of the overrides is also optional.
+            if let Some(doc_type) = &overrides.doc_type {
+                self.ticket.doc_type = doc_type.clone();
+            }
+            if let Some(components) = &overrides.components {
+                self.ticket.components = components.clone();
+            }
+            if let Some(subsystems) = &overrides.subsystems {
+                self.ticket.subsystems = subsystems.clone();
+            }
+        }
+    }
 }
 
 /// Prepare a client to access Bugzilla.
@@ -95,6 +116,11 @@ pub async fn unsorted_tickets(
         let ticket = issue.into_abstract(&trackers.jira)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
+    }
+
+    // Modify each ticket by applying the overrides configured for it.
+    for annotated_ticket in &mut results {
+        annotated_ticket.override_fields();
     }
 
     Ok(results)

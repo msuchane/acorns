@@ -35,11 +35,13 @@ pub enum TicketQuery {
     },
 }
 
+/// Optional, configurable overrides that modify an `AbstractTicket`.
+/// The selected fields that you can modify affect the sorting of the ticket in the document.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 pub struct Overrides {
-    doc_type: Option<String>,
-    components: Option<Vec<String>>,
-    subsystems: Option<Vec<String>>,
+    pub doc_type: Option<String>,
+    pub components: Option<Vec<String>>,
+    pub subsystems: Option<Vec<String>>,
 }
 
 impl TicketQuery {
@@ -62,6 +64,13 @@ impl TicketQuery {
     pub fn tracker(&self) -> &tracker::Service {
         match self {
             Self::Key { tracker, .. } | Self::Search { tracker, .. } => tracker,
+        }
+    }
+    /// Returns the overrides configured for this `TicketQuery`, regardless of the variant.
+    /// The overrides are common to all variants.
+    pub fn overrides(&self) -> &Option<Overrides> {
+        match self {
+            Self::Key { overrides, .. } | Self::Search { overrides, .. } => overrides,
         }
     }
 }
