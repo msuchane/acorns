@@ -164,9 +164,15 @@ impl ExtraFields for Issue {
             .fields
             .extra
             .get(field)
-            .ok_or_else(|| eyre!("The `{}` field is missing.", field))?;
-        let doc_type: JiraDocType = serde_json::from_value(doc_type_field.clone())
-            .context("Jira doc type field has an unexpected structure.")?;
+            .ok_or_else(|| eyre!("The `{}` field is missing in issue {}.", field, self.key))?;
+        let doc_type: JiraDocType =
+            serde_json::from_value(doc_type_field.clone()).wrap_err_with(|| {
+                eyre!(
+                    "The doc type field has an unexpected structure in issue {}:\n{:#?}",
+                    self.key,
+                    doc_type_field
+                )
+            })?;
 
         Ok(doc_type.value)
     }
