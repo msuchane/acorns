@@ -3,7 +3,7 @@ use std::fmt;
 use std::string::ToString;
 
 use color_eyre::{
-    eyre::{eyre, Context},
+    eyre::{eyre, WrapErr},
     Result,
 };
 use serde::Deserialize;
@@ -117,8 +117,13 @@ impl ExtraFields for Bug {
             .extra
             .get(field)
             .ok_or_else(|| eyre!("Field {} is missing.", field))?;
-        let pool: BzPool = serde_json::from_value(pool_field.clone())
-            .context("Pool field has an unexpected structure.")?;
+        let pool: BzPool = serde_json::from_value(pool_field.clone()).wrap_err_with(|| {
+            eyre!(
+                "The pool field has an unexpected structure in bug {}:\n{:#?}",
+                self.id,
+                pool_field
+            )
+        })?;
 
         // In Bugzilla, the bug always has just one subsystem. Therefore,
         // this returns a vector with a single item, or an empty vector.
@@ -197,13 +202,19 @@ impl ExtraFields for Issue {
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.subsystems;
 
-        let pool =
-            self.fields.extra.get(field).ok_or_else(|| {
-                eyre!("Field {} is missing or has an unexpected structure.", field)
-            })?;
+        let pool = self.fields.extra.get(field).ok_or_else(|| {
+            eyre!(
+                "The `{}` field is missing or has an unexpected structure in issue {}.",
+                field,
+                self.key
+            )
+        })?;
 
-        let ssts: Vec<JiraSST> = serde_json::from_value(pool.clone())
-            .context("Jira subsystems field has an unexpected structure.")?;
+        let ssts: Vec<JiraSST> = serde_json::from_value(pool.clone()).wrap_err(eyre!(
+            "The subsystems field has an unexpected structure in issue {}:\n{:#?}",
+            self.key,
+            pool
+        ))?;
 
         let sst_names = ssts.into_iter().map(|sst| sst.value).collect();
 
@@ -218,7 +229,13 @@ impl ExtraFields for Issue {
             .get(field)
             .and_then(|rdt| rdt.get("value"))
             .and_then(Value::as_str)
-            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))?;
+            .ok_or_else(|| {
+                eyre!(
+                    "The `{}` field is missing or has an unexpected structure in issue {}.",
+                    field,
+                    self.key
+                )
+            })?;
 
         DocTextStatus::try_from(rdt_field)
     }
@@ -231,7 +248,13 @@ impl ExtraFields for Issue {
             .and_then(|cf| cf.get("emailAddress"))
             .and_then(Value::as_str)
             .map(ToString::to_string)
-            .ok_or_else(|| eyre!("Field {} is missing or has an unexpected structure.", field))
+            .ok_or_else(|| {
+                eyre!(
+                    "The `{}` field is missing or has an unexpected structure in issue {}.",
+                    field,
+                    self.key
+                )
+            })
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {
