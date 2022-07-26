@@ -1,4 +1,4 @@
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{Result, WrapErr};
 use simplelog::{ColorChoice, Config, LevelFilter, TermLogger, TerminalMode};
 
 /// This function initializes the `simplelog` logging system, which plugs into the `log`
@@ -28,7 +28,7 @@ pub fn initialize_logger(verbose: u64) -> Result<()> {
         // Try to use color if possible.
         ColorChoice::Auto,
     )
-    .context("Failed to configure the terminal logging.")?;
+    .wrap_err("Failed to configure the terminal logging.")?;
 
     Ok(())
 }

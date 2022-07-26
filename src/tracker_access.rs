@@ -2,7 +2,7 @@ use std::string::ToString;
 use std::sync::Arc;
 
 use bugzilla_query::Bug;
-use color_eyre::eyre::{bail, eyre, Context, Result};
+use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use jira_query::Issue;
 
 // use crate::config::tracker::Service;
@@ -29,7 +29,7 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("BZ_API_KEY").context("Set the BZ_API_KEY environment variable.")?
+        std::env::var("BZ_API_KEY").wrap_err("Set the BZ_API_KEY environment variable.")?
     };
 
     Ok(
@@ -45,7 +45,7 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("JIRA_API_KEY").context("Set the JIRA_API_KEY environment variable.")?
+        std::env::var("JIRA_API_KEY").wrap_err("Set the JIRA_API_KEY environment variable.")?
     };
 
     Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?
@@ -162,7 +162,7 @@ async fn bugs_from_ids(
         )
         // This enables the download concurrency:
         .await
-        .context("Failed to download tickets from Bugzilla.")?;
+        .wrap_err("Failed to download tickets from Bugzilla.")?;
 
     let mut annotated_bugs: Vec<(Arc<TicketQuery>, Bug)> = Vec::new();
 
@@ -189,7 +189,7 @@ async fn bugs_from_searches(
             .search(query.search().unwrap())
             // This enables the download concurrency:
             .await
-            .context("Failed to download tickets from Bugzilla.")?
+            .wrap_err("Failed to download tickets from Bugzilla.")?
             .into_iter()
             .map(|bug| (Arc::clone(query), bug))
             .collect();
@@ -263,7 +263,7 @@ async fn issues_from_ids(
         )
         // This enables the download concurrency:
         .await
-        .context("Failed to download tickets from Jira.")?;
+        .wrap_err("Failed to download tickets from Jira.")?;
 
     let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
 
@@ -291,7 +291,7 @@ async fn issues_from_searches(
             .search(query.search().unwrap())
             // This enables the download concurrency:
             .await
-            .context("Failed to download tickets from Bugzilla.")?
+            .wrap_err("Failed to download tickets from Bugzilla.")?
             .into_iter()
             .map(|issue| (Arc::clone(query), issue))
             .collect();

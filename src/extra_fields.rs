@@ -3,7 +3,7 @@ use std::fmt;
 use std::string::ToString;
 
 use color_eyre::{
-    eyre::{eyre, WrapErr},
+    eyre::{bail, eyre, WrapErr},
     Result,
 };
 use serde::Deserialize;
@@ -31,7 +31,7 @@ impl TryFrom<&str> for DocTextStatus {
             "?" | "Proposed" | "In progress" => Ok(Self::InProgress),
             // TODO: Does "Upstream only" really mean to skip this RN?
             "-" | "Rejected" | "Upstream only" => Ok(Self::NoDocumentation),
-            _ => Err(eyre!("Unrecognized doc text status value: {:?}", string)),
+            _ => bail!("Unrecognized doc text status value: {:?}", string),
         }
     }
 }

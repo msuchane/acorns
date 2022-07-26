@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use clap::ArgMatches;
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{Result, WrapErr};
 
 pub mod cli;
 mod config;
@@ -118,7 +118,7 @@ impl Document {
         for module in modules {
             let out_file = &generated_dir.join(&module.file_name);
             log::debug!("Writing file: {}", out_file.display());
-            fs::write(out_file, &module.text).context("Failed to write generated module.")?;
+            fs::write(out_file, &module.text).wrap_err("Failed to write generated module.")?;
 
             // If the currently processed module is an assembly,
             // recursively descend into the assembly and write its included modules.

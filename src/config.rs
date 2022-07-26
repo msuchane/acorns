@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use color_eyre::eyre::{bail, Context, Result};
+use color_eyre::eyre::{bail, Result, WrapErr};
 use serde::Deserialize;
 
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
@@ -145,9 +145,9 @@ pub struct Filter {
 /// Parse the specified tickets config file into the ticket queries configuration.
 fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
     let text =
-        fs::read_to_string(tickets_file).context("Cannot read the tickets configuration file.")?;
+        fs::read_to_string(tickets_file).wrap_err("Cannot read the tickets configuration file.")?;
     let config: Vec<TicketQuery> =
-        serde_yaml::from_str(&text).context("Cannot parse the tickets configuration file.")?;
+        serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
     log::debug!("{:#?}", config);
 
     Ok(config)
@@ -155,10 +155,10 @@ fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
 
 /// Parse the specified tracker file into the trackers configuration.
 fn parse_trackers(trackers_file: &Path) -> Result<tracker::Config> {
-    let text =
-        fs::read_to_string(trackers_file).context("Cannot read the tickets configuration file.")?;
+    let text = fs::read_to_string(trackers_file)
+        .wrap_err("Cannot read the tickets configuration file.")?;
     let trackers: tracker::Config =
-        serde_yaml::from_str(&text).context("Cannot parse the tickets configuration file.")?;
+        serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
     log::debug!("{:#?}", trackers);
 
     Ok(trackers)
@@ -166,9 +166,9 @@ fn parse_trackers(trackers_file: &Path) -> Result<tracker::Config> {
 
 /// Parse the template configuration files into template structs, with chapter and section definitions.
 fn parse_templates(template_file: &Path) -> Result<Template> {
-    let text = fs::read_to_string(template_file).context("Cannot read the template file.")?;
+    let text = fs::read_to_string(template_file).wrap_err("Cannot read the template file.")?;
     let templates: Template =
-        serde_yaml::from_str(&text).context("Cannot parse the template file.")?;
+        serde_yaml::from_str(&text).wrap_err("Cannot parse the template file.")?;
     log::debug!("{:#?}", templates);
     Ok(templates)
 }
