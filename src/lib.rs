@@ -88,6 +88,7 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 struct Document {
     internal: Vec<Module>,
     public: Vec<Module>,
+    status_table: String,
 }
 
 impl Document {
@@ -108,7 +109,13 @@ impl Document {
             &DocumentVariant::Public,
         );
 
-        Ok(Self { internal, public })
+        let status_table = status_report::analyze_status(&abstract_tickets)?;
+
+        Ok(Self {
+            internal,
+            public,
+            status_table,
+        })
     }
 
     /// Write the formatted RN modules of a document variant as files to the output directory.
