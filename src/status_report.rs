@@ -71,7 +71,7 @@ impl AbstractTicket {
         if let Some(assignee) = &self.assignee {
             email_prefix(assignee)
         } else {
-            "No assignee set"
+            "No assignee"
         }
     }
 
@@ -82,21 +82,21 @@ impl AbstractTicket {
         } else if let Some(labels) = &self.labels {
             labels.join(", ")
         } else {
-            "No flags or labels set".to_string()
+            "No flags or labels".to_string()
         }
     }
 
-    fn display_target_release(&self) -> &str {
-        if let Some(release) = &self.target_release {
-            release
+    fn display_target_releases(&self) -> String {
+        if self.target_releases.is_empty() {
+            "No releases".to_string()
         } else {
-            "No release set"
+            self.target_releases.join(", ")
         }
     }
 
     fn display_subsystems(&self) -> String {
         if self.subsystems.is_empty() {
-            "No subsystems set".to_string()
+            "No subsystems".to_string()
         } else {
             self.subsystems.join(", ")
         }
@@ -104,7 +104,7 @@ impl AbstractTicket {
 
     fn display_components(&self) -> String {
         if self.components.is_empty() {
-            "No components set".to_string()
+            "No components".to_string()
         } else {
             self.components.join(", ")
         }

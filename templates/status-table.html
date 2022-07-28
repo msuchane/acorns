@@ -129,7 +129,7 @@
         <th>Bug status</th>
         <th>Docs contact</th>
         <th>Assignee</th>
-        <th>Target release</th>
+        <th>Target releases</th>
         <th>Priority</th>
         <th>Subsystem(s)</th>
         <th>Component(s)</th>
@@ -157,7 +157,7 @@
         <td style="color: {{ checks.development.color() }}">{{ ticket.status }}</td>
         <td>{{ ticket.docs_contact_short() }}</td>
         <td>{{ ticket.assignee_short() }}</td>
-        <td>{{ ticket.display_target_release() }}</td>
+        <td>{{ ticket.display_target_releases() }}</td>
         <td>{{ ticket.priority }}</td>
         <td>{{ ticket.display_subsystems() }}</td>
         <td>{{ ticket.display_components() }}</td>

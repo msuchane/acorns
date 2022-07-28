@@ -30,7 +30,7 @@ pub struct AbstractTicket {
     pub product: String,
     pub labels: Option<Vec<String>>,
     pub flags: Option<Vec<String>>,
-    pub target_release: Option<String>,
+    pub target_releases: Vec<String>,
     pub subsystems: Vec<String>,
     pub groups: Option<Vec<String>>,
     pub public: bool,
@@ -68,8 +68,7 @@ impl IntoAbstract for Bug {
             description: None,
             doc_type: self.doc_type(&tracker.fields)?,
             doc_text: self.doc_text(&tracker.fields)?,
-            // The target release is non-essential. Discard the error and store as Option.
-            target_release: self.target_release(&tracker.fields).ok(),
+            target_releases: self.target_releases(&tracker.fields)?,
             subsystems: self.subsystems(&tracker.fields)?,
             doc_text_status: self.doc_text_status(&tracker.fields)?,
             docs_contact: self.docs_contact(&tracker.fields)?,
@@ -104,7 +103,7 @@ impl IntoAbstract for Issue {
             doc_type: self.doc_type(&tracker.fields)?,
             doc_text: self.doc_text(&tracker.fields)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_release: self.target_release(&tracker.fields).ok(),
+            target_releases: self.target_releases(&tracker.fields)?,
             doc_text_status: self.doc_text_status(&tracker.fields)?,
             docs_contact: self.docs_contact(&tracker.fields)?,
             subsystems: self.subsystems(&tracker.fields)?,
