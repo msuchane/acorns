@@ -95,10 +95,10 @@
       </div>
 
       <div id="completeness">
-      {{ complete_numbers["all"] }} release notes:<br />
-      <span style="color: green;">{{ complete_numbers["complete"] }} ({{ complete_numbers["complete%"] }}%)</span> complete,<br />
-      <span style="color: orange;">{{ complete_numbers["warnings"] }} ({{ complete_numbers["warnings%"] }}%)</span> warnings,<br />
-      <span style="color: red;">{{ complete_numbers["incomplete"] }} ({{ complete_numbers["incomplete%"] }}%)</span> incomplete.
+      {{ overall_progress.all }} release notes:<br />
+      <span style="color: green;">{{ overall_progress.complete }} ({{ overall_progress.complete_pct }}%)</span> complete,<br />
+      <span style="color: orange;">{{ overall_progress.warnings }} ({{ overall_progress.warnings_pct }}%)</span> warnings,<br />
+      <span style="color: red;">{{ overall_progress.incomplete }} ({{ overall_progress.incomplete_pct }}%)</span> incomplete.
       </div>
 
       <!-- Duplicated tickets: Replace with references? -->
@@ -141,7 +141,7 @@
       <tbody>
       {% for ticket in tickets %}
       <tr>
-        <td><a href="{{ ticket.url }}" title="{{ ticket.summary_sanitized }}">{{ ticket.ticket_id }}</a>
+        <td><a href="{{ ticket.url }}" title="{{ ticket.summary }}">{{ ticket.id }}</a>
           <!-- Link to the ticket preview: not yet implemented -->
           <!--
           <% (when (:preview-url ticket) %>
@@ -179,14 +179,14 @@
         <th>% complete</th>
       </thead>
       <tbody>
-        {% for (writer, numbers) in per_writer_stats %}
+        {% for writer_stats in per_writer_stats %}
         <tr>
-          <td>{{ writer }}</td>
-          <td style="text-align: right;">{{ numbers.total }}</td>
-          <td style="text-align: right; color: green;">{{ numbers.complete }}</td>
-          <td style="text-align: right; color: orange;">{{ numbers.warnings }}</td>
-          <td style="text-align: right; color: red;">{{ numbers.incomplete }}</td>
-          <td style="text-align: right;">{{ numbers.percent }}%</td>
+          <td>{{ writer_stats.name }}</td>
+          <td style="text-align: right;">{{ writer_stats.total }}</td>
+          <td style="text-align: right; color: green;">{{ writer_stats.complete }}</td>
+          <td style="text-align: right; color: orange;">{{ writer_stats.warnings }}</td>
+          <td style="text-align: right; color: red;">{{ writer_stats.incomplete }}</td>
+          <td style="text-align: right;">{{ writer_stats.percent }}%</td>
         </tr>
         {% endfor %}
       </tbody>
