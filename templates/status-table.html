@@ -141,6 +141,7 @@
       <tbody>
       {% for ticket in tickets %}
       <tr>
+        {% let checks = ticket.checks() %}
         <td><a href="{{ ticket.url }}" title="{{ ticket.summary }}">{{ ticket.id }}</a>
           <!-- Link to the ticket preview: not yet implemented -->
           <!--
@@ -150,17 +151,17 @@
           <% ) %>
           -->
         </td>
-        <td style="color: {{ ticket.checks.overall[1] }}">{{ ticket.checks.overall[0] }}</td>
+        <td style="color: {{ checks.overall.color() }}">{{ checks.overall.message() }}</td>
         <td>{{ ticket.doc_type }}</td>
         <td style="text-align: center;">{{ ticket.doc_text_status }}</td>
-        <td style="color: {{ ticket.checks.development }}">{{ ticket.status }}</td>
-        <td>{{ ticket.docs_contact_short }}</td>
-        <td>{{ ticket.assignee_short }}</td>
+        <td style="color: {{ checks.development.color() }}">{{ ticket.status }}</td>
+        <td>{{ ticket.docs_contact_short() }}</td>
+        <td>{{ ticket.assignee_short() }}</td>
         <td>{{ ticket.target_release }}</td>
         <td>{{ ticket.priority }}</td>
         <td>{{ ticket.subsystems }}</td>
         <td>{{ ticket.components }}</td>
-        <td style="color: {{ ticket.checks.title_and_text[1] }}">{{ ticket.checks.title_and_text[0] }}</td>
+        <td style="color: {{ checks.title_and_text.color() }}">{{ checks.title_and_text.message() }}</td>
         <td style="font-size: 0.7em;">{{ ticket.flags_or_labels }}</td>
       </tr>
       {% endfor %}
