@@ -70,6 +70,22 @@ impl AbstractTicket {
     fn flags_or_labels(&self) -> String {
         todo!()
     }
+
+    fn display_target_release(&self) -> &str {
+        if let Some(release) = &self.target_release {
+            release
+        } else {
+            "No release set"
+        }
+    }
+
+    fn display_subsystems(&self) -> String {
+        todo!()
+    }
+
+    fn display_components(&self) -> String {
+        todo!()
+    }
 }
 
 #[derive(Template)] // this will generate the code...
