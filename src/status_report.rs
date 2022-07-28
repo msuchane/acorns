@@ -1,6 +1,7 @@
 use std::default::Default;
 
 use askama::Template;
+use color_eyre::eyre::{Result, WrapErr};
 
 use crate::ticket_abstraction::AbstractTicket;
 
@@ -112,7 +113,7 @@ struct StatusTableTemplate<'a> {
     generated_date: &'a str,
 }
 
-fn main() {
+pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
     let status_table = StatusTableTemplate {
         products: "RHEL",
         release: "9.0",
@@ -123,5 +124,8 @@ fn main() {
         tickets: &[],
         generated_date: "",
     };
-    println!("{}", status_table.render().unwrap());
+
+    status_table
+        .render()
+        .wrap_err("Failed to prepare the status table.")
 }
