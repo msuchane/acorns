@@ -26,13 +26,16 @@ struct WriterStats<'a> {
     percent: f32,
 }
 
+#[derive(Default)]
 struct Checks {
     overall: Status,
     development: Status,
     title_and_text: Status,
 }
 
+#[derive(Default)]
 enum Status {
+    #[default]
     Ok,
     Warning(String),
     Error(String),
@@ -57,7 +60,7 @@ impl Status {
 
 impl AbstractTicket {
     fn checks(&self) -> Checks {
-        todo!()
+        Checks::default()
     }
 
     fn docs_contact_short(&self) -> &str {
@@ -73,7 +76,14 @@ impl AbstractTicket {
     }
 
     fn flags_or_labels(&self) -> String {
-        todo!()
+        // TODO: Maybe combine flags and labels together as one list?
+        if let Some(flags) = &self.flags {
+            flags.join(", ")
+        } else if let Some(labels) = &self.labels {
+            labels.join(", ")
+        } else {
+            "No flags or labels set".to_string()
+        }
     }
 
     fn display_target_release(&self) -> &str {
@@ -85,11 +95,19 @@ impl AbstractTicket {
     }
 
     fn display_subsystems(&self) -> String {
-        todo!()
+        if self.subsystems.is_empty() {
+            "No subsystems set".to_string()
+        } else {
+            self.subsystems.join(", ")
+        }
     }
 
     fn display_components(&self) -> String {
-        todo!()
+        if self.components.is_empty() {
+            "No components set".to_string()
+        } else {
+            self.components.join(", ")
+        }
     }
 }
 
