@@ -162,6 +162,7 @@ version = "0.10.0"
 dependencies = [
  "askama",
  "bugzilla_query",
+ "chrono",
  "clap",
  "color-eyre",
  "jira_query",
