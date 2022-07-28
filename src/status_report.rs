@@ -66,6 +66,10 @@ impl AbstractTicket {
     fn assignee_short(&self) -> String {
         todo!()
     }
+
+    fn flags_or_labels(&self) -> String {
+        todo!()
+    }
 }
 
 #[derive(Template)] // this will generate the code...

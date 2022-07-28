@@ -162,7 +162,7 @@
         <td>{{ ticket.subsystems }}</td>
         <td>{{ ticket.components }}</td>
         <td style="color: {{ checks.title_and_text.color() }}">{{ checks.title_and_text.message() }}</td>
-        <td style="font-size: 0.7em;">{{ ticket.flags_or_labels }}</td>
+        <td style="font-size: 0.7em;">{{ ticket.flags_or_labels() }}</td>
       </tr>
       {% endfor %}
       </tbody>
