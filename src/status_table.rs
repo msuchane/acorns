@@ -25,9 +25,52 @@ struct WriterStats<'a> {
     percent: f32,
 }
 
+struct Checks {
+    overall: Status,
+    development: Status,
+    title_and_text: Status,
+}
+
+enum Status {
+    Ok,
+    Warning(String),
+    Error(String),
+}
+
+impl Status {
+    fn message(&self) -> &str {
+        match self {
+            Self::Ok => "OK",
+            Self::Warning(message) => message,
+            Self::Error(message) => message,
+        }
+    }
+    fn color(&self) -> &'static str {
+        match self {
+            Self::Ok => "green",
+            Self::Warning(_) => "orange",
+            Self::Error(_) => "red",
+        }
+    }
+}
+
+impl AbstractTicket {
+    fn checks(&self) -> Checks {
+        todo!()
+    }
+
+    fn docs_contact_short(&self) -> String {
+        todo!()
+    }
+
+    fn assignee_short(&self) -> String {
+        todo!()
+    }
+}
+
 #[derive(Template)] // this will generate the code...
 #[template(path = "status-table.html")] // using the template in this path, relative
-                                 // to the `templates` dir in the crate root
+                                        // to the `templates` dir in the crate root
 struct StatusTableTemplate<'a> {
     products: &'a str,
     release: &'a str,
@@ -41,7 +84,9 @@ fn main() {
     let status_table = StatusTableTemplate {
         products: "RHEL",
         release: "9.0",
-        overall_progress: OverallProgress { ..Default::default() },
+        overall_progress: OverallProgress {
+            ..Default::default()
+        },
         per_writer_stats: &[],
         tickets: &[],
         generated_date: "",
