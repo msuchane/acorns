@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Release notes status for {{ products }}; release {{ release }}</title>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'/>
+    <meta name='Author' content='Marek Suchánek' />
+    <meta name='Generator' content='Cizrna (CoRN 4)' />
+    <script src="https://kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+    <style type='text/css'>
+      body {
+        margin-left: 1em;
+        margin-right: 1em;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        font-family: "Source Sans Pro", "Cantarell", "San Francisco", "Lucida Grande", "Trebuchet MS", "DejaVu Sans", "Sans";
+        font-size: 16px;
+      }
+      p {
+        line-height: 1.2em;
+      }
+      h1 {
+        margin: 0.2em 0em 0.2em 0em;
+      }
+      #subtitle {
+        font-size: 1.2em;
+        margin-top: 0em;
+      }
+      table, th, td {
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+        padding: 0.5em;
+      }
+      th {
+        font-size: 1.2em;
+        color: #444;
+        background-color: #eee;
+      }
+      /* Sortable tables */
+      table.sortable thead {
+        cursor: pointer;
+      }
+      /* Striped rows and columns, blending background colors */
+      /* Let's not shade rows because of filtering */
+      /*
+      tbody tr:nth-child(even) {
+        background-color: #f8f8f8;
+        mix-blend-mode: multiply;
+      }
+      */
+      tr td:nth-child(even) {
+        background-color: #f8f8f8;
+        mix-blend-mode: multiply;
+      }
+      /* table filter */
+      #table-filter {
+        width: 20em;
+        font-size: 1em;
+        padding: 0.5em 1em 0.5em 1em;
+        margin: 0px;
+        border: 1px solid #ddd;
+      }
+      #header {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 1em;
+        color: #444;
+      }
+      /* frame that reports complete/incomplete numbers. Intentionally similar to the filter */
+      #completeness {
+        font-size: 1em;
+        padding: 0.5em 1em 0.5em 1em;
+        margin: 0px;
+        border: 1px solid #ddd;
+        background-color: #f8f8f8;
+      }
+      #table-container {
+        overflow: scroll;
+        /* Max height calculated relative to the viewport (browser screen) */
+        max-height: 75vh;
+      }
+      #footer {
+        margin-top: 1.5em;
+        margin-bottom: 1em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="header">
+      <div>
+      <h1>Release notes status</h1>
+      <p id="subtitle">for {{ products }}; release {{ release }}.</p>
+      </div>
+
+      <div id="completeness">
+      {{ complete_numbers["all"] }} release notes:<br />
+      <span style="color: green;">{{ complete_numbers["complete"] }} ({{ complete_numbers["complete%"] }}%)</span> complete,<br />
+      <span style="color: orange;">{{ complete_numbers["warnings"] }} ({{ complete_numbers["warnings%"] }}%)</span> warnings,<br />
+      <span style="color: red;">{{ complete_numbers["incomplete"] }} ({{ complete_numbers["incomplete%"] }}%)</span> incomplete.
+      </div>
+
+      <!-- Duplicated tickets: Replace with references? -->
+      <!--
+      <% (when duplicated-tickets %>
+      <h2>Duplicated tickets:</h2>
+      <%= duplicated-tickets %>
+      <% ) %>
+      -->
+
+      <input type="search" class="light-table-filter" id="table-filter" data-table="order-table" placeholder="Filter the table…">
+    </div>
+
+    <!-- For reference, the original styling of the table -->
+    <!--
+    <table class='table table-condensed table-hover table-bordered sortable'>
+    -->
+    <div id="table-container">
+    <table id="status-table" class="sortable order-table table">
+
+      <!-- Table header -->
+      <thead>
+      <tr>
+        <th>Bug ID</th>
+        <th>Overall status</th>
+        <th>Doc type</th>
+        <th>RDT</th>
+        <th>Bug status</th>
+        <th>Docs contact</th>
+        <th>Assignee</th>
+        <th>Target release</th>
+        <th>Priority</th>
+        <th>Subsystem(s)</th>
+        <th>Component(s)</th>
+        <th>RN title &amp; text</th>
+        <th>Labels or flags</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      {% for ticket in tickets %}
+      <tr>
+        <td><a href="{{ ticket.url }}" title="{{ ticket.summary_sanitized }}">{{ ticket.ticket_id }}</a>
+          <!-- Link to the ticket preview: not yet implemented -->
+          <!--
+          <% (when (:preview-url ticket) %>
+          <br />
+          <a href="<%= (:preview-url ticket) %>">Preview</a>
+          <% ) %>
+          -->
+        </td>
+        <td style="color: {{ ticket.checks.overall[1] }}">{{ ticket.checks.overall[0] }}</td>
+        <td>{{ ticket.doc_type }}</td>
+        <td style="text-align: center;">{{ ticket.doc_text_status }}</td>
+        <td style="color: {{ ticket.checks.development }}">{{ ticket.status }}</td>
+        <td>{{ ticket.docs_contact_short }}</td>
+        <td>{{ ticket.assignee_short }}</td>
+        <td>{{ ticket.target_release }}</td>
+        <td>{{ ticket.priority }}</td>
+        <td>{{ ticket.subsystems }}</td>
+        <td>{{ ticket.components }}</td>
+        <td style="color: {{ ticket.checks.title_and_text[1] }}">{{ ticket.checks.title_and_text[0] }}</td>
+        <td style="font-size: 0.7em;">{{ ticket.flags_or_labels }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+
+    </table>
+    </div>
+
+    <table class="sortable" style="margin-top: 1.5em;">
+      <thead>
+        <th>Docs contact</th>
+        <th>Total RNs</th>
+        <th>Complete</th>
+        <th>Warnings</th>
+        <th>Incomplete</th>
+        <th>% complete</th>
+      </thead>
+      <tbody>
+        {% for (writer, numbers) in per_writer_stats %}
+        <tr>
+          <td>{{ writer }}</td>
+          <td style="text-align: right;">{{ numbers.total }}</td>
+          <td style="text-align: right; color: green;">{{ numbers.complete }}</td>
+          <td style="text-align: right; color: orange;">{{ numbers.warnings }}</td>
+          <td style="text-align: right; color: red;">{{ numbers.incomplete }}</td>
+          <td style="text-align: right;">{{ numbers.percent }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+
+    </hr>
+
+    <p id="footer">
+      Generated on {{ generated_date }}
+    </p>
+
+    <!-- <script src='/userContent/jquery-3.1.1.min.js' type='text/javascript'></script> -->
+    <!-- <script src='/userContent/js/bootstrap.min.js' type='text/javascript'></script> -->
+    <!-- <script src='/userContent/sorttable.js' type='text/javascript'></script> -->
+
+    <!-- Table filtering script copied from: https://codepen.io/chriscoyier/pen/tIuBL -->
+  <script>
+    (function(document) {
+    'use strict';
+
+    var LightTableFilter = (function(Arr) {
+
+      var _input;
+
+      function _onInputEvent(e) {
+        _input = e.target;
+        var tables = document.getElementsByClassName(_input.getAttribute('data-table'));
+        Arr.forEach.call(tables, function(table) {
+          Arr.forEach.call(table.tBodies, function(tbody) {
+            Arr.forEach.call(tbody.rows, _filter);
+          });
+        });
+      }
+
+      function _filter(row) {
+        var text = row.textContent.toLowerCase(), val = _input.value.toLowerCase();
+        row.style.display = text.indexOf(val) === -1 ? 'none' : 'table-row';
+      }
+
+      return {
+        init: function() {
+          var inputs = document.getElementsByClassName('light-table-filter');
+          Arr.forEach.call(inputs, function(input) {
+            input.oninput = _onInputEvent;
+          });
+        }
+      };
+    })(Array.prototype);
+
+    document.addEventListener('readystatechange', function() {
+      if (document.readyState === 'complete') {
+        LightTableFilter.init();
+      }
+    });
+
+    })(document);
+  </script>
+
+  </body>
+</html>
+
