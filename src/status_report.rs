@@ -121,7 +121,7 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
             ..Default::default()
         },
         per_writer_stats: &[],
-        tickets: &[],
+        tickets,
         generated_date: "",
     };
 
