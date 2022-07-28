@@ -9,13 +9,13 @@ use jira_query::Issue;
 use crate::config::{tracker, TicketQuery};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
-// The number of items in a single Jira query.
-// All Jira queries are processed in chunks of this size.
-// This prevents hitting the maximum allowed request size set in the Jira instance.
+/// The number of items in a single Jira query.
+/// All Jira queries are processed in chunks of this size.
+/// This prevents hitting the maximum allowed request size set in the Jira instance.
 // TODO: Make this configurable.
 const JIRA_CHUNK_SIZE: u32 = 30;
 
-// Always include these fields in Bugzilla requests. We process some of their content.
+/// Always include these fields in Bugzilla requests. We process some of their content.
 const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
 
 #[derive(Clone)]
