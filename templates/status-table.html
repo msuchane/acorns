@@ -157,10 +157,10 @@
         <td style="color: {{ checks.development.color() }}">{{ ticket.status }}</td>
         <td>{{ ticket.docs_contact_short() }}</td>
         <td>{{ ticket.assignee_short() }}</td>
-        <td>{{ ticket.target_release }}</td>
+        <td>{{ ticket.display_target_release() }}</td>
         <td>{{ ticket.priority }}</td>
-        <td>{{ ticket.subsystems }}</td>
-        <td>{{ ticket.components }}</td>
+        <td>{{ ticket.display_subsystems() }}</td>
+        <td>{{ ticket.display_components() }}</td>
         <td style="color: {{ checks.title_and_text.color() }}">{{ checks.title_and_text.message() }}</td>
         <td style="font-size: 0.7em;">{{ ticket.flags_or_labels() }}</td>
       </tr>
