@@ -9,7 +9,7 @@ mod config;
 mod extra_fields;
 mod logging;
 mod note;
-mod status_table;
+mod status_report;
 mod templating;
 mod ticket_abstraction;
 mod tracker_access;
