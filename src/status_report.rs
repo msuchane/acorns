@@ -46,8 +46,7 @@ impl Status {
     fn message(&self) -> &str {
         match self {
             Self::Ok => "OK",
-            Self::Warning(message) => message,
-            Self::Error(message) => message,
+            Self::Warning(message) | Self::Error(message) => message,
         }
     }
     fn color(&self) -> &'static str {
