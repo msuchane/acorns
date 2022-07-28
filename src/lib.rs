@@ -147,9 +147,17 @@ impl Document {
             fs::remove_dir_all(&generated_dir)?;
         }
 
+        let internal_dir = generated_dir.join("internal");
+        let public_dir = generated_dir.join("public");
+
         // Save the newly generated files.
-        Self::write_variant(&self.internal, &generated_dir.join("internal"))?;
-        Self::write_variant(&self.public, &generated_dir.join("public"))?;
+        Self::write_variant(&self.internal, &internal_dir)?;
+        Self::write_variant(&self.public, &public_dir)?;
+
+        // Save the status table.
+        let status_file = generated_dir.join("status-table.html");
+        log::debug!("Writing file: {}", status_file.display());
+        fs::write(status_file, &self.status_table).wrap_err("Failed to write generated module.")?;
 
         Ok(())
     }
