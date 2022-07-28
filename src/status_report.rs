@@ -1,6 +1,7 @@
 use std::default::Default;
 
 use askama::Template;
+use chrono::prelude::*;
 use color_eyre::eyre::{Result, WrapErr};
 
 use crate::ticket_abstraction::AbstractTicket;
@@ -132,6 +133,8 @@ struct StatusTableTemplate<'a> {
 }
 
 pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
+    let date_today: DateTime<Utc> = Utc::now();
+
     let status_table = StatusTableTemplate {
         products: "RHEL",
         release: "9.0",
@@ -140,7 +143,7 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
         },
         per_writer_stats: &[],
         tickets,
-        generated_date: "",
+        generated_date: &date_today.to_rfc2822(),
     };
 
     status_table
