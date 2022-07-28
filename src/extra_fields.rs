@@ -53,7 +53,7 @@ pub trait ExtraFields {
     /// Extract the doc text from the ticket.
     fn doc_text(&self, config: &tracker::Fields) -> Result<String>;
     /// Extract the target release from the ticket.
-    fn target_release(&self, config: &tracker::Fields) -> Result<String>;
+    fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>>;
     /// Extract the subsystems from the ticket.
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
@@ -105,10 +105,21 @@ impl ExtraFields for Bug {
             .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
-    fn target_release(&self, config: &tracker::Fields) -> Result<String> {
+    fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.target_release;
-        extract_field(&self.extra, field)
-            .wrap_err_with(|| eyre!("Failed to extract the target release of bug {}.", self.id))
+        let release = extract_field(&self.extra, field)
+            .wrap_err_with(|| eyre!("Failed to extract the target release of bug {}.", self.id))?;
+
+        // Bugzilla uses the "---" placeholder to represent an unset release.
+        // TODO: Are there any more placeholder?
+        let empty_values = ["---"];
+
+        // If the release is unset, return no releases. If it's set, return that one release.
+        if empty_values.contains(&release.as_str()) {
+            Ok(vec![])
+        } else {
+            Ok(vec![release])
+        }
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
@@ -188,15 +199,14 @@ impl ExtraFields for Issue {
             .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", self.id))
     }
 
-    fn target_release(&self, _config: &tracker::Fields) -> Result<String> {
-        self.fields
+    fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
+        Ok(self
+            .fields
             .fix_versions
-            // TODO: Is the first fix version in the list the one that we want?
-            .get(0)
-            // This error is not serious. Recover from it in the higher layers.
-            .ok_or_else(|| eyre!("Issue {} has no fix version.", &self.key))
-            // TODO: Get rid of the clone.
+            .iter()
+            // TODO: Get rid of the clone if possible
             .map(|version| version.name.clone())
+            .collect())
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
