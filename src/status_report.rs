@@ -59,12 +59,16 @@ impl AbstractTicket {
         todo!()
     }
 
-    fn docs_contact_short(&self) -> String {
-        todo!()
+    fn docs_contact_short(&self) -> &str {
+        email_prefix(&self.docs_contact)
     }
 
-    fn assignee_short(&self) -> String {
-        todo!()
+    fn assignee_short(&self) -> &str {
+        if let Some(assignee) = &self.assignee {
+            email_prefix(assignee)
+        } else {
+            "No assignee set"
+        }
     }
 
     fn flags_or_labels(&self) -> String {
@@ -85,6 +89,14 @@ impl AbstractTicket {
 
     fn display_components(&self) -> String {
         todo!()
+    }
+}
+
+fn email_prefix(email: &str) -> &str {
+    if let Some(prefix) = email.split('@').next() {
+        prefix
+    } else {
+        email
     }
 }
 
