@@ -3,6 +3,8 @@ name = "cizrna"
 authors = ["Marek Suchánek <msuchane@redhat.com>"]
 version = "0.10.1"
 edition = "2021"
+# Check the Rust version using `cargo msrv verify`.
+rust-version = "1.62"
 description = "Generate an AsciiDoc release notes document from tracking tickets."
 license = "GPL-3.0-or-later"
 readme = "README.md"
