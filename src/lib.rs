@@ -8,6 +8,8 @@
 )]
 // Disable the documentation clippy lint, so that it stops suggesting backticks around AsciiDoc.
 #![allow(clippy::doc_markdown)]
+// Forbid unsafe code in this program.
+#![forbid(unsafe_code)]
 
 use std::fs;
 use std::path::Path;
