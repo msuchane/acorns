@@ -7,6 +7,7 @@ description = "Generate an AsciiDoc release notes document from tracking tickets
 license = "GPL-3.0-or-later"
 readme = "README.md"
 categories = ["command-line-utilities", "text-processing", "template-engine"]
+keywords = ["release notes", "asciidoc", "documentation", "Red Hat"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
