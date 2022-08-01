@@ -1,0 +1,34 @@
+name: RPM build
+
+on:
+  push:
+    tags: [ * ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    container: registry.access.redhat.com/ubi8/ubi
+
+    steps:
+    - name: Set up build tools
+      run: |
+        dnf module enable rust-toolset -y
+        dnf copr enable mareksu/cargo-rpm -y
+        dnf install rpm-build rust-toolset cargo-rpm -y
+    - uses: actions/checkout@v3
+    - name: Build the RPM package
+      run: cargo rpm build --verbose
+    - name: Store the binary as an artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: cizrna-binary
+        path: target/release/cizrna
+    - name: Store the built RPMs as an artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: cizrna-rpmbuild
+        path: target/release/rpmbuild
