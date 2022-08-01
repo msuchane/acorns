@@ -1,5 +1,7 @@
 # Cizrna (CoRN 4)
 
+[![Rust tests](https://github.com/msuchane/cizrna/actions/workflows/rust-tests.yml/badge.svg)](https://github.com/msuchane/cizrna/actions/workflows/rust-tests.yml)
+
 Generate an AsciiDoc release notes document from tracking tickets
 
 ## Installing Cizrna
