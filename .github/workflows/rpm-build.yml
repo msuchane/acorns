@@ -1,7 +1,6 @@
 name: RPM build
 
-on:
-  push: [ tags ]
+on: [ tags ]
 
 env:
   CARGO_TERM_COLOR: always
