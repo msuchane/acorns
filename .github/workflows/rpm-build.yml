@@ -2,13 +2,7 @@ name: RPM build
 
 on:
   push:
-    tags:
-      - 0*
-      - 1*
-      - 2*
-      - 3*
-      - 4*
-      - 5*
+    tags: [ "*" ]
 
 env:
   CARGO_TERM_COLOR: always
