@@ -3,6 +3,7 @@ use std::default::Default;
 use askama::Template;
 use chrono::prelude::*;
 use color_eyre::eyre::{Result, WrapErr};
+use counter::Counter;
 
 use crate::ticket_abstraction::AbstractTicket;
 
@@ -123,6 +124,20 @@ fn email_prefix(email: &str) -> &str {
     }
 }
 
+/// List the products set in the tickets, sorted from most common to least common.
+fn combined_products(tickets: &[AbstractTicket]) -> Vec<&str> {
+    let products: Counter<&str> = tickets
+        .iter()
+        .map(|ticket| ticket.product.as_str())
+        .collect();
+
+    products
+        .most_common_ordered()
+        .iter()
+        .map(|(elem, _frequency)| *elem)
+        .collect()
+}
+
 #[derive(Template)] // this will generate the code...
 #[template(path = "status-table.html")] // using the template in this path, relative
                                         // to the `templates` dir in the crate root
@@ -136,17 +151,24 @@ struct StatusTableTemplate<'a> {
 }
 
 pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
-    let date_today: DateTime<Utc> = Utc::now();
+    let products = combined_products(tickets);
+    let products_display = if products.is_empty() {
+        "no products".to_string()
+    } else {
+        products.join(", ")
+    };
+
+    let date_today = Utc::now().to_rfc2822();
 
     let status_table = StatusTableTemplate {
-        products: "RHEL",
+        products: &products_display,
         release: "9.0",
         overall_progress: OverallProgress {
             ..Default::default()
         },
         per_writer_stats: &[],
         tickets,
-        generated_date: &date_today.to_rfc2822(),
+        generated_date: &date_today,
     };
 
     status_table
