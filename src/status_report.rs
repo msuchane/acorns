@@ -4,6 +4,7 @@ use askama::Template;
 use chrono::prelude::*;
 use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
+use regex::Regex;
 
 use crate::ticket_abstraction::AbstractTicket;
 
@@ -37,8 +38,8 @@ struct Checks {
 
 enum Status {
     Ok,
-    Warning(String),
-    Error(String),
+    Warning(&'static str),
+    Error(&'static str),
 }
 
 impl Default for Status {
@@ -65,7 +66,10 @@ impl Status {
 
 impl AbstractTicket {
     fn checks(&self) -> Checks {
-        Checks::default()
+        Checks {
+            title_and_text: check_title(&self.doc_text),
+            ..Checks::default()
+        }
     }
 
     fn docs_contact_short(&self) -> &str {
@@ -116,6 +120,24 @@ impl AbstractTicket {
     }
 }
 
+fn check_title(text: &str) -> Status {
+    let first_content_line = text
+        .lines()
+        .find(|line| !line.trim().is_empty() || !line.starts_with("//"));
+
+    if let Some(first_content_line) = first_content_line {
+        let title_regex = Regex::new(r"\.\S+").unwrap();
+
+        if title_regex.is_match(first_content_line) {
+            Status::Ok
+        } else {
+            Status::Error("First line is not a title.")
+        }
+    } else {
+        Status::Error("The release note is empty.")
+    }
+}
+
 fn email_prefix(email: &str) -> &str {
     if let Some(prefix) = email.split('@').next() {
         prefix
@@ -144,13 +166,11 @@ fn combined_products(tickets: &[AbstractTicket]) -> Vec<&str> {
 fn combined_releases(tickets: &[AbstractTicket]) -> Vec<&str> {
     let mut releases: Counter<&str> = Counter::new();
 
+    // Releases are a list, and each ticket can have several of them.
+    // Update the counter with the values in the lists, rather than
+    // with the lists themselves as values.
     for ticket in tickets.iter() {
-        releases.update(
-            ticket
-                .target_releases
-                .iter()
-                .map(String::as_str),
-        );
+        releases.update(ticket.target_releases.iter().map(String::as_str));
     }
 
     releases
