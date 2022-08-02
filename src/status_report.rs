@@ -1,3 +1,4 @@
+use std::convert::From;
 use std::default::Default;
 
 use askama::Template;
@@ -6,6 +7,7 @@ use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
 use regex::Regex;
 
+use crate::extra_fields::DocTextStatus;
 use crate::ticket_abstraction::AbstractTicket;
 
 #[derive(Default)]
@@ -52,7 +54,7 @@ impl Status {
     fn message(&self) -> &str {
         match self {
             Self::Ok => "OK",
-            Self::Warning(message) | Self::Error(message) => message,
+            &Self::Warning(message) | &Self::Error(message) => message,
         }
     }
     fn color(&self) -> &'static str {
@@ -60,6 +62,16 @@ impl Status {
             Self::Ok => "green",
             Self::Warning(_) => "orange",
             Self::Error(_) => "red",
+        }
+    }
+}
+
+impl From<DocTextStatus> for Status {
+    fn from(item: DocTextStatus) -> Self {
+        match item {
+            DocTextStatus::Approved => Self::Ok,
+            DocTextStatus::InProgress => Self::Error("Release note not approved."),
+            DocTextStatus::NoDocumentation => Self::Error("Release note disabled."),
         }
     }
 }
