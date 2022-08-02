@@ -149,7 +149,7 @@ fn combined_releases(tickets: &[AbstractTicket]) -> Vec<&str> {
             ticket
                 .target_releases
                 .iter()
-                .map(|release| release.as_str()),
+                .map(String::as_str),
         );
     }
 
