@@ -54,14 +54,41 @@ impl Status {
     fn message(&self) -> &str {
         match self {
             Self::Ok => "OK",
-            Self::Warning(message) | Self::Error(message) => &message,
+            Self::Warning(message) | Self::Error(message) => message,
         }
     }
+
     fn color(&self) -> &'static str {
         match self {
             Self::Ok => "green",
             Self::Warning(_) => "orange",
             Self::Error(_) => "red",
+        }
+    }
+
+    fn from_title(text: &str) -> Self {
+        let first_content_line = text
+            .lines()
+            .find(|line| !line.trim().is_empty() || !line.starts_with("//"));
+
+        if let Some(first_content_line) = first_content_line {
+            let title_regex = Regex::new(r"\.\S+").unwrap();
+
+            if title_regex.is_match(first_content_line) {
+                Self::Ok
+            } else {
+                Self::Error("First line is not a title.".into())
+            }
+        } else {
+            Self::Error("The release note is empty.".into())
+        }
+    }
+
+    /// Report when the bug is in early stages of development.
+    fn from_devel_status(status: &str) -> Status {
+        match status.to_lowercase().as_str() {
+            "to do" | "new" | "assigned" | "modified" => Self::Warning("Early development.".into()),
+            _ => Self::Ok,
         }
     }
 }
@@ -79,8 +106,8 @@ impl From<DocTextStatus> for Status {
 impl AbstractTicket {
     fn checks(&self) -> Checks {
         Checks {
-            development: check_devel_status(&self.status),
-            title_and_text: check_title(&self.doc_text),
+            development: Status::from_devel_status(&self.status),
+            title_and_text: Status::from_title(&self.doc_text),
             ..Checks::default()
         }
     }
@@ -130,32 +157,6 @@ impl AbstractTicket {
         } else {
             self.components.join(", ")
         }
-    }
-}
-
-fn check_title(text: &str) -> Status {
-    let first_content_line = text
-        .lines()
-        .find(|line| !line.trim().is_empty() || !line.starts_with("//"));
-
-    if let Some(first_content_line) = first_content_line {
-        let title_regex = Regex::new(r"\.\S+").unwrap();
-
-        if title_regex.is_match(first_content_line) {
-            Status::Ok
-        } else {
-            Status::Error("First line is not a title.".into())
-        }
-    } else {
-        Status::Error("The release note is empty.".into())
-    }
-}
-
-/// Report when the bug is in early stages of development.
-fn check_devel_status(status: &str) -> Status {
-    match status.to_lowercase().as_str() {
-        "to do" | "new" | "assigned" | "modified" => Status::Warning("Early development.".into()),
-        _ => Status::Ok,
     }
 }
 
