@@ -40,8 +40,8 @@ struct Checks {
 
 enum Status {
     Ok,
-    Warning(&'static str),
-    Error(&'static str),
+    Warning(String),
+    Error(String),
 }
 
 impl Default for Status {
@@ -54,7 +54,7 @@ impl Status {
     fn message(&self) -> &str {
         match self {
             Self::Ok => "OK",
-            &Self::Warning(message) | &Self::Error(message) => message,
+            Self::Warning(message) | Self::Error(message) => &message,
         }
     }
     fn color(&self) -> &'static str {
@@ -70,8 +70,8 @@ impl From<DocTextStatus> for Status {
     fn from(item: DocTextStatus) -> Self {
         match item {
             DocTextStatus::Approved => Self::Ok,
-            DocTextStatus::InProgress => Self::Error("Release note not approved."),
-            DocTextStatus::NoDocumentation => Self::Error("Release note disabled."),
+            DocTextStatus::InProgress => Self::Error("Release note not approved.".into()),
+            DocTextStatus::NoDocumentation => Self::Error("Release note disabled.".into()),
         }
     }
 }
@@ -144,17 +144,17 @@ fn check_title(text: &str) -> Status {
         if title_regex.is_match(first_content_line) {
             Status::Ok
         } else {
-            Status::Error("First line is not a title.")
+            Status::Error("First line is not a title.".into())
         }
     } else {
-        Status::Error("The release note is empty.")
+        Status::Error("The release note is empty.".into())
     }
 }
 
 /// Report when the bug is in early stages of development.
 fn check_devel_status(status: &str) -> Status {
     match status.to_lowercase().as_str() {
-        "to do" | "new" | "assigned" | "modified" => Status::Warning("Early development."),
+        "to do" | "new" | "assigned" | "modified" => Status::Warning("Early development.".into()),
         _ => Status::Ok,
     }
 }
