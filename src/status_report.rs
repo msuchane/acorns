@@ -83,9 +83,9 @@ impl Checks {
             .collect();
 
         if !errors.is_empty() {
-            Status::Error(errors.join(", "))
+            Status::Error(errors.join(" "))
         } else if !warnings.is_empty() {
-            Status::Warning(warnings.join(", "))
+            Status::Warning(warnings.join(" "))
         } else {
             Status::Ok
         }
