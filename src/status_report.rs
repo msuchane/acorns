@@ -119,15 +119,20 @@ impl Status {
     /// Report if the ticket's target release doesn't match the the global target release.
     fn from_target_release(
         ticket_releases: &[String],
-        likely_release: &String,
+        likely_release: Option<&&str>,
         doc_type: &str,
     ) -> Self {
-        if ticket_releases.contains(likely_release)
-            || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
-        {
-            Self::Ok
+        if let Some(&likely_release) = likely_release {
+            // TODO: This is an awkward way to compare &str with String. Revisit.
+            if ticket_releases.contains(&likely_release.to_string())
+                || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
+            {
+                Self::Ok
+            } else {
+                Self::Warning("Check target release.".into())
+            }
         } else {
-            Self::Warning("Check target release.".into())
+            Self::Ok
         }
     }
 }
@@ -143,14 +148,14 @@ impl From<DocTextStatus> for Status {
 }
 
 impl AbstractTicket {
-    fn checks(&self) -> Checks {
+    fn checks(&self, releases: &[&str]) -> Checks {
         Checks {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_title(&self.doc_text),
             doc_type: Status::from_doc_type(&self.doc_type),
             target_release: Status::from_target_release(
                 &self.target_releases,
-                todo!(),
+                releases.first(),
                 &self.doc_type,
             ),
             ..Checks::default()
@@ -264,7 +269,7 @@ struct StatusTableTemplate<'a> {
     products: &'a str,
     release: &'a str,
     overall_progress: OverallProgress,
-    tickets: &'a [AbstractTicket],
+    tickets_with_checks: &'a [(&'a AbstractTicket, &'a Checks)],
     per_writer_stats: &'a [WriterStats<'a>],
     generated_date: &'a str,
 }
@@ -278,6 +283,16 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
 
     let date_today = Utc::now().to_rfc2822();
 
+    // Store checks in their own Vec and zip them with tickets by reference,
+    // This satisfies ownership requirements, because the template
+    // needs to receive both tickets and checks by reference.
+    let checks: Vec<Checks> = tickets
+        .iter()
+        .map(|ticket| ticket.checks(&releases))
+        .collect();
+    let tickets_with_checks: Vec<(&AbstractTicket, &Checks)> =
+        tickets.iter().zip(checks.iter()).collect();
+
     let status_table = StatusTableTemplate {
         products: &products_display,
         release: &releases_display,
@@ -285,7 +300,7 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
             ..Default::default()
         },
         per_writer_stats: &[],
-        tickets,
+        tickets_with_checks: &tickets_with_checks,
         generated_date: &date_today,
     };
 
