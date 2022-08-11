@@ -140,6 +140,7 @@
 
       <tbody>
       {% for (ticket, checks) in tickets_with_checks %}
+      {% let overall_status = checks.overall() %}
       <tr>
         <td><a href="{{ ticket.url }}" title="{{ ticket.summary }}">{{ ticket.id }}</a>
           <!-- Link to the ticket preview: not yet implemented -->
@@ -150,7 +151,7 @@
           <% ) %>
           -->
         </td>
-        <td style="color: {{ checks.overall.color() }}">{{ checks.overall.message() }}</td>
+        <td style="color: {{ overall_status.color() }}">{{ overall_status.message() }}</td>
         <td>{{ ticket.doc_type }}</td>
         <td style="text-align: center;">{{ ticket.doc_text_status }}</td>
         <td style="color: {{ checks.development.color() }}">{{ ticket.status }}</td>
