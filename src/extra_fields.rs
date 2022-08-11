@@ -15,7 +15,7 @@ use jira_query::Issue;
 use crate::config::tracker;
 
 /// The status or progress of the release note.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DocTextStatus {
     Approved,
     InProgress,
