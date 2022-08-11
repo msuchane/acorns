@@ -19,7 +19,7 @@ jobs:
         dnf module enable rust-toolset -y
         dnf install 'dnf-command(copr)' -y
         dnf copr enable mareksu/cargo-rpm -y
-        dnf install rpm-build rust-toolset cargo-rpm -y
+        dnf install rpm-build rust-toolset cargo-rpm openssl-devel -y
     - uses: actions/checkout@v3
     - name: Build the RPM package
       run: cargo rpm build --verbose
