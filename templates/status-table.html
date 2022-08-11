@@ -139,9 +139,8 @@
       </thead>
 
       <tbody>
-      {% for ticket in tickets %}
+      {% for (ticket, checks) in tickets_with_checks %}
       <tr>
-        {% let checks = ticket.checks() %}
         <td><a href="{{ ticket.url }}" title="{{ ticket.summary }}">{{ ticket.id }}</a>
           <!-- Link to the ticket preview: not yet implemented -->
           <!--
