@@ -35,6 +35,7 @@ struct WriterStats<'a> {
 struct Checks {
     overall: Status,
     development: Status,
+    doc_type: Status,
     title_and_text: Status,
 }
 
@@ -85,9 +86,17 @@ impl Status {
     }
 
     /// Report when the bug is in early stages of development.
-    fn from_devel_status(status: &str) -> Status {
+    fn from_devel_status(status: &str) -> Self {
         match status.to_lowercase().as_str() {
             "to do" | "new" | "assigned" | "modified" => Self::Warning("Early development.".into()),
+            _ => Self::Ok,
+        }
+    }
+
+    /// Report if the doc type is set to a non-release note type.
+    fn from_doc_type(doc_type: &str) -> Self {
+        match doc_type {
+            "If docs needed, set a value" => Self::Error("Bad doc type.".into()),
             _ => Self::Ok,
         }
     }
@@ -108,6 +117,7 @@ impl AbstractTicket {
         Checks {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_title(&self.doc_text),
+            doc_type: Status::from_doc_type(&self.doc_type),
             ..Checks::default()
         }
     }
