@@ -10,6 +10,14 @@ use regex::Regex;
 use crate::extra_fields::DocTextStatus;
 use crate::ticket_abstraction::AbstractTicket;
 
+/// These doc types don't belong to any particular target release.
+/// Skip the release check for these.
+const UNCHECKED_DOC_TYPES: [&str; 3] = [
+    "known issue",
+    "technology preview",
+    "deprecated functionality",
+];
+
 #[derive(Default)]
 struct OverallProgress {
     all: u32,
@@ -37,6 +45,13 @@ struct Checks {
     development: Status,
     doc_type: Status,
     title_and_text: Status,
+    target_release: Status,
+}
+
+impl Checks {
+    fn overall(self) -> Status {
+        todo!()
+    }
 }
 
 enum Status {
@@ -100,6 +115,21 @@ impl Status {
             _ => Self::Ok,
         }
     }
+
+    /// Report if the ticket's target release doesn't match the the global target release.
+    fn from_target_release(
+        ticket_releases: &[String],
+        likely_release: &String,
+        doc_type: &str,
+    ) -> Self {
+        if ticket_releases.contains(likely_release)
+            || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
+        {
+            Self::Ok
+        } else {
+            Self::Warning("Check target release.".into())
+        }
+    }
 }
 
 impl From<DocTextStatus> for Status {
@@ -118,6 +148,11 @@ impl AbstractTicket {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_title(&self.doc_text),
             doc_type: Status::from_doc_type(&self.doc_type),
+            target_release: Status::from_target_release(
+                &self.target_releases,
+                todo!(),
+                &self.doc_type,
+            ),
             ..Checks::default()
         }
     }
