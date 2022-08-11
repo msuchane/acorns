@@ -79,6 +79,7 @@ impl From<DocTextStatus> for Status {
 impl AbstractTicket {
     fn checks(&self) -> Checks {
         Checks {
+            development: check_devel_status(&self.status),
             title_and_text: check_title(&self.doc_text),
             ..Checks::default()
         }
@@ -147,6 +148,14 @@ fn check_title(text: &str) -> Status {
         }
     } else {
         Status::Error("The release note is empty.")
+    }
+}
+
+/// Report when the bug is in early stages of development.
+fn check_devel_status(status: &str) -> Status {
+    match status.to_lowercase().as_str() {
+        "to do" | "new" | "assigned" | "modified" => Status::Warning("Early development."),
+        _ => Status::Ok,
     }
 }
 
