@@ -41,16 +41,54 @@ struct WriterStats<'a> {
 
 #[derive(Default)]
 struct Checks {
-    overall: Status,
     development: Status,
     doc_type: Status,
+    doc_status: Status,
     title_and_text: Status,
     target_release: Status,
 }
 
 impl Checks {
-    fn overall(self) -> Status {
-        todo!()
+    /// Present an overview of all the particular status checks:
+    ///
+    /// * If any check resulted in an error, return the list of all errors.
+    /// * If any check resulted in a warning, return the list of all warnings.
+    /// * If there are no errors or warnings, return `Ok`.
+    fn overall(&self) -> Status {
+        // All fields on `Checks`, so that we can iterate over them.
+        let items = [
+            &self.doc_type,
+            &self.title_and_text,
+            &self.doc_status,
+            &self.development,
+            &self.target_release,
+        ];
+
+        // Capture all errors.
+        let errors: Vec<&str> = items
+            .iter()
+            .filter_map(|status| match status {
+                Status::Error(e) => Some(e.as_str()),
+                _ => None,
+            })
+            .collect();
+
+        // Capture all warnings.
+        let warnings: Vec<&str> = items
+            .iter()
+            .filter_map(|status| match status {
+                Status::Error(e) => Some(e.as_str()),
+                _ => None,
+            })
+            .collect();
+
+        if !errors.is_empty() {
+            Status::Error(errors.join(", "))
+        } else if !warnings.is_empty() {
+            Status::Warning(warnings.join(", "))
+        } else {
+            Status::Ok
+        }
     }
 }
 
@@ -148,17 +186,18 @@ impl From<DocTextStatus> for Status {
 }
 
 impl AbstractTicket {
+    /// Analyze the release note status of the ticket. Record the analysis as `Checks`.
     fn checks(&self, releases: &[&str]) -> Checks {
         Checks {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_title(&self.doc_text),
             doc_type: Status::from_doc_type(&self.doc_type),
+            doc_status: Status::from(self.doc_text_status),
             target_release: Status::from_target_release(
                 &self.target_releases,
                 releases.first(),
                 &self.doc_type,
             ),
-            ..Checks::default()
         }
     }
 
