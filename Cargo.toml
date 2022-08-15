@@ -22,7 +22,7 @@ color-eyre = { version = "0.6", default-features = false }
 serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "1.0"
-serde_yaml = "0.8"
+serde_yaml = "0.9"
 bugzilla_query = "^0.9"
 jira_query = "^0.7"
 tokio = { version = "^1", features = ["full"] }
