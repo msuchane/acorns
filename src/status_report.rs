@@ -18,15 +18,56 @@ const UNCHECKED_DOC_TYPES: [&str; 3] = [
     "deprecated functionality",
 ];
 
+/// An overview of the completeness status across all tickets.
 #[derive(Default)]
 struct OverallProgress {
-    all: u32,
-    complete: u32,
-    complete_pct: f32,
-    warnings: u32,
-    warnings_pct: f32,
-    incomplete: u32,
-    incomplete_pct: f32,
+    all: usize,
+    complete: usize,
+    complete_pct: f64,
+    warnings: usize,
+    warnings_pct: f64,
+    incomplete: usize,
+    incomplete_pct: f64,
+}
+
+impl From<&[Checks]> for OverallProgress {
+    fn from(item: &[Checks]) -> Self {
+        let all = item.len();
+        // TODO: Currently, we calculate the overall checks twice. Once here, and once
+        // for the status table. Consolidate to only calculate them once.
+        let overall_checks: Vec<Status> = item.iter().map(Checks::overall).collect();
+        let complete = overall_checks
+            .iter()
+            .filter(|status| matches!(status, Status::Ok))
+            .count();
+        let complete_pct = percentage(complete, all);
+        let warnings = overall_checks
+            .iter()
+            .filter(|status| matches!(status, Status::Warning(_)))
+            .count();
+        let warnings_pct = percentage(warnings, all);
+        let incomplete = overall_checks
+            .iter()
+            .filter(|status| matches!(status, Status::Error(_)))
+            .count();
+        let incomplete_pct = percentage(incomplete, all);
+
+        Self {
+            all,
+            complete,
+            complete_pct,
+            warnings,
+            warnings_pct,
+            incomplete,
+            incomplete_pct,
+        }
+    }
+}
+
+/// Calculate the percentage of a part in a total amount.
+/// Uses `usize` as input because it works with list lengths here.
+fn percentage(part: usize, total: usize) -> f64 {
+    (part as f64) / (total as f64) * 100.0
 }
 
 #[derive(Default)]
@@ -332,12 +373,12 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
     let tickets_with_checks: Vec<(&AbstractTicket, &Checks)> =
         tickets.iter().zip(checks.iter()).collect();
 
+    let overall_progress: OverallProgress = checks.as_slice().into();
+
     let status_table = StatusTableTemplate {
         products: &products_display,
         release: &releases_display,
-        overall_progress: OverallProgress {
-            ..Default::default()
-        },
+        overall_progress,
         per_writer_stats: &[],
         tickets_with_checks: &tickets_with_checks,
         generated_date: &date_today,
