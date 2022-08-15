@@ -39,9 +39,9 @@ impl TryFrom<&str> for DocTextStatus {
 impl fmt::Display for DocTextStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let display = match self {
-            Self::Approved => "RDT+",
-            Self::InProgress => "RDT?",
-            Self::NoDocumentation => "RDT-",
+            Self::Approved => "Done",
+            Self::InProgress => "WIP",
+            Self::NoDocumentation => "No docs",
         };
         write!(f, "{}", display)
     }
