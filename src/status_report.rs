@@ -34,12 +34,16 @@ struct Checks {
     title_and_text: Status,
 }
 
-#[derive(Default)]
 enum Status {
-    #[default]
     Ok,
     Warning(String),
     Error(String),
+}
+
+impl Default for Status {
+    fn default() -> Self {
+        Self::Ok
+    }
 }
 
 impl Status {

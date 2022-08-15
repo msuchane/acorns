@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::string::ToString;
 use std::sync::Arc;
 
-use bugzilla_query::Bug;
+use bugzilla_query::{Bug, Component};
 use color_eyre::eyre::{bail, Result};
 use jira_query::Issue;
 
@@ -79,7 +79,10 @@ impl IntoAbstract for Bug {
             priority: self.priority,
             // Bugs are always assigned to someone.
             assignee: Some(self.assigned_to),
-            components: self.component,
+            components: match self.component {
+                Component::One(c) => vec![c],
+                Component::Many(cs) => cs,
+            },
             product: self.product,
             // Bugzilla has no labels
             labels: None,
