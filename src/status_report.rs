@@ -155,10 +155,19 @@ impl Checks {
     /// * If any check resulted in a warning, return the list of all warnings.
     /// * If there are no errors or warnings, return `Ok`.
     fn overall(&self) -> Status {
+        // The text status has a dedicated column in the status table.
+        // Its errors might also be long. Because of that, present
+        // Only a brief error in the overall column instead.
+        let short_text_error = Status::Error("Bad text.".into());
+        let text_check = match &self.title_and_text {
+            Status::Error(_) => &short_text_error,
+            other => other,
+        };
+
         // All fields on `Checks`, so that we can iterate over them.
         let items = [
             &self.doc_type,
-            &self.title_and_text,
+            text_check,
             &self.doc_status,
             &self.development,
             &self.target_release,
