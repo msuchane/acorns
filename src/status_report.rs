@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::convert::From;
 use std::default::Default;
+use std::ops::Neg;
 
 use askama::Template;
 use chrono::prelude::*;
@@ -70,14 +72,58 @@ fn percentage(part: usize, total: usize) -> f64 {
     (part as f64) / (total as f64) * 100.0
 }
 
+/// Records all tickets that belong to a writer and stores statistics
+/// on the overall completeness of the release notes.
 #[derive(Default)]
 struct WriterStats<'a> {
     name: &'a str,
-    total: u32,
-    complete: u32,
-    warnings: u32,
-    incomplete: u32,
+    total: i32,
+    complete: i32,
+    warnings: i32,
+    incomplete: i32,
     percent: f32,
+}
+
+impl<'a> WriterStats<'a> {
+    /// Update these writer statistics with data from a ticket and its release note.
+    fn update(&mut self, checks: &Checks) {
+        self.total += 1;
+
+        // TODO: This is calculating the overall status once more. Consolidate.
+        match checks.overall() {
+            Status::Ok => self.complete += 1,
+            Status::Warning(_) => self.warnings += 1,
+            Status::Error(_) => self.incomplete += 1,
+        }
+    }
+}
+
+/// Gather statistics on all writers involved in the project and all their release notes.
+/// Returns a list of statistics per writer, sorted by the total number of release notes
+/// assigned to the writer.
+fn calculate_writer_stats<'a>(
+    tickets_with_checks: &[(&'a AbstractTicket, &Checks)],
+) -> Vec<WriterStats<'a>> {
+    let mut writers_map: HashMap<&str, WriterStats> = HashMap::new();
+
+    for (ticket, checks) in tickets_with_checks {
+        let name = &ticket.docs_contact;
+        writers_map
+            .entry(name)
+            .and_modify(|stats| stats.update(checks))
+            .or_insert(WriterStats {
+                name,
+                ..Default::default()
+            });
+    }
+
+    let mut writers: Vec<_> = writers_map.into_values().collect();
+
+    // Sort by the number of assigned release notes in reverse, descending order,
+    // so by the negative number of total release notes.
+    writers.sort_by_key(|stats| stats.total.neg());
+
+    writers
 }
 
 #[derive(Default)]
@@ -375,11 +421,13 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
 
     let overall_progress: OverallProgress = checks.as_slice().into();
 
+    let writer_stats = calculate_writer_stats(&tickets_with_checks);
+
     let status_table = StatusTableTemplate {
         products: &products_display,
         release: &releases_display,
         overall_progress,
-        per_writer_stats: &[],
+        per_writer_stats: &writer_stats,
         tickets_with_checks: &tickets_with_checks,
         generated_date: &date_today,
     };
