@@ -250,21 +250,19 @@ impl Status {
 
         match content_lines.len() {
             // If the doc text contains too few paragraphs, return with an error.
-            0 => return Self::Error("The release note is empty.".into()),
+            0 => Self::Error("The release note is empty.".into()),
             // TODO: If the project configuration auto-generates titles, release notes
             // can normally have just one paragraph. Revisit when the option is available.
-            1 => return Self::Error("All in a single paragraph.".into()),
+            1 => Self::Error("All in a single paragraph.".into()),
             _ => {
                 // If the doc text contains at least two paragraphs, it can be a release note.
                 // In that case, proceed with the analysis.
+                // It's now safe to index directly into the list, because it contains at least 2 items.
+                // Use this to analyze the release note title in detail.
+                let first_content_line = content_lines[0];
+                Self::from_title(first_content_line)
             }
         }
-
-        // It's now safe to index directly into the list, because it contains at least 2 items.
-        // Use this to analyze the release note title in detail.
-        let first_content_line = content_lines[0];
-
-        Self::from_title(first_content_line)
     }
 
     /// Check that the first line in a release note is a title
