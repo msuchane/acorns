@@ -220,34 +220,56 @@ impl Status {
         }
     }
 
-    fn from_title(text: &str) -> Self {
-        let first_content_line = text
+    // TODO: Consider comparing the doc text with the predefined Bugzilla doc text templates,
+    // if Jira also implements them in some way.
+    /// Analyze the doc text and check if it conforms to a general release note format.
+    fn from_text(text: &str) -> Self {
+        let content_lines: Vec<_> = text
             .lines()
-            .find(|line| !line.trim().is_empty() || !line.starts_with("//"));
+            .filter(|line| !line.trim().is_empty() || !line.starts_with("//"))
+            .collect();
 
-        if let Some(first_content_line) = first_content_line {
-            // Identify the title as a line that starts with a dot (`.`) followed by a character,
-            // and capture everything after the dot for analysis.
-            let title_regex = Regex::new(r"\.(\S+.*)").unwrap();
+        match content_lines.len() {
+            // If the doc text contains too few paragraphs, return with an error.
+            0 => return Self::Error("The release note is empty.".into()),
+            // TODO: If the project configuration auto-generates titles, release notes
+            // can normally have just one paragraph. Revisit when the option is available.
+            1 => return Self::Error("All in a single paragraph.".into()),
+            _ => {
+                // If the doc text contains at least two paragraphs, it can be a release note.
+                // In that case, proceed with the analysis.
+            }
+        }
 
-            let title: Option<&str> = title_regex
-                .captures(first_content_line)
-                .and_then(|captures| captures.get(1))
-                .map(|capture| capture.as_str());
+        // It's now safe to index directly into the list, because it contains at least 2 items.
+        // Use this to analyze the release note title in detail.
+        let first_content_line = content_lines[0];
 
-            if let Some(title) = title {
-                // Measure the title length in characters, not bytes.
-                let length = title.chars().count();
-                if length > MAX_TITLE_LENGTH {
-                    Self::Error(format!("Title too long: {} characters.", length))
-                } else {
-                    Self::Ok
-                }
+        Self::from_title(first_content_line)
+    }
+
+    /// Check that the first line in a release note is a title
+    /// in the AsciiDoc label format, and that it matches other title requirements.
+    fn from_title(text: &str) -> Self {
+        // Identify the title as a line that starts with a dot (`.`) followed by a character,
+        // and capture everything after the dot for analysis.
+        let title_regex = Regex::new(r"\.(\S+.*)").unwrap();
+
+        let title: Option<&str> = title_regex
+            .captures(text)
+            .and_then(|captures| captures.get(1))
+            .map(|capture| capture.as_str());
+
+        if let Some(title) = title {
+            // Measure the title length in characters, not bytes.
+            let length = title.chars().count();
+            if length > MAX_TITLE_LENGTH {
+                Self::Error(format!("Title too long: {} characters.", length))
             } else {
-                Self::Error("First line is not a title.".into())
+                Self::Ok
             }
         } else {
-            Self::Error("The release note is empty.".into())
+            Self::Error("First line is not a title.".into())
         }
     }
 
@@ -303,7 +325,7 @@ impl AbstractTicket {
     fn checks(&self, releases: &[&str]) -> Checks {
         Checks {
             development: Status::from_devel_status(&self.status),
-            title_and_text: Status::from_title(&self.doc_text),
+            title_and_text: Status::from_text(&self.doc_text),
             doc_type: Status::from_doc_type(&self.doc_type),
             doc_status: Status::from(self.doc_text_status),
             target_release: Status::from_target_release(
