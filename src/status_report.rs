@@ -81,7 +81,6 @@ struct WriterStats<'a> {
     complete: i32,
     warnings: i32,
     incomplete: i32,
-    percent: f32,
 }
 
 impl<'a> WriterStats<'a> {
@@ -94,6 +93,18 @@ impl<'a> WriterStats<'a> {
             Status::Ok => self.complete += 1,
             Status::Warning(_) => self.warnings += 1,
             Status::Error(_) => self.incomplete += 1,
+        }
+    }
+
+    // TODO: Consolidate with the `percentage` function if possible.
+    /// Calculate the percentage of complete release notes assigned to this writer.
+    fn percent(&self) -> f64 {
+        // If no release notes are assigned to the writer, dividing by 0 would result in NaN.
+        // To make the result more readable and useful, report that case as 0% complete.
+        if self.total == 0 {
+            0.0
+        } else {
+            f64::from(self.complete) / f64::from(self.total) * 100.0
         }
     }
 }
