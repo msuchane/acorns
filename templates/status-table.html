@@ -96,9 +96,9 @@
 
       <div id="completeness">
       {{ overall_progress.all }} release notes:<br />
-      <span style="color: green;">{{ overall_progress.complete }} ({{ overall_progress.complete_pct }}%)</span> complete,<br />
-      <span style="color: orange;">{{ overall_progress.warnings }} ({{ overall_progress.warnings_pct }}%)</span> warnings,<br />
-      <span style="color: red;">{{ overall_progress.incomplete }} ({{ overall_progress.incomplete_pct }}%)</span> incomplete.
+      <span style="color: green;">{{ overall_progress.complete }} ({{ overall_progress.complete_pct.round() }}%)</span> complete,<br />
+      <span style="color: orange;">{{ overall_progress.warnings }} ({{ overall_progress.warnings_pct.round() }}%)</span> warnings,<br />
+      <span style="color: red;">{{ overall_progress.incomplete }} ({{ overall_progress.incomplete_pct.round() }}%)</span> incomplete.
       </div>
 
       <!-- Duplicated tickets: Replace with references? -->
