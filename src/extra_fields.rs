@@ -154,8 +154,9 @@ impl ExtraFields for Bug {
 
     fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
         // TODO: There's probably a way to avoid this clone.
-        // Besides, this function exists only to satisfy the trait. It's very short and simple.
-        Ok(self.docs_contact.clone())
+        self.docs_contact
+            .clone()
+            .ok_or_else(|| eyre!("The `docs_contact` field is missing in bug {}.", self.id))
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {

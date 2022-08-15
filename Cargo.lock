@@ -111,9 +111,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bugzilla_query"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f80a872055f5fac2e05b0e0a94dcc41327f485f00c808cbb95a95860e57ffc7"
+checksum = "a597cee1ecf01e327908c19b7782cf15317b0854674a5c3cd0759b15763082be"
 dependencies = [
  "chrono",
  "log",
@@ -1111,6 +1111,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db76ff9fa4b1458b3c7f077f3ff9887394058460d21e634355b273aaf11eea45"
 dependencies = [
  "itoa",
+ "js-sys",
  "libc",
  "num_threads",
  "time-macros",
