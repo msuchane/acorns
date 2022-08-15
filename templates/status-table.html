@@ -187,7 +187,7 @@
           <td style="text-align: right; color: green;">{{ writer_stats.complete }}</td>
           <td style="text-align: right; color: orange;">{{ writer_stats.warnings }}</td>
           <td style="text-align: right; color: red;">{{ writer_stats.incomplete }}</td>
-          <td style="text-align: right;">{{ writer_stats.percent }}%</td>
+          <td style="text-align: right;">{{ writer_stats.percent().round() }}%</td>
         </tr>
         {% endfor %}
       </tbody>
