@@ -35,6 +35,8 @@ struct OverallProgress {
 }
 
 impl From<&[Checks]> for OverallProgress {
+    /// Calculate the global progress statistics for the whole release notes project,
+    /// based on the overall status of every ticket.
     fn from(item: &[Checks]) -> Self {
         let all = item.len();
         // TODO: Currently, we calculate the overall checks twice. Once here, and once
@@ -139,6 +141,8 @@ fn calculate_writer_stats<'a>(
     writers
 }
 
+/// Several checks on a ticket, which capture the status of properties
+/// relevant to documentation.
 #[derive(Default)]
 struct Checks {
     development: Status,
@@ -201,6 +205,8 @@ impl Checks {
     }
 }
 
+/// The status of a particular ticket property. It can be either okay,
+/// a non-serious warning with a message, or a serious error with a message.
 enum Status {
     Ok,
     Warning(String),
@@ -214,6 +220,8 @@ impl Default for Status {
 }
 
 impl Status {
+    /// A human-readable status message for this ticket property.
+    /// If the status is a warning or an error, provide the message. If it's `Ok`, display `OK`.
     fn message(&self) -> &str {
         match self {
             Self::Ok => "OK",
@@ -221,8 +229,10 @@ impl Status {
         }
     }
 
+    /// An HTML color associated with a status. It's applied to text in the status table.
     fn color(&self) -> &'static str {
         match self {
+            // TODO: Consider tweaking the colors to less obvious, prettier ones.
             Self::Ok => "green",
             Self::Warning(_) => "orange",
             Self::Error(_) => "red",
@@ -345,10 +355,12 @@ impl AbstractTicket {
         }
     }
 
+    /// Extract the account name before `@` from the docs contact email address.
     fn docs_contact_short(&self) -> &str {
         email_prefix(&self.docs_contact)
     }
 
+    /// Extract the account name before `@` from the assignee email address.
     fn assignee_short(&self) -> &str {
         if let Some(assignee) = &self.assignee {
             email_prefix(assignee)
@@ -357,6 +369,7 @@ impl AbstractTicket {
         }
     }
 
+    /// Display the list of flags or labels for this ticket, depending on which it contains.
     fn flags_or_labels(&self) -> String {
         // TODO: Maybe combine flags and labels together as one list?
         if let Some(flags) = &self.flags {
@@ -368,6 +381,7 @@ impl AbstractTicket {
         }
     }
 
+    /// Display the list of target releases, or a placeholder if there are none.
     fn display_target_releases(&self) -> String {
         if self.target_releases.is_empty() {
             "No releases".to_string()
@@ -376,6 +390,7 @@ impl AbstractTicket {
         }
     }
 
+    /// Display the list of subsystems, or a placeholder if there are none.
     fn display_subsystems(&self) -> String {
         if self.subsystems.is_empty() {
             "No subsystems".to_string()
@@ -384,6 +399,7 @@ impl AbstractTicket {
         }
     }
 
+    /// Display the list of components, or a placeholder if there are none.
     fn display_components(&self) -> String {
         if self.components.is_empty() {
             "No components".to_string()
@@ -393,6 +409,7 @@ impl AbstractTicket {
     }
 }
 
+/// Extract the account name before `@` from an email address.
 fn email_prefix(email: &str) -> &str {
     if let Some(prefix) = email.split('@').next() {
         prefix
@@ -445,6 +462,7 @@ fn list_or_placeholder(list: &[&str], name: &str) -> String {
     }
 }
 
+/// All the data that the status table needs to render.
 #[derive(Template)] // this will generate the code...
 #[template(path = "status-table.html")] // using the template in this path, relative
                                         // to the `templates` dir in the crate root
@@ -457,6 +475,7 @@ struct StatusTableTemplate<'a> {
     generated_date: &'a str,
 }
 
+/// Analyze all tickets and release notes, and produce a status table as text with HTML markup.
 pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
     let products = combined_products(tickets);
     let products_display = list_or_placeholder(&products, "products");
