@@ -19,6 +19,8 @@ const UNCHECKED_DOC_TYPES: [&str; 3] = [
     "technology preview",
     "deprecated functionality",
 ];
+/// The maximum allowed title length for a release note.
+const MAX_TITLE_LENGTH: usize = 120;
 
 /// An overview of the completeness status across all tickets.
 #[derive(Default)]
@@ -224,10 +226,23 @@ impl Status {
             .find(|line| !line.trim().is_empty() || !line.starts_with("//"));
 
         if let Some(first_content_line) = first_content_line {
-            let title_regex = Regex::new(r"\.\S+").unwrap();
+            // Identify the title as a line that starts with a dot (`.`) followed by a character,
+            // and capture everything after the dot for analysis.
+            let title_regex = Regex::new(r"\.(\S+.*)").unwrap();
 
-            if title_regex.is_match(first_content_line) {
-                Self::Ok
+            let title: Option<&str> = title_regex
+                .captures(first_content_line)
+                .and_then(|captures| captures.get(1))
+                .map(|capture| capture.as_str());
+
+            if let Some(title) = title {
+                // Measure the title length in characters, not bytes.
+                let length = title.chars().count();
+                if length > MAX_TITLE_LENGTH {
+                    Self::Error(format!("Title too long: {} characters.", length))
+                } else {
+                    Self::Ok
+                }
             } else {
                 Self::Error("First line is not a title.".into())
             }
