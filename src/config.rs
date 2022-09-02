@@ -45,13 +45,15 @@ pub enum TicketQuery {
         tracker: tracker::Service,
         key: String,
         overrides: Option<Overrides>,
-        references: Option<Vec<TicketQuery>>,
+        #[serde(default)]
+        references: Vec<TicketQuery>,
     },
     Search {
         tracker: tracker::Service,
         search: String,
         overrides: Option<Overrides>,
-        references: Option<Vec<TicketQuery>>,
+        #[serde(default)]
+        references: Vec<TicketQuery>,
     },
 }
 
@@ -81,17 +83,9 @@ impl TicketQuery {
     }
     /// Returns the references configured for this `TicketQuery`, regardless of the variant.
     /// The references are common to all variants.
-    ///
-    /// The references field is optional in the configuration. This getter removes the optional layer,
-    /// and if the configuration specifies no references, the result is an empty slice.
     pub fn references(&self) -> &[TicketQuery] {
-        let references = match self {
-            Self::Key { references, .. } | Self::Search { references, .. } => references,
-        };
-        if let Some(references) = references {
-            references
-        } else {
-            &[]
+        match self {
+            Self::Key { references, .. } | Self::Search { references, .. } => &references,
         }
     }
 }
