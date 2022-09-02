@@ -36,6 +36,12 @@ const JIRA_CHUNK_SIZE: u32 = 30;
 /// Always include these fields in Bugzilla requests. We process some of their content.
 const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
 
+/// The environment variable that holds the API key to Bugzilla.
+const BZ_API_KEY_VAR: &str = "BZ_API_KEY";
+
+/// The environment variable that holds the API key to Jira.
+const JIRA_API_KEY_VAR: &str = "JIRA_API_KEY";
+
 #[derive(Clone)]
 pub struct AnnotatedTicket {
     pub ticket: AbstractTicket,
@@ -68,7 +74,8 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("BZ_API_KEY").wrap_err("Set the BZ_API_KEY environment variable.")?
+        std::env::var(BZ_API_KEY_VAR)
+            .wrap_err_with(|| format!("Set the {} environment variable.", BZ_API_KEY_VAR))?
     };
 
     Ok(
@@ -84,7 +91,8 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("JIRA_API_KEY").wrap_err("Set the JIRA_API_KEY environment variable.")?
+        std::env::var(JIRA_API_KEY_VAR)
+            .wrap_err_with(|| format!("Set the {} environment variable.", JIRA_API_KEY_VAR))?
     };
 
     Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?
