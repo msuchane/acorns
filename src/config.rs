@@ -63,20 +63,6 @@ pub struct Overrides {
 }
 
 impl TicketQuery {
-    /// Returns the ticket key if this instance is `TicketQuery::Key`. Otherwise, returns `None`.
-    pub fn key(&self) -> Option<&str> {
-        match self {
-            Self::Key { key, .. } => Some(key.as_str()),
-            Self::Search { .. } => None,
-        }
-    }
-    /// Returns the ticket query if this instance is `TicketQuery::Query`. Otherwise, returns `None`.
-    pub fn search(&self) -> Option<&str> {
-        match self {
-            Self::Key { .. } => None,
-            Self::Search { search, .. } => Some(search.as_str()),
-        }
-    }
     /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.
     /// The tracker is common to all variants.
     pub fn tracker(&self) -> &tracker::Service {

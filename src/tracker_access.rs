@@ -144,6 +144,34 @@ pub async fn unsorted_tickets(
     Ok(results)
 }
 
+/// Extract queries of the `TicketQuery::Key` kind with their keys.
+fn take_id_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)> {
+    queries
+        .iter()
+        .filter_map(|tq| {
+            if let TicketQuery::Key { key, .. } = &**tq {
+                Some((key.as_str(), Arc::clone(tq)))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Extract queries of the `TicketQuery::Search` kind with their searches.
+fn take_search_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)> {
+    queries
+        .iter()
+        .filter_map(|tq| {
+            if let TicketQuery::Search { search, .. } = &**tq {
+                Some((search.as_str(), Arc::clone(tq)))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 /// Download all configured bugs from Bugzilla.
 /// Returns every bug in a tuple, annotated with the query that it came from.
 async fn bugs(
@@ -161,17 +189,8 @@ async fn bugs(
         return Ok(Vec::new());
     }
 
-    let queries_by_id: Vec<Arc<TicketQuery>> = bugzilla_queries
-        .iter()
-        .filter(|&tq| tq.key().is_some())
-        .map(Arc::clone)
-        .collect();
-
-    let queries_by_search: Vec<Arc<TicketQuery>> = bugzilla_queries
-        .iter()
-        .filter(|&tq| tq.search().is_some())
-        .map(Arc::clone)
-        .collect();
+    let queries_by_id = take_id_queries(&bugzilla_queries);
+    let queries_by_search = take_search_queries(&bugzilla_queries);
 
     log::info!("Downloading bugs from Bugzilla.");
     let bz_instance = bz_instance(trackers)?;
@@ -194,14 +213,14 @@ async fn bugs(
 
 /// Download bugs that come from ID queries.
 async fn bugs_from_ids(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let bugs = bz_instance
         .bugs(
             &queries
                 .iter()
-                .filter_map(|q| q.key())
+                .map(|(key, _query)| *key)
                 .collect::<Vec<&str>>(),
         )
         // This enables the download concurrency:
@@ -213,9 +232,10 @@ async fn bugs_from_ids(
     for bug in bugs {
         let matching_query = queries
             .iter()
-            .find(|query| query.key() == Some(bug.id.to_string().as_str()))
+            .find(|(key, _query)| key == &bug.id.to_string().as_str())
+            .map(|(_key, query)| Arc::clone(query))
             .ok_or_else(|| eyre!("Bug {} doesn't match any configured query.", bug.id))?;
-        annotated_bugs.push((Arc::clone(matching_query), bug));
+        annotated_bugs.push((matching_query, bug));
     }
 
     Ok(annotated_bugs)
@@ -223,14 +243,14 @@ async fn bugs_from_ids(
 
 /// Download bugs that come from search queries.
 async fn bugs_from_searches(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let mut annotated_bugs: Vec<(Arc<TicketQuery>, Bug)> = Vec::new();
 
-    for query in queries.iter() {
+    for (search, query) in queries.iter() {
         let mut bugs = bz_instance
-            .search(query.search().unwrap())
+            .search(search)
             // This enables the download concurrency:
             .await
             .wrap_err("Failed to download tickets from Bugzilla.")?
@@ -261,17 +281,8 @@ async fn issues(
         return Ok(Vec::new());
     }
 
-    let queries_by_id: Vec<Arc<TicketQuery>> = jira_queries
-        .iter()
-        .filter(|&tq| tq.key().is_some())
-        .map(Arc::clone)
-        .collect();
-
-    let queries_by_search: Vec<Arc<TicketQuery>> = jira_queries
-        .iter()
-        .filter(|&tq| tq.search().is_some())
-        .map(Arc::clone)
-        .collect();
+    let queries_by_id = take_id_queries(&jira_queries);
+    let queries_by_search = take_search_queries(&jira_queries);
 
     log::info!("Downloading issues from Jira.");
 
@@ -295,14 +306,14 @@ async fn issues(
 
 /// Download issues that come from ID queries.
 async fn issues_from_ids(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     jira_instance: &jira_query::JiraInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let issues = jira_instance
         .issues(
             &queries
                 .iter()
-                .filter_map(|q| q.key())
+                .map(|(key, _query)| *key)
                 .collect::<Vec<&str>>(),
         )
         // This enables the download concurrency:
@@ -314,8 +325,8 @@ async fn issues_from_ids(
     for issue in issues {
         let matching_query = queries
             .iter()
-            .find(|query| query.key() == Some(issue.key.as_str()))
-            .map(Arc::clone)
+            .find(|(key, _query)| key == &issue.key.as_str())
+            .map(|(_key, query)| Arc::clone(query))
             .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
         annotated_issues.push((matching_query, issue));
     }
@@ -325,14 +336,14 @@ async fn issues_from_ids(
 
 /// Download issues that come from search queries.
 async fn issues_from_searches(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     jira_instance: &jira_query::JiraInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
 
-    for query in queries.iter() {
+    for (search, query) in queries.iter() {
         let mut issues = jira_instance
-            .search(query.search().unwrap())
+            .search(search)
             // This enables the download concurrency:
             .await
             .wrap_err("Failed to download tickets from Bugzilla.")?
