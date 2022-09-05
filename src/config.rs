@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use std::convert::From;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -34,27 +35,77 @@ const DATA_PREFIX: &str = PROGRAM_NAME;
 /// The sub-directory inside the data directory that contains all generated documents.
 const GENERATED_PREFIX: &str = "generated";
 
+/// A ticket query extracted from the user configuration file.
+/// It holds all the information necessary to download information
+/// on a particular ticket or a group of tickets from an issue tracker.
+#[derive(Debug, Eq, PartialEq, Hash)]
+pub struct TicketQuery {
+    pub tracker: tracker::Service,
+    pub using: QueryUsing,
+    pub overrides: Option<Overrides>,
+    pub references: Vec<TicketQuery>,
+}
+
 /// Variants of the ticket query that the user can configure in `tickets.yaml`.
 ///
 /// * `Key`: Requests a specific ticket by its key.
 /// * `Free`: Requests all tickets that match a free-form query.
-#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash)]
+pub enum QueryUsing {
+    Key(String),
+    Search(String),
+}
+
+/// A ticket query as defined in the user configuration file.
+/// The rest of the program doesn't use the query in this format,
+/// because it's unnecessarily wraped in an enum.
+/// However, the enum enables nice and short configuration entries.
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum TicketQuery {
+enum TicketQueryEntry {
     Key {
         tracker: tracker::Service,
         key: String,
         overrides: Option<Overrides>,
         #[serde(default)]
-        references: Vec<TicketQuery>,
+        references: Vec<TicketQueryEntry>,
     },
     Search {
         tracker: tracker::Service,
         search: String,
         overrides: Option<Overrides>,
         #[serde(default)]
-        references: Vec<TicketQuery>,
+        references: Vec<TicketQueryEntry>,
     },
+}
+
+impl From<TicketQueryEntry> for TicketQuery {
+    fn from(item: TicketQueryEntry) -> Self {
+        match item {
+            TicketQueryEntry::Key {
+                tracker,
+                key,
+                overrides,
+                references,
+            } => Self {
+                using: QueryUsing::Key(key),
+                tracker,
+                overrides,
+                references: references.into_iter().map(Self::from).collect(),
+            },
+            TicketQueryEntry::Search {
+                tracker,
+                search,
+                overrides,
+                references,
+            } => Self {
+                using: QueryUsing::Search(search),
+                tracker,
+                overrides,
+                references: references.into_iter().map(Self::from).collect(),
+            },
+        }
+    }
 }
 
 /// Optional, configurable overrides that modify an `AbstractTicket`.
@@ -64,30 +115,6 @@ pub struct Overrides {
     pub doc_type: Option<String>,
     pub components: Option<Vec<String>>,
     pub subsystems: Option<Vec<String>>,
-}
-
-impl TicketQuery {
-    /// Returns the tracker configured for this `TicketQuery`, regardless of the variant.
-    /// The tracker is common to all variants.
-    pub fn tracker(&self) -> &tracker::Service {
-        match self {
-            Self::Key { tracker, .. } | Self::Search { tracker, .. } => tracker,
-        }
-    }
-    /// Returns the overrides configured for this `TicketQuery`, regardless of the variant.
-    /// The overrides are common to all variants.
-    pub fn overrides(&self) -> &Option<Overrides> {
-        match self {
-            Self::Key { overrides, .. } | Self::Search { overrides, .. } => overrides,
-        }
-    }
-    /// Returns the references configured for this `TicketQuery`, regardless of the variant.
-    /// The references are common to all variants.
-    pub fn references(&self) -> &[TicketQuery] {
-        match self {
-            Self::Key { references, .. } | Self::Search { references, .. } => &references,
-        }
-    }
 }
 
 pub mod tracker {
@@ -111,7 +138,7 @@ pub mod tracker {
         }
     }
 
-    #[derive(Debug, PartialEq, Deserialize)]
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
     pub struct Fields {
         pub doc_type: String,
         pub doc_text: String,
@@ -123,7 +150,7 @@ pub mod tracker {
 
     /// The particular instance of an issue tracker,
     /// with a host URL and access credentials.
-    #[derive(Debug, PartialEq, Deserialize)]
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
     pub struct Instance {
         pub host: String,
         pub api_key: Option<String>,
@@ -131,7 +158,7 @@ pub mod tracker {
     }
 
     /// The issue tracker instances configured in the current release notes project.
-    #[derive(Debug, PartialEq, Deserialize)]
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
     pub struct Config {
         pub jira: Instance,
         pub bugzilla: Instance,
@@ -165,7 +192,7 @@ pub struct Section {
 
 /// The configuration of a filter, which narrows down the tickets
 /// that can appear in the section that the filter belongs to.
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct Filter {
     pub doc_type: Option<Vec<String>>,
     pub subsystem: Option<Vec<String>>,
@@ -176,11 +203,13 @@ pub struct Filter {
 fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
     let text =
         fs::read_to_string(tickets_file).wrap_err("Cannot read the tickets configuration file.")?;
-    let config: Vec<TicketQuery> =
+    let config: Vec<TicketQueryEntry> =
         serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
     log::debug!("{:#?}", config);
 
-    Ok(config)
+    let queries = config.into_iter().map(TicketQuery::from).collect();
+
+    Ok(queries)
 }
 
 /// Parse the specified tracker file into the trackers configuration.

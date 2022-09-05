@@ -24,7 +24,7 @@ use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use jira_query::Issue;
 
 // use crate::config::tracker::Service;
-use crate::config::{tracker, TicketQuery};
+use crate::config::{tracker, QueryUsing, TicketQuery};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
 /// The number of items in a single Jira query.
@@ -53,7 +53,7 @@ impl AnnotatedTicket {
     /// The overrides might edit several specific fields of `AbstractTicket`.
     pub fn override_fields(&mut self) {
         // The overrides configuration entry is optional.
-        if let Some(overrides) = self.query.overrides() {
+        if let Some(overrides) = &self.query.overrides {
             // Each part of the overrides is also optional.
             if let Some(doc_type) = &overrides.doc_type {
                 self.ticket.doc_type = doc_type.clone();
@@ -157,7 +157,7 @@ fn take_id_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)
     queries
         .iter()
         .filter_map(|tq| {
-            if let TicketQuery::Key { key, .. } = &**tq {
+            if let QueryUsing::Key(key) = &tq.using {
                 Some((key.as_str(), Arc::clone(tq)))
             } else {
                 None
@@ -171,7 +171,7 @@ fn take_search_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQue
     queries
         .iter()
         .filter_map(|tq| {
-            if let TicketQuery::Search { search, .. } = &**tq {
+            if let QueryUsing::Search(search) = &tq.using {
                 Some((search.as_str(), Arc::clone(tq)))
             } else {
                 None
@@ -188,7 +188,7 @@ async fn bugs(
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let bugzilla_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
-        .filter(|tq| tq.tracker() == &tracker::Service::Bugzilla)
+        .filter(|tq| tq.tracker == tracker::Service::Bugzilla)
         .map(Arc::clone)
         .collect();
 
@@ -280,7 +280,7 @@ async fn issues(
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let jira_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
-        .filter(|&t| t.tracker() == &tracker::Service::Jira)
+        .filter(|&t| t.tracker == tracker::Service::Jira)
         .map(Arc::clone)
         .collect();
 
