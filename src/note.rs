@@ -54,9 +54,9 @@ impl AbstractTicket {
 
             // This is the resulting release note:
             format!(
-                "{}\n\n({}) {}",
+                "{}\n\n{} {}",
                 doc_text_unix,
-                self.format_signature(),
+                self.all_signatures(),
                 // In the internal variant, add the debug information line.
                 if *variant == DocumentVariant::Internal {
                     debug_info
@@ -74,6 +74,16 @@ impl AbstractTicket {
             format!("link:{}[{}]", &self.url, self.id)
         } else {
             self.id.to_string()
+        }
+    }
+
+    /// Prepare a list with signatures to this ticket and all its optional references.
+    /// The result is a comma-separated list of signatures, enclosed in parentheses.
+    fn all_signatures(&self) -> String {
+        if let Some(references) = &self.references {
+            format!("({}, {})", self.format_signature(), references.join(", "))
+        } else {
+            format!("({})", self.format_signature())
         }
     }
 }
