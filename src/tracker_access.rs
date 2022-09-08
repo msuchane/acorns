@@ -144,14 +144,14 @@ pub async fn unsorted_tickets(
 
     let mut references: HashMap<Arc<TicketQuery>, Vec<String>> = HashMap::new();
     for (query, bug) in ref_bugs {
-        let ticket = Arc::new(bug.into_abstract(&trackers.bugzilla)?);
+        let ticket = bug.into_abstract(None, &trackers.bugzilla)?;
         references
             .entry(query)
             .and_modify(|e| e.push(ticket.format_signature()))
             .or_insert_with(|| vec![ticket.format_signature()]);
     }
     for (query, issue) in ref_issues {
-        let ticket = Arc::new(issue.into_abstract(&trackers.jira)?);
+        let ticket = issue.into_abstract(None, &trackers.jira)?;
         references
             .entry(query)
             .and_modify(|e| e.push(ticket.format_signature()))
@@ -164,12 +164,14 @@ pub async fn unsorted_tickets(
     // Convert bugs and issues into abstract tickets.
     // Using an imperative style so that each `into_abstract` call can return an error.
     for (query, bug) in plain_bugs {
-        let ticket = bug.into_abstract(&trackers.bugzilla)?;
+        let attached_references = reattach_references(&query, &references);
+        let ticket = bug.into_abstract(Some(attached_references), &trackers.bugzilla)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
     }
     for (query, issue) in plain_issues {
-        let ticket = issue.into_abstract(&trackers.jira)?;
+        let attached_references = reattach_references(&query, &references);
+        let ticket = issue.into_abstract(Some(attached_references), &trackers.jira)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
     }
@@ -182,8 +184,17 @@ pub async fn unsorted_tickets(
     Ok(results)
 }
 
-fn reattach_references(main_query: Arc<TicketQuery>) {
-    todo!()
+fn reattach_references(
+    main_query: &Arc<TicketQuery>,
+    references: &HashMap<Arc<TicketQuery>, Vec<String>>,
+) -> Vec<String> {
+    let needed_references = &main_query.references;
+    references
+        .iter()
+        .filter(|(query, _references)| needed_references.contains(query))
+        .flat_map(|(_query, references)| references)
+        .cloned()
+        .collect()
 }
 
 /// Extract queries of the `TicketQuery::Key` kind with their keys.
