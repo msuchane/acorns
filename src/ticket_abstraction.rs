@@ -53,7 +53,7 @@ pub struct AbstractTicket {
     pub groups: Option<Vec<String>>,
     pub public: bool,
     pub doc_text_status: DocTextStatus,
-    pub duplicates: Vec<AbstractTicket>,
+    pub references: Vec<String>,
 }
 
 /// An identification of the original ticket on the issue tracker.
@@ -111,7 +111,7 @@ impl IntoAbstract for Bug {
             // A bug is public if no groups are set for it.
             public: self.groups.is_empty(),
             groups: Some(self.groups),
-            duplicates: Vec::new(),
+            references: Vec::new(),
         };
 
         Ok(ticket)
@@ -151,7 +151,7 @@ impl IntoAbstract for Issue {
             groups: None,
             // TODO: Implement public
             public: false,
-            duplicates: Vec::new(),
+            references: Vec::new(),
         };
 
         Ok(ticket)

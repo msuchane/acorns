@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use std::collections::HashMap;
 use std::string::ToString;
 use std::sync::Arc;
 
@@ -122,23 +123,52 @@ pub async fn unsorted_tickets(
 
     let queries: Vec<Arc<TicketQuery>> = queries.iter().map(Arc::clone).collect();
 
+    let mut reference_queries: Vec<Arc<TicketQuery>> = Vec::new();
+
+    // I don't know how to accomplish this in a functional style, unfortunately.
+    for query in &queries {
+        for reference in &query.references {
+            reference_queries.push(Arc::clone(reference));
+        }
+    }
+
     // Download from Bugzilla and from Jira in parallel:
-    let bugs = bugs(&queries, trackers);
-    let issues = issues(&queries, trackers);
+    let plain_bugs = bugs(&queries, trackers);
+    let plain_issues = issues(&queries, trackers);
+    let ref_bugs = bugs(&reference_queries, trackers);
+    let ref_issues = issues(&reference_queries, trackers);
 
     // Wait until both downloads have finished:
-    let (bugs, issues) = tokio::try_join!(bugs, issues)?;
+    let (plain_bugs, plain_issues, ref_bugs, ref_issues) =
+        tokio::try_join!(plain_bugs, plain_issues, ref_bugs, ref_issues)?;
+
+    let mut references: HashMap<Arc<TicketQuery>, Vec<String>> = HashMap::new();
+    for (query, bug) in ref_bugs {
+        let ticket = Arc::new(bug.into_abstract(&trackers.bugzilla)?);
+        references
+            .entry(query)
+            .and_modify(|e| e.push(ticket.format_signature()))
+            .or_insert_with(|| vec![ticket.format_signature()]);
+    }
+    for (query, issue) in ref_issues {
+        let ticket = Arc::new(issue.into_abstract(&trackers.jira)?);
+        references
+            .entry(query)
+            .and_modify(|e| e.push(ticket.format_signature()))
+            .or_insert_with(|| vec![ticket.format_signature()]);
+    }
+    eprintln!("These are the references: {:#?}", references);
 
     let mut results = Vec::new();
 
     // Convert bugs and issues into abstract tickets.
     // Using an imperative style so that each `into_abstract` call can return an error.
-    for (query, bug) in bugs {
+    for (query, bug) in plain_bugs {
         let ticket = bug.into_abstract(&trackers.bugzilla)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
     }
-    for (query, issue) in issues {
+    for (query, issue) in plain_issues {
         let ticket = issue.into_abstract(&trackers.jira)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
@@ -150,6 +180,10 @@ pub async fn unsorted_tickets(
     }
 
     Ok(results)
+}
+
+fn reattach_references(main_query: Arc<TicketQuery>) {
+    todo!()
 }
 
 /// Extract queries of the `TicketQuery::Key` kind with their keys.

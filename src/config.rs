@@ -43,7 +43,7 @@ pub struct TicketQuery {
     pub tracker: tracker::Service,
     pub using: QueryUsing,
     pub overrides: Option<Overrides>,
-    pub references: Vec<TicketQuery>,
+    pub references: Vec<Arc<TicketQuery>>,
 }
 
 /// Variants of the ticket query that the user can configure in `tickets.yaml`.
@@ -91,7 +91,11 @@ impl From<TicketQueryEntry> for TicketQuery {
                 using: QueryUsing::Key(key),
                 tracker,
                 overrides,
-                references: references.into_iter().map(Self::from).collect(),
+                references: references
+                    .into_iter()
+                    .map(Self::from)
+                    .map(Arc::new)
+                    .collect(),
             },
             TicketQueryEntry::Search {
                 tracker,
@@ -102,7 +106,11 @@ impl From<TicketQueryEntry> for TicketQuery {
                 using: QueryUsing::Search(search),
                 tracker,
                 overrides,
-                references: references.into_iter().map(Self::from).collect(),
+                references: references
+                    .into_iter()
+                    .map(Self::from)
+                    .map(Arc::new)
+                    .collect(),
             },
         }
     }

@@ -69,7 +69,7 @@ impl AbstractTicket {
 
     /// Prepare the link or the non-clickable signature that marks the ticket
     /// belonging to this release note.
-    fn format_signature(&self) -> String {
+    pub fn format_signature(&self) -> String {
         if self.public {
             format!("link:{}[{}]", &self.url, self.id)
         } else {
