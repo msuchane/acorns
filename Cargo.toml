@@ -4,7 +4,7 @@ authors = ["Marek Suchánek <msuchane@redhat.com>"]
 version = "0.11.0"
 edition = "2021"
 # Check the Rust version using `cargo msrv verify`.
-rust-version = "1.57"
+rust-version = "1.59"
 description = "Generate an AsciiDoc release notes document from tracking tickets."
 license = "GPL-3.0-or-later"
 readme = "README.md"
