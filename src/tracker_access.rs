@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use std::collections::HashMap;
 use std::string::ToString;
 use std::sync::Arc;
 
@@ -26,6 +25,7 @@ use jira_query::Issue;
 
 // use crate::config::tracker::Service;
 use crate::config::{tracker, QueryUsing, TicketQuery};
+use crate::references::{ReferenceQueries, ReferenceSignatures};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
 /// The number of items in a single Jira query.
@@ -123,78 +123,58 @@ pub async fn unsorted_tickets(
 
     let queries: Vec<Arc<TicketQuery>> = queries.iter().map(Arc::clone).collect();
 
-    let mut reference_queries: Vec<Arc<TicketQuery>> = Vec::new();
-
-    // I don't know how to accomplish this in a functional style, unfortunately.
-    for query in &queries {
-        for reference in &query.references {
-            reference_queries.push(Arc::clone(reference));
-        }
-    }
+    let ref_queries = ReferenceQueries::from(queries.as_slice());
 
     // Download from Bugzilla and from Jira in parallel:
     let plain_bugs = bugs(&queries, trackers);
     let plain_issues = issues(&queries, trackers);
-    let ref_bugs = bugs(&reference_queries, trackers);
-    let ref_issues = issues(&reference_queries, trackers);
+    let ref_bugs = bugs(&ref_queries.0, trackers);
+    let ref_issues = issues(&ref_queries.0, trackers);
 
     // Wait until both downloads have finished:
     let (plain_bugs, plain_issues, ref_bugs, ref_issues) =
         tokio::try_join!(plain_bugs, plain_issues, ref_bugs, ref_issues)?;
 
-    let mut references: HashMap<Arc<TicketQuery>, Vec<String>> = HashMap::new();
-    for (query, bug) in ref_bugs {
-        let ticket = bug.into_abstract(None, &trackers.bugzilla)?;
-        references
-            .entry(query)
-            .and_modify(|e| e.push(ticket.format_signature()))
-            .or_insert_with(|| vec![ticket.format_signature()]);
-    }
-    for (query, issue) in ref_issues {
-        let ticket = issue.into_abstract(None, &trackers.jira)?;
-        references
-            .entry(query)
-            .and_modify(|e| e.push(ticket.format_signature()))
-            .or_insert_with(|| vec![ticket.format_signature()]);
-    }
-    eprintln!("These are the references: {:#?}", references);
+    let ref_signatures = ReferenceSignatures::new(ref_bugs, ref_issues, trackers)?;
 
-    let mut results = Vec::new();
-
-    // Convert bugs and issues into abstract tickets.
-    // Using an imperative style so that each `into_abstract` call can return an error.
-    for (query, bug) in plain_bugs {
-        let attached_references = reattach_references(&query, &references);
-        let ticket = bug.into_abstract(Some(attached_references), &trackers.bugzilla)?;
-        let annotated = AnnotatedTicket { ticket, query };
-        results.push(annotated);
-    }
-    for (query, issue) in plain_issues {
-        let attached_references = reattach_references(&query, &references);
-        let ticket = issue.into_abstract(Some(attached_references), &trackers.jira)?;
-        let annotated = AnnotatedTicket { ticket, query };
-        results.push(annotated);
-    }
+    // Combine bugs and issues as abstract annotated tickets
+    let mut annotated_tickets = Vec::new();
+    annotated_tickets.append(&mut into_annotated_tickets(
+        plain_bugs,
+        &trackers.bugzilla,
+        &ref_signatures,
+    )?);
+    annotated_tickets.append(&mut into_annotated_tickets(
+        plain_issues,
+        &trackers.jira,
+        &ref_signatures,
+    )?);
 
     // Modify each ticket by applying the overrides configured for it.
-    for annotated_ticket in &mut results {
+    for annotated_ticket in &mut annotated_tickets {
         annotated_ticket.override_fields();
     }
 
-    Ok(results)
+    Ok(annotated_tickets)
 }
 
-fn reattach_references(
-    main_query: &Arc<TicketQuery>,
-    references: &HashMap<Arc<TicketQuery>, Vec<String>>,
-) -> Vec<String> {
-    let needed_references = &main_query.references;
-    references
-        .iter()
-        .filter(|(query, _references)| needed_references.contains(query))
-        .flat_map(|(_query, references)| references)
-        .cloned()
-        .collect()
+/// Convert bugs and issues into abstract tickets.
+fn into_annotated_tickets(
+    issues: Vec<(Arc<TicketQuery>, impl IntoAbstract)>,
+    config: &tracker::Instance,
+    ref_signatures: &ReferenceSignatures,
+) -> Result<Vec<AnnotatedTicket>> {
+    // Using an imperative style so that each `into_abstract` call can return an error.
+    let mut results = Vec::new();
+
+    for (query, issue) in issues {
+        let attached_references = ref_signatures.reattach_to(&query);
+        let ticket = issue.into_abstract(Some(attached_references), config)?;
+        let annotated = AnnotatedTicket { ticket, query };
+        results.push(annotated);
+    }
+
+    Ok(results)
 }
 
 /// Extract queries of the `TicketQuery::Key` kind with their keys.
