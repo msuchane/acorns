@@ -126,10 +126,10 @@ pub async fn unsorted_tickets(
     let ref_queries = ReferenceQueries::from(queries.as_slice());
 
     // Download from Bugzilla and from Jira in parallel:
-    let plain_bugs = bugs(&queries, trackers);
-    let plain_issues = issues(&queries, trackers);
-    let ref_bugs = bugs(&ref_queries.0, trackers);
-    let ref_issues = issues(&ref_queries.0, trackers);
+    let plain_bugs = bugs(QueriesKind::Plain(&queries), trackers);
+    let plain_issues = issues(QueriesKind::Plain(&queries), trackers);
+    let ref_bugs = bugs(QueriesKind::Ref(&ref_queries), trackers);
+    let ref_issues = issues(QueriesKind::Ref(&ref_queries), trackers);
 
     // Wait until both downloads have finished:
     let (plain_bugs, plain_issues, ref_bugs, ref_issues) =
@@ -205,12 +205,42 @@ fn take_search_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQue
         .collect()
 }
 
+/// A wrapper around ticket queries used when downloading tickets.
+/// The wrapper distinguishes between:
+///
+/// * `Plain`: Actual, release note ticket queries.
+/// * `Ref`: Reference ticket queries.
+///
+/// The kind then influences the download log messages.
+enum QueriesKind<'a> {
+    Plain(&'a [Arc<TicketQuery>]),
+    Ref(&'a ReferenceQueries),
+}
+
+impl QueriesKind<'_> {
+    /// Name this query kind for use in log messages.
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Plain(_) => "tickets",
+            Self::Ref(_) => "references",
+        }
+    }
+    /// Extract the queries from the wrapper.
+    pub fn list(&self) -> &[Arc<TicketQuery>] {
+        match self {
+            Self::Plain(qs) => qs,
+            Self::Ref(rqs) => &rqs.0,
+        }
+    }
+}
+
 /// Download all configured bugs from Bugzilla.
 /// Returns every bug in a tuple, annotated with the query that it came from.
 async fn bugs(
-    queries: &[Arc<TicketQuery>],
+    queriesk: QueriesKind<'_>,
     trackers: &tracker::Config,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
+    let queries = queriesk.list();
     let bugzilla_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
         .filter(|tq| tq.tracker == tracker::Service::Bugzilla)
@@ -225,7 +255,7 @@ async fn bugs(
     let queries_by_id = take_id_queries(&bugzilla_queries);
     let queries_by_search = take_search_queries(&bugzilla_queries);
 
-    log::info!("Downloading bugs from Bugzilla.");
+    log::info!("Downloading {} from Bugzilla.", queriesk.label());
     let bz_instance = bz_instance(trackers)?;
 
     let mut all_bugs = Vec::new();
@@ -239,7 +269,7 @@ async fn bugs(
     all_bugs.append(&mut bugs_from_ids);
     all_bugs.append(&mut bugs_from_searches);
 
-    log::info!("Finished downloading from Bugzilla.");
+    log::info!("Finished downloading {} from Bugzilla.", queriesk.label());
 
     Ok(all_bugs)
 }
@@ -300,9 +330,10 @@ async fn bugs_from_searches(
 /// Download all configured issues from Jira.
 /// Returns every issue in a tuple, annotated with the query that it came from.
 async fn issues(
-    queries: &[Arc<TicketQuery>],
+    queriesk: QueriesKind<'_>,
     trackers: &tracker::Config,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
+    let queries = queriesk.list();
     let jira_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
         .filter(|&t| t.tracker == tracker::Service::Jira)
@@ -317,7 +348,7 @@ async fn issues(
     let queries_by_id = take_id_queries(&jira_queries);
     let queries_by_search = take_search_queries(&jira_queries);
 
-    log::info!("Downloading issues from Jira.");
+    log::info!("Downloading {} from Jira.", queriesk.label());
 
     let jira_instance = jira_instance(trackers)?;
 
@@ -332,7 +363,7 @@ async fn issues(
     all_issues.append(&mut issues_from_ids);
     all_issues.append(&mut issues_from_searches);
 
-    log::info!("Finished downloading from Jira.");
+    log::info!("Finished downloading {} from Jira.", queriesk.label());
 
     Ok(all_issues)
 }
