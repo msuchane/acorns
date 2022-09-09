@@ -24,7 +24,8 @@ use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use jira_query::Issue;
 
 // use crate::config::tracker::Service;
-use crate::config::{tracker, TicketQuery};
+use crate::config::{tracker, QueryUsing, TicketQuery};
+use crate::references::{ReferenceQueries, ReferenceSignatures};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
 /// The number of items in a single Jira query.
@@ -35,6 +36,12 @@ const JIRA_CHUNK_SIZE: u32 = 30;
 
 /// Always include these fields in Bugzilla requests. We process some of their content.
 const BZ_INCLUDED_FIELDS: &[&str; 3] = &["_default", "pool", "flags"];
+
+/// The environment variable that holds the API key to Bugzilla.
+const BZ_API_KEY_VAR: &str = "BZ_API_KEY";
+
+/// The environment variable that holds the API key to Jira.
+const JIRA_API_KEY_VAR: &str = "JIRA_API_KEY";
 
 #[derive(Clone)]
 pub struct AnnotatedTicket {
@@ -47,7 +54,7 @@ impl AnnotatedTicket {
     /// The overrides might edit several specific fields of `AbstractTicket`.
     pub fn override_fields(&mut self) {
         // The overrides configuration entry is optional.
-        if let Some(overrides) = self.query.overrides() {
+        if let Some(overrides) = &self.query.overrides {
             // Each part of the overrides is also optional.
             if let Some(doc_type) = &overrides.doc_type {
                 self.ticket.doc_type = doc_type.clone();
@@ -68,7 +75,8 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("BZ_API_KEY").wrap_err("Set the BZ_API_KEY environment variable.")?
+        std::env::var(BZ_API_KEY_VAR)
+            .wrap_err_with(|| format!("Set the {} environment variable.", BZ_API_KEY_VAR))?
     };
 
     Ok(
@@ -84,7 +92,8 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
         key.clone()
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
-        std::env::var("JIRA_API_KEY").wrap_err("Set the JIRA_API_KEY environment variable.")?
+        std::env::var(JIRA_API_KEY_VAR)
+            .wrap_err_with(|| format!("Set the {} environment variable.", JIRA_API_KEY_VAR))?
     };
 
     Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?
@@ -114,45 +123,127 @@ pub async fn unsorted_tickets(
 
     let queries: Vec<Arc<TicketQuery>> = queries.iter().map(Arc::clone).collect();
 
+    let ref_queries = ReferenceQueries::from(queries.as_slice());
+
     // Download from Bugzilla and from Jira in parallel:
-    let bugs = bugs(&queries, trackers);
-    let issues = issues(&queries, trackers);
+    let plain_bugs = bugs(QueriesKind::Plain(&queries), trackers);
+    let plain_issues = issues(QueriesKind::Plain(&queries), trackers);
+    let ref_bugs = bugs(QueriesKind::Ref(&ref_queries), trackers);
+    let ref_issues = issues(QueriesKind::Ref(&ref_queries), trackers);
 
     // Wait until both downloads have finished:
-    let (bugs, issues) = tokio::try_join!(bugs, issues)?;
+    let (plain_bugs, plain_issues, ref_bugs, ref_issues) =
+        tokio::try_join!(plain_bugs, plain_issues, ref_bugs, ref_issues)?;
 
-    let mut results = Vec::new();
+    let ref_signatures = ReferenceSignatures::new(ref_bugs, ref_issues, trackers)?;
 
-    // Convert bugs and issues into abstract tickets.
-    // Using an imperative style so that each `into_abstract` call can return an error.
-    for (query, bug) in bugs {
-        let ticket = bug.into_abstract(&trackers.bugzilla)?;
-        let annotated = AnnotatedTicket { ticket, query };
-        results.push(annotated);
-    }
-    for (query, issue) in issues {
-        let ticket = issue.into_abstract(&trackers.jira)?;
-        let annotated = AnnotatedTicket { ticket, query };
-        results.push(annotated);
-    }
+    // Combine bugs and issues as abstract annotated tickets
+    let mut annotated_tickets = Vec::new();
+    annotated_tickets.append(&mut into_annotated_tickets(
+        plain_bugs,
+        &trackers.bugzilla,
+        &ref_signatures,
+    )?);
+    annotated_tickets.append(&mut into_annotated_tickets(
+        plain_issues,
+        &trackers.jira,
+        &ref_signatures,
+    )?);
 
     // Modify each ticket by applying the overrides configured for it.
-    for annotated_ticket in &mut results {
+    for annotated_ticket in &mut annotated_tickets {
         annotated_ticket.override_fields();
+    }
+
+    Ok(annotated_tickets)
+}
+
+/// Convert bugs and issues into abstract tickets.
+fn into_annotated_tickets(
+    issues: Vec<(Arc<TicketQuery>, impl IntoAbstract)>,
+    config: &tracker::Instance,
+    ref_signatures: &ReferenceSignatures,
+) -> Result<Vec<AnnotatedTicket>> {
+    // Using an imperative style so that each `into_abstract` call can return an error.
+    let mut results = Vec::new();
+
+    for (query, issue) in issues {
+        let attached_references = ref_signatures.reattach_to(&query);
+        let ticket = issue.into_abstract(Some(attached_references), config)?;
+        let annotated = AnnotatedTicket { ticket, query };
+        results.push(annotated);
     }
 
     Ok(results)
 }
 
+/// Extract queries of the `TicketQuery::Key` kind with their keys.
+fn take_id_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)> {
+    queries
+        .iter()
+        .filter_map(|tq| {
+            if let QueryUsing::Key(key) = &tq.using {
+                Some((key.as_str(), Arc::clone(tq)))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Extract queries of the `TicketQuery::Search` kind with their searches.
+fn take_search_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)> {
+    queries
+        .iter()
+        .filter_map(|tq| {
+            if let QueryUsing::Search(search) = &tq.using {
+                Some((search.as_str(), Arc::clone(tq)))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// A wrapper around ticket queries used when downloading tickets.
+/// The wrapper distinguishes between:
+///
+/// * `Plain`: Actual, release note ticket queries.
+/// * `Ref`: Reference ticket queries.
+///
+/// The kind then influences the download log messages.
+enum QueriesKind<'a> {
+    Plain(&'a [Arc<TicketQuery>]),
+    Ref(&'a ReferenceQueries),
+}
+
+impl QueriesKind<'_> {
+    /// Name this query kind for use in log messages.
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Plain(_) => "tickets",
+            Self::Ref(_) => "references",
+        }
+    }
+    /// Extract the queries from the wrapper.
+    pub fn list(&self) -> &[Arc<TicketQuery>] {
+        match self {
+            Self::Plain(qs) => qs,
+            Self::Ref(rqs) => &rqs.0,
+        }
+    }
+}
+
 /// Download all configured bugs from Bugzilla.
 /// Returns every bug in a tuple, annotated with the query that it came from.
 async fn bugs(
-    queries: &[Arc<TicketQuery>],
+    queriesk: QueriesKind<'_>,
     trackers: &tracker::Config,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
+    let queries = queriesk.list();
     let bugzilla_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
-        .filter(|tq| tq.tracker() == &tracker::Service::Bugzilla)
+        .filter(|tq| tq.tracker == tracker::Service::Bugzilla)
         .map(Arc::clone)
         .collect();
 
@@ -161,19 +252,10 @@ async fn bugs(
         return Ok(Vec::new());
     }
 
-    let queries_by_id: Vec<Arc<TicketQuery>> = bugzilla_queries
-        .iter()
-        .filter(|&tq| tq.key().is_some())
-        .map(Arc::clone)
-        .collect();
+    let queries_by_id = take_id_queries(&bugzilla_queries);
+    let queries_by_search = take_search_queries(&bugzilla_queries);
 
-    let queries_by_search: Vec<Arc<TicketQuery>> = bugzilla_queries
-        .iter()
-        .filter(|&tq| tq.search().is_some())
-        .map(Arc::clone)
-        .collect();
-
-    log::info!("Downloading bugs from Bugzilla.");
+    log::info!("Downloading {} from Bugzilla.", queriesk.label());
     let bz_instance = bz_instance(trackers)?;
 
     let mut all_bugs = Vec::new();
@@ -187,21 +269,21 @@ async fn bugs(
     all_bugs.append(&mut bugs_from_ids);
     all_bugs.append(&mut bugs_from_searches);
 
-    log::info!("Finished downloading from Bugzilla.");
+    log::info!("Finished downloading {} from Bugzilla.", queriesk.label());
 
     Ok(all_bugs)
 }
 
 /// Download bugs that come from ID queries.
 async fn bugs_from_ids(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let bugs = bz_instance
         .bugs(
             &queries
                 .iter()
-                .filter_map(|q| q.key())
+                .map(|(key, _query)| *key)
                 .collect::<Vec<&str>>(),
         )
         // This enables the download concurrency:
@@ -213,9 +295,10 @@ async fn bugs_from_ids(
     for bug in bugs {
         let matching_query = queries
             .iter()
-            .find(|query| query.key() == Some(bug.id.to_string().as_str()))
+            .find(|(key, _query)| key == &bug.id.to_string().as_str())
+            .map(|(_key, query)| Arc::clone(query))
             .ok_or_else(|| eyre!("Bug {} doesn't match any configured query.", bug.id))?;
-        annotated_bugs.push((Arc::clone(matching_query), bug));
+        annotated_bugs.push((matching_query, bug));
     }
 
     Ok(annotated_bugs)
@@ -223,14 +306,14 @@ async fn bugs_from_ids(
 
 /// Download bugs that come from search queries.
 async fn bugs_from_searches(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     bz_instance: &bugzilla_query::BzInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let mut annotated_bugs: Vec<(Arc<TicketQuery>, Bug)> = Vec::new();
 
-    for query in queries.iter() {
+    for (search, query) in queries.iter() {
         let mut bugs = bz_instance
-            .search(query.search().unwrap())
+            .search(search)
             // This enables the download concurrency:
             .await
             .wrap_err("Failed to download tickets from Bugzilla.")?
@@ -247,12 +330,13 @@ async fn bugs_from_searches(
 /// Download all configured issues from Jira.
 /// Returns every issue in a tuple, annotated with the query that it came from.
 async fn issues(
-    queries: &[Arc<TicketQuery>],
+    queriesk: QueriesKind<'_>,
     trackers: &tracker::Config,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
+    let queries = queriesk.list();
     let jira_queries: Vec<Arc<TicketQuery>> = queries
         .iter()
-        .filter(|&t| t.tracker() == &tracker::Service::Jira)
+        .filter(|&t| t.tracker == tracker::Service::Jira)
         .map(Arc::clone)
         .collect();
 
@@ -261,19 +345,10 @@ async fn issues(
         return Ok(Vec::new());
     }
 
-    let queries_by_id: Vec<Arc<TicketQuery>> = jira_queries
-        .iter()
-        .filter(|&tq| tq.key().is_some())
-        .map(Arc::clone)
-        .collect();
+    let queries_by_id = take_id_queries(&jira_queries);
+    let queries_by_search = take_search_queries(&jira_queries);
 
-    let queries_by_search: Vec<Arc<TicketQuery>> = jira_queries
-        .iter()
-        .filter(|&tq| tq.search().is_some())
-        .map(Arc::clone)
-        .collect();
-
-    log::info!("Downloading issues from Jira.");
+    log::info!("Downloading {} from Jira.", queriesk.label());
 
     let jira_instance = jira_instance(trackers)?;
 
@@ -288,21 +363,21 @@ async fn issues(
     all_issues.append(&mut issues_from_ids);
     all_issues.append(&mut issues_from_searches);
 
-    log::info!("Finished downloading from Jira.");
+    log::info!("Finished downloading {} from Jira.", queriesk.label());
 
     Ok(all_issues)
 }
 
 /// Download issues that come from ID queries.
 async fn issues_from_ids(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     jira_instance: &jira_query::JiraInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let issues = jira_instance
         .issues(
             &queries
                 .iter()
-                .filter_map(|q| q.key())
+                .map(|(key, _query)| *key)
                 .collect::<Vec<&str>>(),
         )
         // This enables the download concurrency:
@@ -314,8 +389,8 @@ async fn issues_from_ids(
     for issue in issues {
         let matching_query = queries
             .iter()
-            .find(|query| query.key() == Some(issue.key.as_str()))
-            .map(Arc::clone)
+            .find(|(key, _query)| key == &issue.key.as_str())
+            .map(|(_key, query)| Arc::clone(query))
             .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
         annotated_issues.push((matching_query, issue));
     }
@@ -325,14 +400,14 @@ async fn issues_from_ids(
 
 /// Download issues that come from search queries.
 async fn issues_from_searches(
-    queries: &[Arc<TicketQuery>],
+    queries: &[(&str, Arc<TicketQuery>)],
     jira_instance: &jira_query::JiraInstance,
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
 
-    for query in queries.iter() {
+    for (search, query) in queries.iter() {
         let mut issues = jira_instance
-            .search(query.search().unwrap())
+            .search(search)
             // This enables the download concurrency:
             .await
             .wrap_err("Failed to download tickets from Bugzilla.")?

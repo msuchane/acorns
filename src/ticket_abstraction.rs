@@ -53,7 +53,7 @@ pub struct AbstractTicket {
     pub groups: Option<Vec<String>>,
     pub public: bool,
     pub doc_text_status: DocTextStatus,
-    pub duplicates: Vec<AbstractTicket>,
+    pub references: Option<Vec<String>>,
 }
 
 /// An identification of the original ticket on the issue tracker.
@@ -72,11 +72,19 @@ impl fmt::Display for TicketId {
 pub trait IntoAbstract {
     /// Converts a Bugzilla bug or a Jira ticket to `AbstractTicket`.
     /// Consumes the original ticket.
-    fn into_abstract(self, config: &tracker::Instance) -> Result<AbstractTicket>;
+    fn into_abstract(
+        self,
+        references: Option<Vec<String>>,
+        config: &tracker::Instance,
+    ) -> Result<AbstractTicket>;
 }
 
 impl IntoAbstract for Bug {
-    fn into_abstract(self, tracker: &tracker::Instance) -> Result<AbstractTicket> {
+    fn into_abstract(
+        self,
+        references: Option<Vec<String>>,
+        tracker: &tracker::Instance,
+    ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
             id: Rc::new(TicketId {
                 key: self.id.to_string(),
@@ -111,7 +119,7 @@ impl IntoAbstract for Bug {
             // A bug is public if no groups are set for it.
             public: self.groups.is_empty(),
             groups: Some(self.groups),
-            duplicates: Vec::new(),
+            references,
         };
 
         Ok(ticket)
@@ -119,7 +127,11 @@ impl IntoAbstract for Bug {
 }
 
 impl IntoAbstract for Issue {
-    fn into_abstract(self, tracker: &tracker::Instance) -> Result<AbstractTicket> {
+    fn into_abstract(
+        self,
+        references: Option<Vec<String>>,
+        tracker: &tracker::Instance,
+    ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
             doc_type: self.doc_type(&tracker.fields)?,
             doc_text: self.doc_text(&tracker.fields)?,
@@ -151,7 +163,7 @@ impl IntoAbstract for Issue {
             groups: None,
             // TODO: Implement public
             public: false,
-            duplicates: Vec::new(),
+            references,
         };
 
         Ok(ticket)

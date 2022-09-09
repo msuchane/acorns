@@ -40,6 +40,7 @@ mod config;
 mod extra_fields;
 mod logging;
 mod note;
+mod references;
 mod status_report;
 mod templating;
 mod ticket_abstraction;

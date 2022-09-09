@@ -179,7 +179,7 @@ impl Checks {
     fn overall(&self) -> Status {
         // The text status has a dedicated column in the status table.
         // Its errors might also be long. Because of that, present
-        // Only a brief error in the overall column instead.
+        // only a brief error in the overall column instead.
         let short_text_error = Status::Error("Bad text.".into());
         let text_check = match &self.title_and_text {
             Status::Error(_) => &short_text_error,
@@ -330,9 +330,10 @@ impl Status {
         likely_release: Option<&&str>,
         doc_type: &str,
     ) -> Self {
-        if let Some(&likely_release) = likely_release {
-            // TODO: This is an awkward way to compare &str with String. Revisit.
-            if ticket_releases.contains(&likely_release.to_string())
+        if let Some(likely_release) = likely_release {
+            // This is a replacement to the `contains` method that converts the `String` list to `&str`,
+            // and thus enables us to compare the two strings without allocating every time.
+            if ticket_releases.iter().any(|r| r == likely_release)
                 || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
             {
                 Self::Ok
