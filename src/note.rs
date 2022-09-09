@@ -69,7 +69,7 @@ impl AbstractTicket {
 
     /// Prepare the link or the non-clickable signature that marks the ticket
     /// belonging to this release note.
-    pub fn format_signature(&self) -> String {
+    pub fn signature(&self) -> String {
         if self.public {
             format!("link:{}[{}]", &self.url, self.id)
         } else {
@@ -81,9 +81,9 @@ impl AbstractTicket {
     /// The result is a comma-separated list of signatures, enclosed in parentheses.
     fn all_signatures(&self) -> String {
         if let Some(references) = &self.references {
-            format!("({}, {})", self.format_signature(), references.join(", "))
+            format!("({}, {})", self.signature(), references.join(", "))
         } else {
-            format!("({})", self.format_signature())
+            format!("({})", self.signature())
         }
     }
 }

@@ -55,8 +55,8 @@ impl ReferenceSignatures {
             let ticket = issue.into_abstract(None, config)?;
             signatures
                 .entry(query)
-                .and_modify(|e| e.push(ticket.format_signature()))
-                .or_insert_with(|| vec![ticket.format_signature()]);
+                .and_modify(|e| e.push(ticket.signature()))
+                .or_insert_with(|| vec![ticket.signature()]);
         }
 
         Ok(())
