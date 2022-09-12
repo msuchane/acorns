@@ -45,7 +45,7 @@ impl AbstractTicket {
         );
 
         // TODO: Handle the empty doc text earlier as an error.
-        if self.doc_text.is_empty() {
+        if content_lines(&self.doc_text).is_empty() {
             empty
         } else {
             // If the doc text contains DOS line endings (`\r`), remove them
@@ -86,4 +86,13 @@ impl AbstractTicket {
             format!("({})", self.signature())
         }
     }
+}
+
+/// Pull out the lines from a doc text that aren't empty and aren't comments.
+/// In other words, this should be the actual text content of the release note.
+pub fn content_lines(doc_text: &str) -> Vec<&str> {
+    doc_text
+        .lines()
+        .filter(|line| !line.trim().is_empty() && !line.starts_with("//"))
+        .collect()
 }

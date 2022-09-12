@@ -28,6 +28,7 @@ use counter::Counter;
 use regex::Regex;
 
 use crate::extra_fields::DocTextStatus;
+use crate::note::content_lines;
 use crate::ticket_abstraction::AbstractTicket;
 
 /// These doc types don't belong to any particular target release.
@@ -261,10 +262,7 @@ impl Status {
     // if Jira also implements them in some way.
     /// Analyze the doc text and check if it conforms to a general release note format.
     fn from_text(text: &str) -> Self {
-        let content_lines: Vec<_> = text
-            .lines()
-            .filter(|line| !line.trim().is_empty() || !line.starts_with("//"))
-            .collect();
+        let content_lines = content_lines(text);
 
         match content_lines.len() {
             // If the doc text contains too few paragraphs, return with an error.
