@@ -154,7 +154,7 @@ impl config::Section {
             } else {
                 let include_statements: Vec<String> = included_modules
                     .iter()
-                    .map(|m| m.include_statement())
+                    .map(Module::include_statement)
                     .collect();
 
                 let template = Assembly {

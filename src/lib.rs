@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #![warn(
     clippy::pedantic,
     clippy::unwrap_used,
-    clippy::expect_used,
     clippy::clone_on_ref_ptr,
     clippy::todo
 )]

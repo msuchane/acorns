@@ -286,7 +286,7 @@ impl Status {
     fn from_title(text: &str) -> Self {
         // Identify the title as a line that starts with a dot (`.`) followed by a character,
         // and capture everything after the dot for analysis.
-        let title_regex = Regex::new(r"\.(\S+.*)").unwrap();
+        let title_regex = Regex::new(r"\.(\S+.*)").expect("Failed to parse a regular expression.");
 
         let title: Option<&str> = title_regex
             .captures(text)
