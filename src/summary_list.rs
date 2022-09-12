@@ -8,64 +8,76 @@ use crate::extra_fields::DocTextStatus;
 use crate::AbstractTicket;
 
 // TODO: We might want these to be configurable.
+/// Documentation components that only categorize tickets internally.
 const THROWAWAY_COMPONENTS: [&str; 3] = ["releng", "(none)", "Documentation"];
+/// Prefixes shared by other internal, documentation components.
 const THROWAWAY_PREFIXES: [&str; 2] = ["doc-", "Red_Hat_Enterprise_Linux-Release_Notes"];
+/// The placeholder that renames the internal, documentation components.
 const COMPONENT_PLACEHOLDER: &str = "other";
 
+/// A list of all the ticket signatures that belong under this component.
 #[derive(Eq, PartialEq, PartialOrd, Ord)]
 struct TicketsByComponent<'a> {
     component: PresentableComponent<'a>,
     signatures: Vec<String>,
 }
 
-/// All the data that the status table needs to render.
-#[derive(Template)] // this will generate the code...
-#[template(path = "summary-list.adoc", escape = "none")] // using the template in this path, relative
-                                                         // to the `templates` dir in the crate root
+/// A representation of the AsciiDoc template for the appendix. Later rendered.
+#[derive(Template)]
+#[template(path = "summary-list.adoc", escape = "none")]
 struct SummaryList<'a> {
     tickets_by_components: &'a [TicketsByComponent<'a>],
 }
 
+/// A wrapper around tickets components. It keeps all internal components separate
+/// in the `Internal` variant. Public components are unchanged in the `Public` variant.
 #[derive(Eq, Hash, PartialEq, PartialOrd, Ord)]
 enum PresentableComponent<'a> {
-    Some(&'a str),
-    None,
+    Public(&'a str),
+    Internal,
 }
 
 impl<'a> PresentableComponent<'a> {
+    /// Store the component either as public or as internal.
     fn from(component: &'a str) -> Self {
         if THROWAWAY_COMPONENTS.contains(&component)
             || THROWAWAY_PREFIXES
                 .iter()
                 .any(|prefix| component.starts_with(prefix))
         {
-            Self::None
+            Self::Internal
         } else {
-            Self::Some(component)
+            Self::Public(component)
         }
     }
 }
 
 impl fmt::Display for PresentableComponent<'_> {
+    /// Display the component. Adds backticks for AsciiDoc formatting.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             // If the variant is an actual component, format it with backticks as a code literal.
-            PresentableComponent::Some(component) => write!(f, "`{}`", component),
+            PresentableComponent::Public(component) => write!(f, "`{}`", component),
             // If the variant is a throwaway component, replace it with an unformatted placeholder.
-            PresentableComponent::None => write!(f, "{}", COMPONENT_PLACEHOLDER),
+            PresentableComponent::Internal => write!(f, "{}", COMPONENT_PLACEHOLDER),
         }
     }
 }
 
+/// Group together all tickets by their component. Instead of full tickets, store just their signatures.
 fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
+    // Use an intermediate `HashMap` for grouping.
     let mut components: HashMap<PresentableComponent, Vec<String>> = HashMap::new();
 
     tickets
         .iter()
+        // Only include tickets with an approved doc text.
+        // TODO: Include all tickets in the internal document variant.
         .filter(|ticket| ticket.doc_text_status == DocTextStatus::Approved)
         .for_each(|ticket| {
             for component in &ticket.components {
                 let presentable = PresentableComponent::from(component);
+
                 components
                     .entry(presentable)
                     .and_modify(|c| c.push(ticket.signature()))
@@ -73,6 +85,7 @@ fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
             }
         });
 
+    // Convert the intermediate `HashMap` to the output `TicketsByComponent` format.
     components
         .into_iter()
         .map(|(component, signatures)| TicketsByComponent {
@@ -82,17 +95,22 @@ fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
         .collect()
 }
 
+/// Produce an AsciiDoc appendix file that lists all tickets in the document
+/// by their component in a sorted table.
 pub fn appendix(tickets: &[AbstractTicket]) -> Result<String> {
+    // Prepare ticket signatures grouped by component.
     let mut groups = groups(tickets);
 
     // Sort the list by component name, alphabetically.
     // The 'other' group ends up at the very end, because it's a separate `enum` variant.
     groups.sort_unstable();
 
+    // Pass the component groups to the AsciiDoc template.
     let template = SummaryList {
         tickets_by_components: &groups,
     };
 
+    // Render the template as a valid AsciiDoc string.
     template
         .render()
         .wrap_err("Failed to prepare the ticket appendix.")
