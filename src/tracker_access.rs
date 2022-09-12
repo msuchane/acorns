@@ -63,7 +63,7 @@ impl AnnotatedTicket {
                 self.ticket.components = components.clone();
             }
             if let Some(subsystems) = &overrides.subsystems {
-                self.ticket.subsystems = subsystems.clone();
+                self.ticket.subsystems = Ok(subsystems.clone());
             }
         }
     }

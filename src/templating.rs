@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::collections::HashMap;
 use std::rc::Rc;
 
-// use color_eyre::eyre::{Context, Result};
 use askama::Template;
+//use color_eyre::Result;
 
 use crate::config;
 use crate::ticket_abstraction::AbstractTicket;
@@ -200,16 +200,24 @@ impl config::Section {
             None => true,
         };
         let matches_subsystem = match &self.filter.subsystem {
-            Some(ssts) => ssts
-                .iter()
-                // Compare both subsystems in lower case.
-                // Match if any of the ticket SSTs matches any of the template SSTs.
-                .any(|sst| {
-                    ticket
-                        .subsystems
-                        .iter()
-                        .any(|ticket_sst| sst.to_lowercase() == ticket_sst.to_lowercase())
-                }),
+            Some(ssts) => {
+                // Try to unwrap the result of the subsystems field only when a configured filter
+                // actually needs the subsystems. That way, subsystems are strictly optional,
+                // and if a project doesn't configure them at all, the release notes build
+                // can still finish successfully.
+                //
+                // TODO: Consider using a proper `Result` chain here instead of the `expect`.
+                let unwrapped_ssts = ticket.subsystems.as_ref().expect("Invalid subsystems");
+
+                ssts.iter()
+                    // Compare both subsystems in lower case.
+                    // Match if any of the ticket SSTs matches any of the template SSTs.
+                    .any(|sst| {
+                        unwrapped_ssts
+                            .iter()
+                            .any(|ticket_sst| sst.to_lowercase() == ticket_sst.to_lowercase())
+                    })
+            }
             // If the filter doesn't configure a subsystem, match by default
             None => true,
         };

@@ -49,7 +49,11 @@ pub struct AbstractTicket {
     pub labels: Option<Vec<String>>,
     pub flags: Option<Vec<String>>,
     pub target_releases: Vec<String>,
-    pub subsystems: Vec<String>,
+    // `AbstractTicket` derives cloning, but the `Result` from `eyre` doesn't implement it.
+    // To work around the limitation, replace the `eyre` `Result` with the standard
+    // `Result` and store just the `eyre` text description in it.
+    // It's not such a nice solution anymore, but it works and clones.
+    pub subsystems: Result<Vec<String>, String>,
     pub groups: Option<Vec<String>>,
     pub public: bool,
     pub doc_text_status: DocTextStatus,
@@ -95,7 +99,7 @@ impl IntoAbstract for Bug {
             doc_type: self.doc_type(&tracker.fields)?,
             doc_text: self.doc_text(&tracker.fields)?,
             target_releases: self.target_releases(&tracker.fields)?,
-            subsystems: self.subsystems(&tracker.fields)?,
+            subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
             doc_text_status: self.doc_text_status(&tracker.fields)?,
             docs_contact: self.docs_contact(&tracker.fields)?,
             url: self.url(tracker),
@@ -139,7 +143,7 @@ impl IntoAbstract for Issue {
             target_releases: self.target_releases(&tracker.fields)?,
             doc_text_status: self.doc_text_status(&tracker.fields)?,
             docs_contact: self.docs_contact(&tracker.fields)?,
-            subsystems: self.subsystems(&tracker.fields)?,
+            subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
             url: self.url(tracker),
             // The ID in particular is wrapped in Rc because it's involved in various filters
             // and comparisons where ownership is complicated.

@@ -407,10 +407,17 @@ impl AbstractTicket {
 
     /// Display the list of subsystems, or a placeholder if there are none.
     fn display_subsystems(&self) -> String {
-        if self.subsystems.is_empty() {
-            "No subsystems".to_string()
-        } else {
-            self.subsystems.join(", ")
+        match &self.subsystems {
+            Ok(subsystems) => {
+                if subsystems.is_empty() {
+                    "No subsystems".to_string()
+                } else {
+                    subsystems.join(", ")
+                }
+            }
+            // If getting the subsystems field resulted in an error, it's not
+            // a fatal issue in the status table. Just report it and proceed.
+            Err(_) => "Invalid subsystems".to_string(),
         }
     }
 
