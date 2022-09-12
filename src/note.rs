@@ -21,7 +21,7 @@ use crate::ticket_abstraction::AbstractTicket;
 
 impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
-    pub fn release_note(&self, variant: &DocumentVariant) -> String {
+    pub fn release_note(&self, variant: DocumentVariant) -> String {
         let docs_contact_placeholder = "No docs contact";
 
         // TODO: Handle the empty docs contact earlier as an error.
@@ -58,7 +58,7 @@ impl AbstractTicket {
                 doc_text_unix,
                 self.all_signatures(),
                 // In the internal variant, add the debug information line.
-                if *variant == DocumentVariant::Internal {
+                if variant == DocumentVariant::Internal {
                     debug_info
                 } else {
                     String::new()

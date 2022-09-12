@@ -42,6 +42,7 @@ mod logging;
 mod note;
 mod references;
 mod status_report;
+mod summary_list;
 mod templating;
 mod ticket_abstraction;
 mod tracker_access;
@@ -50,6 +51,7 @@ mod tracker_access;
 use templating::{DocumentVariant, Module};
 
 use crate::config::Project;
+pub use crate::ticket_abstraction::AbstractTicket;
 
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
@@ -118,9 +120,11 @@ fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
 
 /// Holds all the data generated from the project configuration before writing them to disk.
 struct Document {
-    internal: Vec<Module>,
-    public: Vec<Module>,
+    internal_modules: Vec<Module>,
+    public_modules: Vec<Module>,
     status_table: String,
+    internal_summary: String,
+    public_summary: String,
 }
 
 impl Document {
@@ -130,28 +134,40 @@ impl Document {
         let abstract_tickets =
             ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
 
-        let internal = templating::format_document(
-            &abstract_tickets,
+        // Filter internal and public tickets here before formatting the document.
+        // That way, functions in `templating` don't have to keep checking if they're
+        // working on the right ticket subset.
+        let tickets_for_internal = variant_tickets(&abstract_tickets, DocumentVariant::Internal);
+        let tickets_for_public = variant_tickets(&abstract_tickets, DocumentVariant::Public);
+
+        let internal_modules = templating::format_document(
+            &tickets_for_internal,
             &project.templates,
-            &DocumentVariant::Internal,
+            DocumentVariant::Internal,
         );
-        let public = templating::format_document(
-            &abstract_tickets,
+        let public_modules = templating::format_document(
+            &tickets_for_public,
             &project.templates,
-            &DocumentVariant::Public,
+            DocumentVariant::Public,
         );
 
         let status_table = status_report::analyze_status(&abstract_tickets)?;
 
+        let internal_summary =
+            summary_list::appendix(&tickets_for_internal, DocumentVariant::Internal)?;
+        let public_summary = summary_list::appendix(&tickets_for_public, DocumentVariant::Public)?;
+
         Ok(Self {
-            internal,
-            public,
+            internal_modules,
+            public_modules,
             status_table,
+            internal_summary,
+            public_summary,
         })
     }
 
     /// Write the formatted RN modules of a document variant as files to the output directory.
-    fn write_variant(modules: &[Module], generated_dir: &Path) -> Result<()> {
+    fn write_variant(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
         // Make sure that the output directory exists.
         fs::create_dir_all(&generated_dir)?;
 
@@ -163,8 +179,14 @@ impl Document {
             // If the currently processed module is an assembly,
             // recursively descend into the assembly and write its included modules.
             if let Some(included_modules) = &module.included_modules {
-                Self::write_variant(included_modules, generated_dir)?;
+                Self::write_variant(included_modules, summary, generated_dir)?;
             }
+
+            // Save the appendix.
+            let summary_file = generated_dir.join("ref_list-of-tickets-by-component.adoc");
+            log::debug!("Writing file: {}", summary_file.display());
+            fs::write(summary_file, summary)
+                .wrap_err("Failed to write generated summary appendix.")?;
         }
 
         Ok(())
@@ -183,8 +205,12 @@ impl Document {
         let public_dir = generated_dir.join("public");
 
         // Save the newly generated files.
-        Self::write_variant(&self.internal, &internal_dir)?;
-        Self::write_variant(&self.public, &public_dir)?;
+        Self::write_variant(
+            &self.internal_modules,
+            &self.internal_summary,
+            &internal_dir,
+        )?;
+        Self::write_variant(&self.public_modules, &self.public_summary, &public_dir)?;
 
         // Save the status table.
         let status_file = generated_dir.join("status-table.html");
@@ -192,5 +218,21 @@ impl Document {
         fs::write(status_file, &self.status_table).wrap_err("Failed to write generated module.")?;
 
         Ok(())
+    }
+}
+
+/// Select only those tickets that belong in the Internal or Public variant.
+fn variant_tickets(
+    all_tickets: &[AbstractTicket],
+    variant: DocumentVariant,
+) -> Vec<&AbstractTicket> {
+    match variant {
+        // The internal variant accepts all tickets.
+        DocumentVariant::Internal => all_tickets.iter().collect(),
+        // The public variant accepts only finished and approved tickets.
+        DocumentVariant::Public => all_tickets
+            .iter()
+            .filter(|t| t.doc_text_status == extra_fields::DocTextStatus::Approved)
+            .collect(),
     }
 }

@@ -1,0 +1,12 @@
+[appendix]
+= List of tickets by component
+
+Bugzilla and JIRA tickets are listed in this document for reference. Tickets that are publicly accessible include a link to the ticket.
+
+[cols="1,2", options="header"]
+|===
+| Component | Tickets
+{% for group in tickets_by_components %}
+| {{ group.component }} | {{ group.signatures.join(", ") }}
+{% endfor %}
+|===
