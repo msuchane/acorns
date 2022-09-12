@@ -153,8 +153,9 @@ impl Document {
 
         let status_table = status_report::analyze_status(&abstract_tickets)?;
 
-        let internal_summary = summary_list::appendix(&tickets_for_internal)?;
-        let public_summary = summary_list::appendix(&tickets_for_public)?;
+        let internal_summary =
+            summary_list::appendix(&tickets_for_internal, DocumentVariant::Internal)?;
+        let public_summary = summary_list::appendix(&tickets_for_public, DocumentVariant::Public)?;
 
         Ok(Self {
             internal_modules,

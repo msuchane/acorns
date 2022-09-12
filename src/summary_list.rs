@@ -5,6 +5,7 @@ use askama::Template;
 use color_eyre::{eyre::Context, Result};
 
 use crate::extra_fields::DocTextStatus;
+use crate::templating::DocumentVariant;
 use crate::AbstractTicket;
 
 // TODO: We might want these to be configurable.
@@ -65,7 +66,10 @@ impl fmt::Display for PresentableComponent<'_> {
 }
 
 /// Group together all tickets by their component. Instead of full tickets, store just their signatures.
-fn groups<'a>(tickets: &[&'a AbstractTicket]) -> Vec<TicketsByComponent<'a>> {
+fn groups<'a>(
+    tickets: &[&'a AbstractTicket],
+    variant: DocumentVariant,
+) -> Vec<TicketsByComponent<'a>> {
     // Use an intermediate `HashMap` for grouping.
     let mut components: HashMap<PresentableComponent, Vec<String>> = HashMap::new();
 
@@ -73,7 +77,7 @@ fn groups<'a>(tickets: &[&'a AbstractTicket]) -> Vec<TicketsByComponent<'a>> {
         .iter()
         // Only include tickets with an approved doc text.
         // TODO: Include all tickets in the internal document variant.
-        .filter(|ticket| ticket.doc_text_status == DocTextStatus::Approved)
+        .filter(|ticket| filter_doc_text(ticket, variant))
         .for_each(|ticket| {
             for component in &ticket.components {
                 let presentable = PresentableComponent::from(component);
@@ -95,11 +99,22 @@ fn groups<'a>(tickets: &[&'a AbstractTicket]) -> Vec<TicketsByComponent<'a>> {
         .collect()
 }
 
+/// A filter function that limits the tickets that are listed in the public document variant:
+///
+/// * In the public variant, only list tickets with an approved doc text.
+/// * In the internal variant, list all tickets.
+fn filter_doc_text(ticket: &AbstractTicket, variant: DocumentVariant) -> bool {
+    match variant {
+        DocumentVariant::Internal => true,
+        DocumentVariant::Public => ticket.doc_text_status == DocTextStatus::Approved,
+    }
+}
+
 /// Produce an AsciiDoc appendix file that lists all tickets in the document
 /// by their component in a sorted table.
-pub fn appendix(tickets: &[&AbstractTicket]) -> Result<String> {
+pub fn appendix(tickets: &[&AbstractTicket], variant: DocumentVariant) -> Result<String> {
     // Prepare ticket signatures grouped by component.
-    let mut groups = groups(tickets);
+    let mut groups = groups(tickets, variant);
 
     // Sort the list by component name, alphabetically.
     // The 'other' group ends up at the very end, because it's a separate `enum` variant.
