@@ -20,10 +20,31 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 // use color_eyre::eyre::{Context, Result};
+use askama::Template;
 
-use crate::config::{Section, Template};
+use crate::config;
 use crate::ticket_abstraction::AbstractTicket;
 use crate::ticket_abstraction::TicketId;
+
+/// A leaf, reference module that contains release notes with no further nesting.
+#[derive(Template)]
+#[template(path = "reference.adoc", escape = "none")]
+struct Leaf<'a> {
+    id: &'a str,
+    title: &'a str,
+    intro_abstract: &'a str,
+    release_notes: &'a [String],
+}
+
+/// An assembly module that nests other assemblies or leaf reference modules.
+#[derive(Template)]
+#[template(path = "assembly.adoc", escape = "none")]
+struct Assembly<'a> {
+    id: &'a str,
+    title: &'a str,
+    intro_abstract: &'a str,
+    includes: &'a [String],
+}
 
 /// The variant of the generated, output document:
 ///
@@ -50,7 +71,7 @@ impl Module {
     }
 }
 
-impl Section {
+impl config::Section {
     /// Convert the body of the section into AsciiDoc text that will serve
     /// as the body of the resulting module.
     fn render(
@@ -73,33 +94,24 @@ impl Section {
         if matching_tickets.is_empty() {
             None
         } else {
-            let heading = format!("= {}", &self.title);
-
             let release_notes: Vec<_> = matching_tickets
                 .iter()
                 .map(|t| t.release_note(variant))
                 .collect();
 
-            // If an introductory abstract is configured for this section, add it below the heading,
-            // followed by a newline separator.
-            let intro = if let Some(intro_abstract) = &self.intro_abstract {
-                format!("{}\n", intro_abstract)
-            } else {
-                String::new()
+            let template = Leaf {
+                id,
+                title: &self.title,
+                // If an introductory abstract is configured for this section, add it below the heading.
+                intro_abstract: self.intro_abstract.as_ref().map_or("", |s| s.as_str()),
+                release_notes: &release_notes,
             };
 
-            Some(format!(
-                "[id=\"{}\"]\n\
-                {}\n\
-                \n\
-                {}\
-                \n\
-                {}\n",
-                id,
-                heading,
-                intro,
-                release_notes.join("\n\n")
-            ))
+            Some(
+                template
+                    .render()
+                    .expect("Failed to render a reference module template."),
+            )
         }
     }
 
@@ -145,25 +157,17 @@ impl Section {
                     .map(|m| m.include_statement())
                     .collect();
 
-                let include_block = include_statements.join("\n\n");
-
-                // If an introductory abstract is configured for this section, add it below the heading,
-                // followed by a newline separator.
-                let intro = if let Some(intro_abstract) = &self.intro_abstract {
-                    format!("{}\n", intro_abstract)
-                } else {
-                    String::new()
+                let template = Assembly {
+                    id: &module_id,
+                    title: &self.title,
+                    // If an introductory abstract is configured for this section, add it below the heading.
+                    intro_abstract: self.intro_abstract.as_ref().map_or("", |s| s.as_str()),
+                    includes: &include_statements,
                 };
 
-                let text = format!(
-                    "[id=\"{}\"]\n\
-                    = {}\n\
-                    \n\
-                    {}\
-                    \n\
-                    {}\n",
-                    &module_id, &self.title, intro, include_block
-                );
+                let text = template
+                    .render()
+                    .expect("Failed to render an assembly template.");
 
                 Some(Module {
                     file_name,
@@ -231,7 +235,7 @@ impl Section {
 /// Form all modules that are recursively defined in the template configuration.
 pub fn format_document(
     tickets: &[&AbstractTicket],
-    template: &Template,
+    template: &config::Template,
     variant: DocumentVariant,
 ) -> Vec<Module> {
     // Prepare a container for ticket usage statistics.
