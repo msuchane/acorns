@@ -206,8 +206,16 @@ impl config::Section {
                 // and if a project doesn't configure them at all, the release notes build
                 // can still finish successfully.
                 //
-                // TODO: Consider using a proper `Result` chain here instead of the `expect`.
-                let unwrapped_ssts = ticket.subsystems.as_ref().expect("Invalid subsystems");
+                // TODO: Consider using a proper `Result` chain here instead of simply panicking.
+                let unwrapped_ssts = match &ticket.subsystems {
+                    Ok(ssts) => ssts,
+                    // If subsystems resulted in an error, print out some debugging information
+                    // before quitting. The ticket ID is especially useful.
+                    Err(e) => {
+                        log::error!("Invalid subsystems field in ticket {}.", &ticket.id);
+                        panic!("{}", e);
+                    }
+                };
 
                 ssts.iter()
                     // Compare both subsystems in lower case.
