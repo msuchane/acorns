@@ -22,14 +22,14 @@ use std::rc::Rc;
 // use color_eyre::eyre::{Context, Result};
 
 use crate::config::{Section, Template};
+use crate::ticket_abstraction::AbstractTicket;
 use crate::ticket_abstraction::TicketId;
-use crate::{extra_fields::DocTextStatus, ticket_abstraction::AbstractTicket};
 
 /// The variant of the generated, output document:
 ///
 /// * `Public`: The external variant intended for publishing the release notes.
 /// * `Internal`: The debugging variant intended for preparing the release notes.
-#[derive(PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DocumentVariant {
     Public,
     Internal,
@@ -56,31 +56,18 @@ impl Section {
     fn render(
         &self,
         id: &str,
-        tickets: &[AbstractTicket],
-        variant: &DocumentVariant,
+        tickets: &[&AbstractTicket],
+        variant: DocumentVariant,
         ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<String> {
-        // Select only those tickets that belong in the Internal or Public variant.
-        let variant_tickets: Vec<&AbstractTicket> = match variant {
-            // The internal variant accepts all tickets.
-            DocumentVariant::Internal => tickets.iter().collect(),
-            // The public variant accepts only finished and approved tickets.
-            DocumentVariant::Public => tickets
-                .iter()
-                .filter(|t| t.doc_text_status == DocTextStatus::Approved)
-                .collect(),
-        };
-
-        let matching_tickets: Vec<_> = variant_tickets
-            .iter()
-            .filter(|t| self.matches_ticket(t))
-            .collect();
+        let matching_tickets: Vec<_> = tickets.iter().filter(|t| self.matches_ticket(t)).collect();
 
         // Record usage statistics for this leaf module
         for ticket in &matching_tickets {
             ticket_stats
                 .entry(Rc::clone(&ticket.id))
-                .and_modify(|counter| *counter += 1);
+                .and_modify(|counter| *counter += 1)
+                .or_insert(1);
         }
 
         if matching_tickets.is_empty() {
@@ -122,15 +109,15 @@ impl Section {
     /// Returns `None` if the module or assembly captured no release notes at all.
     fn modules(
         &self,
-        tickets: &[AbstractTicket],
+        tickets: &[&AbstractTicket],
         prefix: Option<&str>,
-        variant: &DocumentVariant,
+        variant: DocumentVariant,
         ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<Module> {
-        let matching_tickets: Vec<AbstractTicket> = tickets
+        let matching_tickets: Vec<&AbstractTicket> = tickets
             .iter()
-            .filter(|&t| self.matches_ticket(t))
-            .cloned()
+            .filter(|t| self.matches_ticket(t))
+            .copied()
             .collect();
 
         let module_id_fragment = self.title.to_lowercase().replace(' ', "-");
@@ -243,15 +230,18 @@ impl Section {
 
 /// Form all modules that are recursively defined in the template configuration.
 pub fn format_document(
-    tickets: &[AbstractTicket],
+    tickets: &[&AbstractTicket],
     template: &Template,
-    variant: &DocumentVariant,
+    variant: DocumentVariant,
 ) -> Vec<Module> {
     // Prepare a container for ticket usage statistics.
     let mut ticket_stats = HashMap::new();
 
     // Initialize every ticket in the statistics with 0 usage.
     // Later, the number increases each time that the ticket is used.
+    // Initializing with 0 rather than relying on each ticket's `entry` call
+    // is necessary for tickets that end up unused, because they wouldn't
+    // call `entry` at all, and would report nothing.
     for ticket in tickets.iter() {
         ticket_stats.insert(Rc::clone(&ticket.id), 0);
     }
@@ -268,7 +258,7 @@ pub fn format_document(
 
     // A crude way to ensure that the statistics are only printed once, and not twice.
     // TODO: Revisit, maybe return the value instead.
-    if variant == &DocumentVariant::Internal {
+    if variant == DocumentVariant::Internal {
         report_usage_statistics(&ticket_stats);
     }
 

@@ -65,7 +65,7 @@ impl fmt::Display for PresentableComponent<'_> {
 }
 
 /// Group together all tickets by their component. Instead of full tickets, store just their signatures.
-fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
+fn groups<'a>(tickets: &[&'a AbstractTicket]) -> Vec<TicketsByComponent<'a>> {
     // Use an intermediate `HashMap` for grouping.
     let mut components: HashMap<PresentableComponent, Vec<String>> = HashMap::new();
 
@@ -97,7 +97,7 @@ fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
 
 /// Produce an AsciiDoc appendix file that lists all tickets in the document
 /// by their component in a sorted table.
-pub fn appendix(tickets: &[AbstractTicket]) -> Result<String> {
+pub fn appendix(tickets: &[&AbstractTicket]) -> Result<String> {
     // Prepare ticket signatures grouped by component.
     let mut groups = groups(tickets);
 
