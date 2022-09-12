@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use askama::Template;
 use color_eyre::{eyre::Context, Result};
@@ -6,8 +7,13 @@ use color_eyre::{eyre::Context, Result};
 use crate::extra_fields::DocTextStatus;
 use crate::AbstractTicket;
 
+// TODO: We might want these to be configurable.
+const THROWAWAY_COMPONENTS: [&str; 3] = ["releng", "(none)", "Documentation"];
+const THROWAWAY_PREFIXES: [&str; 2] = ["doc-", "Red_Hat_Enterprise_Linux-Release_Notes"];
+const COMPONENT_PLACEHOLDER: &str = "other";
+
 struct TicketsByComponent<'a> {
-    component: &'a str,
+    component: PresentableComponent<'a>,
     signatures: Vec<String>,
 }
 
@@ -19,16 +25,48 @@ struct SummaryList<'a> {
     tickets_by_components: &'a [TicketsByComponent<'a>],
 }
 
+#[derive(Eq, Hash, PartialEq)]
+enum PresentableComponent<'a> {
+    Some(&'a str),
+    None,
+}
+
+impl<'a> PresentableComponent<'a> {
+    fn from(component: &'a str) -> Self {
+        if THROWAWAY_COMPONENTS.contains(&component)
+            || THROWAWAY_PREFIXES
+                .iter()
+                .any(|prefix| component.starts_with(prefix))
+        {
+            Self::None
+        } else {
+            Self::Some(component)
+        }
+    }
+}
+
+impl fmt::Display for PresentableComponent<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            // If the variant is an actual component, format it with backticks as a code literal.
+            PresentableComponent::Some(component) => write!(f, "`{}`", component),
+            // If the variant is a throwaway component, replace it with an unformatted placeholder.
+            PresentableComponent::None => write!(f, "{}", COMPONENT_PLACEHOLDER),
+        }
+    }
+}
+
 fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
-    let mut components: HashMap<&str, Vec<String>> = HashMap::new();
+    let mut components: HashMap<PresentableComponent, Vec<String>> = HashMap::new();
 
     tickets
         .iter()
         .filter(|ticket| ticket.doc_text_status == DocTextStatus::Approved)
         .for_each(|ticket| {
             for component in &ticket.components {
+                let presentable = PresentableComponent::from(component);
                 components
-                    .entry(component)
+                    .entry(presentable)
                     .and_modify(|c| c.push(ticket.signature()))
                     .or_insert_with(|| vec![ticket.signature()]);
             }
@@ -45,11 +83,11 @@ fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
 
 pub fn appendix(tickets: &[AbstractTicket]) -> Result<String> {
     let groups = groups(tickets);
-    let module = SummaryList {
+    let template = SummaryList {
         tickets_by_components: &groups,
     };
 
-    module
+    template
         .render()
         .wrap_err("Failed to prepare the ticket appendix.")
 }

@@ -7,6 +7,6 @@ Bugzilla and JIRA tickets are listed in this document for reference. Tickets tha
 |===
 | Component | Tickets
 {% for group in tickets_by_components %}
-| `{{ group.component }}` | {{ group.signatures.join(", ") }}
+| {{ group.component }} | {{ group.signatures.join(", ") }}
 {% endfor %}
 |===
