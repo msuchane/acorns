@@ -42,6 +42,7 @@ mod logging;
 mod note;
 mod references;
 mod status_report;
+mod summary_list;
 mod templating;
 mod ticket_abstraction;
 mod tracker_access;
@@ -50,6 +51,7 @@ mod tracker_access;
 use templating::{DocumentVariant, Module};
 
 use crate::config::Project;
+pub use crate::ticket_abstraction::AbstractTicket;
 
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
@@ -121,6 +123,7 @@ struct Document {
     internal: Vec<Module>,
     public: Vec<Module>,
     status_table: String,
+    summary_appendix: String,
 }
 
 impl Document {
@@ -143,10 +146,13 @@ impl Document {
 
         let status_table = status_report::analyze_status(&abstract_tickets)?;
 
+        let summary_appendix = summary_list::appendix(&abstract_tickets)?;
+
         Ok(Self {
             internal,
             public,
             status_table,
+            summary_appendix,
         })
     }
 
@@ -190,6 +196,12 @@ impl Document {
         let status_file = generated_dir.join("status-table.html");
         log::debug!("Writing file: {}", status_file.display());
         fs::write(status_file, &self.status_table).wrap_err("Failed to write generated module.")?;
+
+        // Save the appendix.
+        let summary_file = generated_dir.join("summary-appendix.adoc");
+        log::debug!("Writing file: {}", summary_file.display());
+        fs::write(summary_file, &self.summary_appendix)
+            .wrap_err("Failed to write generated module.")?;
 
         Ok(())
     }
