@@ -12,6 +12,7 @@ const THROWAWAY_COMPONENTS: [&str; 3] = ["releng", "(none)", "Documentation"];
 const THROWAWAY_PREFIXES: [&str; 2] = ["doc-", "Red_Hat_Enterprise_Linux-Release_Notes"];
 const COMPONENT_PLACEHOLDER: &str = "other";
 
+#[derive(Eq, PartialEq, PartialOrd, Ord)]
 struct TicketsByComponent<'a> {
     component: PresentableComponent<'a>,
     signatures: Vec<String>,
@@ -25,7 +26,7 @@ struct SummaryList<'a> {
     tickets_by_components: &'a [TicketsByComponent<'a>],
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, PartialOrd, Ord)]
 enum PresentableComponent<'a> {
     Some(&'a str),
     None,
@@ -82,7 +83,12 @@ fn groups(tickets: &[AbstractTicket]) -> Vec<TicketsByComponent> {
 }
 
 pub fn appendix(tickets: &[AbstractTicket]) -> Result<String> {
-    let groups = groups(tickets);
+    let mut groups = groups(tickets);
+
+    // Sort the list by component name, alphabetically.
+    // The 'other' group ends up at the very end, because it's a separate `enum` variant.
+    groups.sort_unstable();
+
     let template = SummaryList {
         tickets_by_components: &groups,
     };
