@@ -182,7 +182,7 @@ impl Document {
             }
 
             // Save the appendix.
-            let summary_file = generated_dir.join("summary-appendix.adoc");
+            let summary_file = generated_dir.join("ref_list-of-tickets-by-component.adoc");
             log::debug!("Writing file: {}", summary_file.display());
             fs::write(summary_file, summary)
                 .wrap_err("Failed to write generated summary appendix.")?;
