@@ -97,9 +97,16 @@ struct BzTeam {
 ///
 /// Returns an error is the field is missing or if it is not a string.
 fn extract_field(extra: &Value, field: &str) -> Result<String> {
-    extra
-        .get(field)
-        .and_then(Value::as_str)
+    let field_value = extra.get(field);
+
+    // This check covers the case where the field exists, but its value
+    // is unset. I think it's safe to treat it as an empty string.
+    if let Some(Value::Null) = field_value {
+        log::warn!("Field {} is unset in a ticket.", field);
+        return Ok(String::new());
+    }
+
+    field_value.and_then(Value::as_str)
         .map(ToString::to_string)
         .ok_or_else(|| {
             eyre!(
