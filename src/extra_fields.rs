@@ -106,7 +106,8 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
         return Ok(String::new());
     }
 
-    field_value.and_then(Value::as_str)
+    field_value
+        .and_then(Value::as_str)
         .map(ToString::to_string)
         .ok_or_else(|| {
             eyre!(

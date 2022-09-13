@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use std::convert::From;
+use std::convert::TryFrom;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -58,61 +58,40 @@ pub enum QueryUsing {
 
 /// A ticket query as defined in the user configuration file.
 /// The rest of the program doesn't use the query in this format,
-/// because it's unnecessarily wraped in an enum.
+/// because it's unnecessarily wrapped in an enum.
 /// However, the enum enables nice and short configuration entries.
 #[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum TicketQueryEntry {
-    Key {
-        tracker: tracker::Service,
-        key: String,
-        overrides: Option<Overrides>,
-        #[serde(default)]
-        references: Vec<TicketQueryEntry>,
-    },
-    Search {
-        tracker: tracker::Service,
-        search: String,
-        overrides: Option<Overrides>,
-        #[serde(default)]
-        references: Vec<TicketQueryEntry>,
-    },
+struct TicketQueryEntry {
+    tracker: tracker::Service,
+    key: Option<String>,
+    search: Option<String>,
+    overrides: Option<Overrides>,
+    #[serde(default)]
+    references: Vec<TicketQueryEntry>,
 }
 
-impl From<TicketQueryEntry> for TicketQuery {
-    fn from(item: TicketQueryEntry) -> Self {
-        match item {
-            TicketQueryEntry::Key {
-                tracker,
-                key,
-                overrides,
-                references,
-            } => Self {
-                using: QueryUsing::Key(key),
-                tracker,
-                overrides,
-                references: references
-                    .into_iter()
-                    .map(Self::from)
-                    .map(Arc::new)
-                    .collect(),
-            },
-            TicketQueryEntry::Search {
-                tracker,
-                search,
-                overrides,
-                references,
-            } => Self {
-                using: QueryUsing::Search(search),
-                tracker,
-                overrides,
-                references: references
-                    .into_iter()
-                    .map(Self::from)
-                    .map(Arc::new)
-                    .collect(),
-            },
+impl TryFrom<TicketQueryEntry> for TicketQuery {
+    type Error = color_eyre::eyre::Error;
+    fn try_from(item: TicketQueryEntry) -> Result<Self> {
+        let using = match (item.key, item.search) {
+            (None, None) => bail!("Either key or search is required."),
+            (Some(_), Some(_)) => bail!("No"),
+            (Some(key), None) => QueryUsing::Key(key),
+            (None, Some(search)) => QueryUsing::Search(search),
+        };
+
+        let mut references: Vec<Arc<TicketQuery>> = Vec::new();
+        for reference in item.references {
+            let query = Self::try_from(reference)?;
+            references.push(Arc::new(query));
         }
+
+        Ok(Self {
+            using,
+            tracker: item.tracker,
+            overrides: item.overrides,
+            references,
+        })
     }
 }
 
@@ -215,9 +194,9 @@ fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
         serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
     log::debug!("{:#?}", config);
 
-    let queries = config.into_iter().map(TicketQuery::from).collect();
+    let queries = config.into_iter().map(TicketQuery::try_from).collect();
 
-    Ok(queries)
+    queries
 }
 
 /// Parse the specified tracker file into the trackers configuration.
