@@ -83,11 +83,13 @@ impl AbstractTicket {
     /// The result is a comma-separated list of signatures, enclosed in parentheses.
     #[must_use]
     fn all_signatures(&self) -> String {
-        if let Some(references) = &self.references {
-            format!("({}, {})", self.signature(), references.join(", "))
-        } else {
-            format!("({})", self.signature())
+        let mut signatures = vec![self.signature()];
+
+        if let Some(references) = self.references.as_ref() {
+            signatures.append(&mut references.clone());
         }
+
+        format!("({})", signatures.join(", "))
     }
 }
 
