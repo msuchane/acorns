@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use std::convert::TryFrom;
+use std::convert::From;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -50,48 +50,50 @@ pub struct TicketQuery {
 ///
 /// * `Key`: Requests a specific ticket by its key.
 /// * `Free`: Requests all tickets that match a free-form query.
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 pub enum QueryUsing {
+    #[serde(rename = "key")]
     Key(String),
+    #[serde(rename = "search")]
     Search(String),
 }
 
 /// A ticket query as defined in the user configuration file.
-/// The rest of the program doesn't use the query in this format,
-/// because it's unnecessarily wrapped in an enum.
-/// However, the enum enables nice and short configuration entries.
+/// This entry struct is separate from `TicketQuery` because
+/// it enables us to wrap references in `Arc` when converting
+/// from this struct to `TicketQuery`.
+/// Otherwise, `Arc` doesn't implement `Deserialize`.
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TicketQueryEntry {
     tracker: tracker::Service,
-    key: Option<String>,
-    search: Option<String>,
+    // The combination of `flatten` here and `deny_unknown_fields` earlier
+    // enables the entry to specify the enum variant directly at the root
+    // of the entry, without nesting them in anything.
+    // However, it might stop working in a later version of serde.
+    // See <https://stackoverflow.com/a/73604693>.
+    #[serde(flatten)]
+    using: QueryUsing,
     overrides: Option<Overrides>,
     #[serde(default)]
     references: Vec<TicketQueryEntry>,
 }
 
-impl TryFrom<TicketQueryEntry> for TicketQuery {
-    type Error = color_eyre::eyre::Error;
-    fn try_from(item: TicketQueryEntry) -> Result<Self> {
-        let using = match (item.key, item.search) {
-            (None, None) => bail!("Either key or search is required."),
-            (Some(_), Some(_)) => bail!("No"),
-            (Some(key), None) => QueryUsing::Key(key),
-            (None, Some(search)) => QueryUsing::Search(search),
-        };
+impl From<TicketQueryEntry> for TicketQuery {
+    fn from(item: TicketQueryEntry) -> Self {
+        let references: Vec<Arc<TicketQuery>> = item
+            .references
+            .into_iter()
+            .map(Self::from)
+            .map(Arc::new)
+            .collect();
 
-        let mut references: Vec<Arc<TicketQuery>> = Vec::new();
-        for reference in item.references {
-            let query = Self::try_from(reference)?;
-            references.push(Arc::new(query));
-        }
-
-        Ok(Self {
-            using,
+        Self {
+            using: item.using,
             tracker: item.tracker,
             overrides: item.overrides,
             references,
-        })
+        }
     }
 }
 
@@ -194,9 +196,9 @@ fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
         serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
     log::debug!("{:#?}", config);
 
-    let queries = config.into_iter().map(TicketQuery::try_from).collect();
+    let queries = config.into_iter().map(TicketQuery::from).collect();
 
-    queries
+    Ok(queries)
 }
 
 /// Parse the specified tracker file into the trackers configuration.
