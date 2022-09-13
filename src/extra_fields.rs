@@ -46,7 +46,7 @@ impl TryFrom<&str> for DocTextStatus {
     fn try_from(string: &str) -> Result<Self> {
         match string {
             "+" | "Done" => Ok(Self::Approved),
-            "?" | "Proposed" | "In progress" => Ok(Self::InProgress),
+            "?" | "Proposed" | "In progress" | "Unset" => Ok(Self::InProgress),
             // TODO: Does "Upstream only" really mean to skip this RN?
             "-" | "Rejected" | "Upstream only" => Ok(Self::NoDocumentation),
             _ => bail!("Unrecognized doc text status value: {:?}", string),
