@@ -41,7 +41,7 @@ const GENERATED_PREFIX: &str = "generated";
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct TicketQuery {
     pub tracker: tracker::Service,
-    pub using: QueryUsing,
+    pub using: KeyOrSearch,
     pub overrides: Option<Overrides>,
     pub references: Vec<Arc<TicketQuery>>,
 }
@@ -51,7 +51,7 @@ pub struct TicketQuery {
 /// * `Key`: Requests a specific ticket by its key.
 /// * `Free`: Requests all tickets that match a free-form query.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
-pub enum QueryUsing {
+pub enum KeyOrSearch {
     #[serde(rename = "key")]
     Key(String),
     #[serde(rename = "search")]
@@ -73,7 +73,7 @@ struct TicketQueryEntry {
     // However, it might stop working in a later version of serde.
     // See <https://stackoverflow.com/a/73604693>.
     #[serde(flatten)]
-    using: QueryUsing,
+    using: KeyOrSearch,
     overrides: Option<Overrides>,
     #[serde(default)]
     references: Vec<TicketQueryEntry>,

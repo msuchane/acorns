@@ -24,7 +24,7 @@ use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use jira_query::Issue;
 
 // use crate::config::tracker::Service;
-use crate::config::{tracker, QueryUsing, TicketQuery};
+use crate::config::{tracker, KeyOrSearch, TicketQuery};
 use crate::references::{ReferenceQueries, ReferenceSignatures};
 use crate::ticket_abstraction::{AbstractTicket, IntoAbstract};
 
@@ -182,7 +182,7 @@ fn take_id_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQuery>)
     queries
         .iter()
         .filter_map(|tq| {
-            if let QueryUsing::Key(key) = &tq.using {
+            if let KeyOrSearch::Key(key) = &tq.using {
                 Some((key.as_str(), Arc::clone(tq)))
             } else {
                 None
@@ -196,7 +196,7 @@ fn take_search_queries(queries: &[Arc<TicketQuery>]) -> Vec<(&str, Arc<TicketQue
     queries
         .iter()
         .filter_map(|tq| {
-            if let QueryUsing::Search(search) = &tq.using {
+            if let KeyOrSearch::Search(search) = &tq.using {
                 Some((search.as_str(), Arc::clone(tq)))
             } else {
                 None
