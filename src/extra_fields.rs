@@ -215,7 +215,7 @@ impl ExtraFields for Issue {
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
         extract_field(&self.fields.extra, field)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", self.id))
+            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", self.key))
     }
 
     fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
