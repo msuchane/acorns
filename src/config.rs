@@ -50,38 +50,57 @@ pub struct TicketQuery {
 ///
 /// * `Key`: Requests a specific ticket by its key.
 /// * `Free`: Requests all tickets that match a free-form query.
-#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub enum KeyOrSearch {
-    #[serde(rename = "key")]
     Key(String),
-    #[serde(rename = "search")]
     Search(String),
 }
 
 /// A ticket query as defined in the user configuration file.
-/// This entry struct is separate from `TicketQuery` because
-/// it enables us to wrap references in `Arc` when converting
+/// This entry enum is separate from `TicketQuery` because
+/// this enum format is more ergonomic to write in config files,
+/// and it enables us to wrap references in `Arc` when converting
 /// from this struct to `TicketQuery`.
 /// Otherwise, `Arc` doesn't implement `Deserialize`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct TicketQueryEntry {
-    tracker: tracker::Service,
-    // The combination of `flatten` here and `deny_unknown_fields` earlier
-    // enables the entry to specify the enum variant directly at the root
-    // of the entry, without nesting them in anything.
-    // However, it might stop working in a later version of serde.
-    // See <https://stackoverflow.com/a/73604693>.
-    #[serde(flatten)]
-    using: KeyOrSearch,
+enum TicketQueryEntry {
+    #[serde(rename = "key")]
+    Key(
+        tracker::Service,
+        String,
+        #[serde(default)] TicketQueryOptions,
+    ),
+    #[serde(rename = "search")]
+    Search(
+        tracker::Service,
+        String,
+        #[serde(default)] TicketQueryOptions,
+    ),
+}
+
+/// A shared options entry in a ticket query written
+/// in the configuration file enum format.
+#[derive(Debug, Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+struct TicketQueryOptions {
     overrides: Option<Overrides>,
-    #[serde(default)]
     references: Vec<TicketQueryEntry>,
 }
 
 impl From<TicketQueryEntry> for TicketQuery {
     fn from(item: TicketQueryEntry) -> Self {
-        let references: Vec<Arc<TicketQuery>> = item
+        // Destructure all the parts of the query to avoid trouble with partial moves
+        // and to avoid cloning.
+        let (tracker, using, options) = match item {
+            TicketQueryEntry::Key(tracker, key, options) => {
+                (tracker, KeyOrSearch::Key(key), options)
+            }
+            TicketQueryEntry::Search(tracker, search, options) => {
+                (tracker, KeyOrSearch::Search(search), options)
+            }
+        };
+        let references: Vec<Arc<TicketQuery>> = options
             .references
             .into_iter()
             .map(Self::from)
@@ -89,9 +108,9 @@ impl From<TicketQueryEntry> for TicketQuery {
             .collect();
 
         Self {
-            using: item.using,
-            tracker: item.tracker,
-            overrides: item.overrides,
+            using,
+            tracker,
+            overrides: options.overrides,
             references,
         }
     }
