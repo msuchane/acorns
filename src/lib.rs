@@ -31,7 +31,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::fs;
 use std::path::Path;
 
-use clap::ArgMatches;
 use color_eyre::eyre::{Result, WrapErr};
 
 pub mod cli;
@@ -46,6 +45,8 @@ mod templating;
 mod ticket_abstraction;
 mod tracker_access;
 
+use cli::{Cli, Commands};
+
 // use config::tracker::Service;
 use templating::{DocumentVariant, Module};
 
@@ -53,18 +54,23 @@ use crate::config::Project;
 pub use crate::ticket_abstraction::AbstractTicket;
 
 /// Run the subcommand that the user picked on the command line.
-pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
+pub fn run(cli: &Cli) -> Result<()> {
     // Initialize the logging system based on the set verbosity
-    logging::initialize_logger(cli_arguments.occurrences_of("verbose"))?;
+    logging::initialize_logger(cli.verbose)?;
 
-    // If the user picked the `ticket` subcommand, fetch and display a single ticket
-    if let Some(cli_arguments) = cli_arguments.subcommand_matches("ticket") {
-        display_single_ticket(cli_arguments)?;
-    }
-
-    // If the user picked the `build` subcommand, build the specified release notes project directory
-    if let Some(build_args) = cli_arguments.subcommand_matches("build") {
-        build_rn_project(build_args)?;
+    match &cli.command {
+        // If the user picked the `build` subcommand, build the specified release notes project directory
+        Commands::Build { project } => {
+            build_rn_project(project)?;
+        }
+        // If the user picked the `ticket` subcommand, fetch and display a single ticket
+        Commands::Ticket { .. } => {
+            display_single_ticket()?;
+        }
+        // If the user picked the `convert` subcommand, convert from the CoRN 3 config file
+        Commands::Convert { .. } => {
+            todo!();
+        }
     }
 
     Ok(())
@@ -72,7 +78,7 @@ pub fn run(cli_arguments: &ArgMatches) -> Result<()> {
 
 /// Run the `ticket` subcommand, which downloads information about the single specified ticket
 /// and prints out the release note resulting from the ticket.
-fn display_single_ticket(_ticket_args: &ArgMatches) -> Result<()> {
+fn display_single_ticket() -> Result<()> {
     // TODO: Tie in the ticket subcommand with the new tracker configuration.
     todo!();
     /*
@@ -99,13 +105,8 @@ fn display_single_ticket(_ticket_args: &ArgMatches) -> Result<()> {
 
 /// Run the `build` subcommand, which build the release notes project that's configured
 /// in the project directory specified on the command line, or in the working directory.
-fn build_rn_project(build_args: &ArgMatches) -> Result<()> {
-    // By default, build release notes in the current working directory.
-    let project_dir = match build_args.value_of_os("project") {
-        Some(dir) => Path::new(dir),
-        None => Path::new("."),
-    };
-
+fn build_rn_project(project_dir: &Path) -> Result<()> {
+    // TODO: Recognize the optional paths to different config files.
     let project = Project::new(project_dir)?;
 
     log::info!("Building release notes in {}", &project.base_dir.display());

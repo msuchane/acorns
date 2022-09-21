@@ -16,51 +16,89 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use clap::{arg, command, ArgMatches, Command};
+use std::path::PathBuf;
+
+use clap::{Parser, Subcommand};
 
 /// Define the command-line arguments of the tool.
 #[must_use]
-pub fn arguments() -> ArgMatches {
-    let app = command!()
-        .arg(arg!(
-            -v --verbose ... "Display more detailed progress messages."
-        ).global(true))
-        .subcommand(
-            Command::new("build")
-                .about("Build release notes from a configuration directory.")
-                .arg(arg!([project] "Path to the configuration directory. The default is the current working directory.").allow_invalid_utf8(true))
-                .arg(
-                    arg!(
-                        -t --tickets [FILE] "A configuration file containing tickets."
-                    )
-                    // Support non-UTF8 paths
-                    .allow_invalid_utf8(true),
-                )
-                .arg(
-                    arg!(
-                        -T --trackers [FILE] "A configuration file containing trackers."
-                    )
-                    // Support non-UTF8 paths
-                    .allow_invalid_utf8(true),
-                )
-        )
-        .subcommand(
-            Command::new("ticket")
-                .about("Query a single ticket.")
-                .arg(arg!(
-                    -i --id <ID> "The ID of the ticket"
-                ))
-                .arg(arg!(
-                    -a --api_key <KEY> "The Bugzilla API key"
-                ))
-                .arg(arg!(
-                    -H --host <URL> "The URL to the host with a Bugzilla instance"
-                ))
-                .arg(arg!(
-                    -s --service <name> "The type of the issue tracker service."
-                ).possible_values(["bugzilla", "jira"]))
-        // Require using at least one subcommand or some other argument.
-        ).arg_required_else_help(true);
+pub fn arguments() -> Cli {
+    Cli::parse()
+}
 
-    app.get_matches()
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+pub struct Cli {
+    /// Display more detailed progress messages.
+    #[clap(short, long, action = clap::ArgAction::Count)]
+    pub verbose: u8,
+
+    #[clap(subcommand)]
+    pub command: Commands,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Build release notes from a configuration directory.
+    Build {
+        /// Path to the configuration directory. The default is the current working directory.
+        #[clap(value_parser, value_name = "DIR", default_value = ".")]
+        project: PathBuf,
+        // Disabling the optional config paths for now.
+        // It's questionable if it's even useful to specify these separately.
+        /*
+        /// A configuration file containing tickets.
+        #[clap(short, long, value_name = "FILE")]
+        tickets: Option<PathBuf>,
+        /// A configuration file containing trackers.
+        #[clap(short='T', long, value_name = "FILE")]
+        trackers: Option<PathBuf>,
+        /// A configuration file containing templates.
+        #[clap(short='e', long, value_name = "FILE")]
+        templates: Option<PathBuf>,
+        */
+    },
+    /// Query a single ticket.
+    Ticket {
+        /// The type of the issue tracker service.
+        #[clap(value_name = "SERVICE")]
+        //tracker: crate::config::tracker::Service,
+        tracker: String,
+        /// The ID of the ticket.
+        #[clap(value_name = "ID")]
+        id: String,
+        /// The trackers configuration file.
+        #[clap(
+            short,
+            long,
+            value_parser,
+            value_name = "FILE",
+            default_value = "./cizrna/trackers.yaml"
+        )]
+        config: PathBuf,
+        /// The API key to access the tracker.
+        #[clap(short, long, value_name = "FILE")]
+        api_key: Option<String>,
+    },
+    /// Convert a CoRN 3 configuration file to the new format.
+    Convert {
+        /// The legacy corn.yaml configuration file.
+        #[clap(
+            short,
+            long,
+            value_parser,
+            value_name = "FILE",
+            default_value = "./corn.yaml"
+        )]
+        legacy_config: PathBuf,
+        /// The legacy corn.yaml configuration file.
+        #[clap(
+            short,
+            long,
+            value_parser,
+            value_name = "FILE",
+            default_value = "./tickets.yaml"
+        )]
+        new_config: PathBuf,
+    },
 }
