@@ -35,6 +35,7 @@ use color_eyre::eyre::{Result, WrapErr};
 
 pub mod cli;
 mod config;
+mod convert;
 mod extra_fields;
 mod logging;
 mod note;
@@ -68,8 +69,11 @@ pub fn run(cli: &Cli) -> Result<()> {
             display_single_ticket()?;
         }
         // If the user picked the `convert` subcommand, convert from the CoRN 3 config file
-        Commands::Convert { .. } => {
-            todo!();
+        Commands::Convert {
+            legacy_config,
+            new_config,
+        } => {
+            convert::convert(legacy_config, new_config)?;
         }
     }
 
