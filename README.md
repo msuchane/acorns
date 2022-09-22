@@ -33,7 +33,7 @@ Generate an AsciiDoc release notes document from tracking tickets
     2. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
 
         ```
-        alias cizrna="docker run -it -v .:/mnt/cizrna:Z msuchane/cizrna cizrna"
+        alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/cizrna:Z msuchane/cizrna cizrna"
         ```
     
     3. Open a new terminal to reload the shell configuration.
