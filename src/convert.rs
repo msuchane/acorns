@@ -71,17 +71,35 @@ impl Overrides {
     }
 }
 
-pub fn convert(legacy: &Path, _new: &Path) -> Result<()> {
+pub fn convert(legacy: &Path, new: &Path) -> Result<()> {
+    log::info!(
+        "Reading the legacy configuration file:\n\t{}",
+        legacy.display()
+    );
+
     let text = fs::read_to_string(legacy).wrap_err("Cannot read the legacy configuration file.")?;
     let legacy_config: CornConfig =
         serde_yaml::from_str(&text).wrap_err("Cannot parse the legacy configuration file.")?;
 
-    println!("{:#?}", legacy_config);
+    log::debug!("The legacy configuration:\n{:#?}", legacy_config);
 
-    for entry in legacy_config.ids {
-        let new_entry = String::try_from(entry)?;
-        println!("- {}", new_entry);
-    }
+    let new_entries: Vec<String> = legacy_config
+        .ids
+        .into_iter()
+        .map(String::try_from)
+        .collect::<Result<_>>()
+        .wrap_err("Cannot parse an entry in the legacy configuration file.")?;
+
+    let new_config = new_entries
+        .into_iter()
+        .map(|entry| format!("- {}", entry))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    log::debug!("The new configuration:\n{:#?}", new_config);
+
+    log::info!("Saving the new configuration file:\n\t{}", new.display());
+    fs::write(new, new_config).wrap_err("Cannot write to the new configuration file.")?;
 
     Ok(())
 }
