@@ -95,9 +95,9 @@ fn parse_stamp(stamp: &str) -> Result<(Service, KeyOrSearch)> {
         let search = KeyOrSearch::Search(captures[1].to_string());
         Ok((service, search))
     // Unsupported options
-    } else if let Some(_captures) = BZ_TRAC_REGEX.captures(stamp) {
+    } else if BZ_TRAC_REGEX.is_match(stamp) {
         Err(eyre!("The Bugzilla tracker option is not implemented yet."))
-    } else if let Some(_captures) = PES_REGEX.captures(stamp) {
+    } else if PES_REGEX.is_match(stamp) {
         Err(eyre!("The PES option is not implemented yet."))
     } else {
         Err(eyre!("Failed to parse the ticket ID: `{}`", stamp))
