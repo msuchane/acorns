@@ -46,6 +46,27 @@ struct Overrides {
     doc_type: Option<String>,
 }
 
+impl Overrides {
+    fn into_new_format(self) -> String {
+        let ssts = match self.subsystem {
+            None => String::new(),
+            Some(sst) => format!("subsystems: [{}]", sst)
+        };
+        let components = match self.component {
+            None => String::new(),
+            Some(component) => format!("components: [{}]", component)
+        };
+        let doc_type = match self.doc_type {
+            None => String::new(),
+            Some(doc_type) => format!("doc_type: {}", doc_type)
+        };
+
+        let list = [ssts, components, doc_type].join(", ");
+
+        format!("overrides: {{{}}}", list)
+    }
+}
+
 pub fn convert(legacy: &Path, _new: &Path) -> Result<()> {
     let text = fs::read_to_string(legacy).wrap_err("Cannot read the legacy configuration file.")?;
     let legacy_config: CornConfig =
@@ -68,11 +89,19 @@ impl TryFrom<CornEntry> for String {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
         let prefix = match key_or_search {
-            KeyOrSearch::Key(key) => format!("- !key [{}, \"{}\"]", service, key),
-            KeyOrSearch::Search(search) => format!("- !search [{}, \"{}\"]", service, search),
+            KeyOrSearch::Key(key) => format!("- !key [{}, \"{}\"", service, key),
+            KeyOrSearch::Search(search) => format!("- !search [{}, \"{}\"", service, search),
         };
 
-        Ok(prefix)
+        let overrides = item.overrides.map(Overrides::into_new_format);
+
+        let new_entry = [Some(prefix), overrides].into_iter()
+            // Take only the `Some` variants.
+            .flatten()
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        Ok(new_entry + "]")
     }
 }
 
