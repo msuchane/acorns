@@ -133,8 +133,14 @@ impl ExtraFields for Bug {
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.target_release;
-        let release = extract_field(&self.extra, field)
-            .wrap_err_with(|| eyre!("Failed to extract the target release of bug {}.", self.id))?;
+        let release = if let Ok(release) = extract_field(&self.extra, field) {
+            release
+        } else {
+            // The target release field isn't critical. Log the problem
+            // and return an empty list of releases.
+            log::warn!("Failed to extract the target release of bug {}.", self.id);
+            return Ok(vec![]);
+        };
 
         // Bugzilla uses the "---" placeholder to represent an unset release.
         // TODO: Are there any more placeholder?

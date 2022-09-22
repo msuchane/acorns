@@ -116,7 +116,7 @@ pub fn convert(legacy: &Path, new: &Path) -> Result<()> {
 /// is that we want the inline YaML syntax, where each entry fits
 /// on one line. Serializing would get us the multi-line syntax.
 fn convert_format(legacy_format: &str) -> Result<String> {
-    let legacy_config: CornConfig = serde_yaml::from_str(&legacy_format)
+    let legacy_config: CornConfig = serde_yaml::from_str(legacy_format)
         .wrap_err("Cannot parse the legacy configuration file.")?;
 
     log::debug!("The legacy configuration:\n{:#?}", legacy_config);
