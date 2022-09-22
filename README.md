@@ -20,7 +20,25 @@ Generate an AsciiDoc release notes document from tracking tickets
         # dnf install cizrna
         ```
 
-* On other systems, including different Linux distributions and macOS, build Cizrna from source:
+* On any system that has the Docker or Podman container platform, you can use Cizrna as a container.
+
+    On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following commands.
+
+    1. Download the image:
+
+        ```
+        $ docker pull quay.io/msuchane/cizrna
+        ```
+    
+    2. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
+
+        ```
+        alias cizrna="docker run -it -v .:/mnt/cizrna:Z msuchane/cizrna cizrna"
+        ```
+    
+    3. Open a new terminal to reload the shell configuration.
+
+* On any system, including different Linux distributions and macOS, you can build Cizrna from source:
 
     1. Clone this Git repository.
 
@@ -33,3 +51,28 @@ Generate an AsciiDoc release notes document from tracking tickets
         ```
 
         If the build fails due to a missing dependency, install the missing dependency on your system and start the build again.
+
+
+## Generating release notes
+
+_TODO_: Provide information for platforms other than Fedora and RHEL, and explain setting up the release notes project.
+
+1. Switch to an existing directory with a release notes project configuration.
+
+2. Generate the release notes:
+
+    ```
+    $ cizrna build
+    ```
+
+3. Build an HTML preview:
+
+    ```
+    $ asciidoctor --safe -vn main.adoc
+    ```
+
+4. Open the HTML preview:
+
+    ```
+    $ gio open main.html
+    ```
