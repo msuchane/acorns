@@ -1,3 +1,7 @@
+//! This module provides conversion functionality to convert
+//! from the legacy CoRN 3 `corn.yaml` configuration file format
+//! to the current tickets.yaml format.
+
 use std::convert::TryFrom;
 use std::fs;
 use std::path::Path;
@@ -113,7 +117,18 @@ impl TryFrom<CornEntry> for String {
             Some(format!("references: [{}]", references.join(", ")))
         };
 
-        let new_entry = [Some(prefix), overrides, references]
+        let options = if overrides.is_some() || references.is_some() {
+            let list = [overrides, references]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<String>>()
+                .join(", ");
+            Some(format!("{{ {} }}", list))
+        } else {
+            None
+        };
+
+        let new_entry = [Some(prefix), options]
             .into_iter()
             // Take only the `Some` variants.
             .flatten()
