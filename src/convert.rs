@@ -14,34 +14,51 @@ use serde::Deserialize;
 
 use crate::config::{tracker::Service, KeyOrSearch};
 
+/// A shared error message that displays if the static regular expressions
+/// are invalid, and the regex library can't parse them.
 const REGEX_ERROR: &str = "Invalid built-in regular expression.";
 
+/// A regular expression that matches the Bugzilla ID format in CoRN 3.
 static BZ_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^BZ#(\d+)$").expect(REGEX_ERROR));
+/// A regular expression that matches the Jira ID format in CoRN 3.
 static JIRA_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^JIRA:([A-Z0-9-]+)$").expect(REGEX_ERROR));
+/// A regular expression that matches the Bugzilla tracker format in CoRN 3.
 static BZ_TRAC_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^BZ_TRAC#(\d+)$").expect(REGEX_ERROR));
+/// A regular expression that matches the Bugzilla query format in CoRN 3.
 static BZ_QUERY_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^BZ_QUERY:(.*)$").expect(REGEX_ERROR));
+/// A regular expression that matches the Jira query format in CoRN 3.
 static JIRA_QUERY_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^JIRA_QUERY:(.*)$").expect(REGEX_ERROR));
+/// A regular expression that matches the PES query format in CoRN 3.
 static PES_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^PES_QUERY:(\d+)\.(\d+)$").expect(REGEX_ERROR));
 
+/// An incomplete representation of the legacy `corn.yaml` configuration file.
+/// We only care about the `ids` section here.
 #[derive(Debug, Deserialize)]
 struct CornConfig {
     ids: Vec<CornEntry>,
 }
 
+/// An entry in the legacy `corn.yaml` configuration file.
+/// It represents a query for a ticket or a set of tickets.
 #[derive(Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CornEntry {
+    /// The `id` field stores both the tracker identification
+    /// and the ticket key or query string.
+    /// This information is encoded in a string that we can parse
+    /// using a regular expression.
     id: String,
     overrides: Option<Overrides>,
     #[serde(default)]
     references: Vec<String>,
 }
 
+/// The overrides option for an entry in the legacy `corn.yaml` configuration file.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Overrides {
@@ -51,6 +68,8 @@ struct Overrides {
 }
 
 impl Overrides {
+    /// Convert the legacy overrides into a string that conforms to the current
+    /// configuration format.
     fn into_new_format(self) -> String {
         let ssts = self.subsystem.map(|sst| format!("subsystems: [{}]", sst));
         let components = self
@@ -71,6 +90,8 @@ impl Overrides {
     }
 }
 
+/// Load the legacy, CoRN 3 configuration from a file and save the new,
+/// converted configuration to a new file.
 pub fn convert(legacy: &Path, new: &Path) -> Result<()> {
     log::info!(
         "Reading the legacy configuration file:\n\t{}",
@@ -78,8 +99,25 @@ pub fn convert(legacy: &Path, new: &Path) -> Result<()> {
     );
 
     let text = fs::read_to_string(legacy).wrap_err("Cannot read the legacy configuration file.")?;
-    let legacy_config: CornConfig =
-        serde_yaml::from_str(&text).wrap_err("Cannot parse the legacy configuration file.")?;
+
+    let new_config = convert_format(&text)?;
+
+    log::info!("Saving the new configuration file:\n\t{}", new.display());
+    fs::write(new, new_config).wrap_err("Cannot write to the new configuration file.")?;
+
+    Ok(())
+}
+
+/// Convert a string containing the legacy configuration
+/// to a string containing the new configuration.
+///
+/// The reason why we manually compose a string as the output,
+/// rather than automatically serializing a structure of some kind,
+/// is that we want the inline YaML syntax, where each entry fits
+/// on one line. Serializing would get us the multi-line syntax.
+fn convert_format(legacy_format: &str) -> Result<String> {
+    let legacy_config: CornConfig = serde_yaml::from_str(&legacy_format)
+        .wrap_err("Cannot parse the legacy configuration file.")?;
 
     log::debug!("The legacy configuration:\n{:#?}", legacy_config);
 
@@ -98,15 +136,17 @@ pub fn convert(legacy: &Path, new: &Path) -> Result<()> {
 
     log::debug!("The new configuration:\n{:#?}", new_config);
 
-    log::info!("Saving the new configuration file:\n\t{}", new.display());
-    fs::write(new, new_config).wrap_err("Cannot write to the new configuration file.")?;
-
-    Ok(())
+    Ok(new_config)
 }
 
 impl TryFrom<CornEntry> for String {
     type Error = color_eyre::eyre::Error;
 
+    /// Convert the legacy CoRN 3 entry to a string, which is
+    /// a tagged YaML enum variant, holding a tuple.
+    ///
+    /// The string intentionally doesn't start with the `-` bullet point,
+    /// so that we can use this function to process inline elements, too.
     fn try_from(item: CornEntry) -> Result<Self> {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
@@ -157,6 +197,8 @@ impl TryFrom<CornEntry> for String {
     }
 }
 
+/// Parse the `id` field of the legacy CoRN 3 entry, and pull out
+/// the tracker service and the ticket key or search query.
 fn parse_stamp(stamp: &str) -> Result<(Service, KeyOrSearch)> {
     // Supported options
     if let Some(captures) = BZ_REGEX.captures(stamp) {
