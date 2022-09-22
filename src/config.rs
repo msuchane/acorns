@@ -64,7 +64,7 @@ pub enum KeyOrSearch {
 /// Otherwise, `Arc` doesn't implement `Deserialize`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub enum TicketQueryEntry {
+enum TicketQueryEntry {
     #[serde(rename = "key")]
     Key(
         tracker::Service,
@@ -83,7 +83,7 @@ pub enum TicketQueryEntry {
 /// in the configuration file enum format.
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]
-pub struct TicketQueryOptions {
+struct TicketQueryOptions {
     overrides: Option<Overrides>,
     references: Vec<TicketQueryEntry>,
 }
