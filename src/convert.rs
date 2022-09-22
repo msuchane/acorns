@@ -48,20 +48,20 @@ struct Overrides {
 
 impl Overrides {
     fn into_new_format(self) -> String {
-        let ssts = match self.subsystem {
-            None => String::new(),
-            Some(sst) => format!("subsystems: [{}]", sst)
-        };
-        let components = match self.component {
-            None => String::new(),
-            Some(component) => format!("components: [{}]", component)
-        };
-        let doc_type = match self.doc_type {
-            None => String::new(),
-            Some(doc_type) => format!("doc_type: {}", doc_type)
-        };
+        let ssts = self.subsystem.map(|sst| format!("subsystems: [{}]", sst));
+        let components = self
+            .component
+            .map(|component| format!("components: [{}]", component));
+        let doc_type = self
+            .doc_type
+            .map(|doc_type| format!("doc_type: {}", doc_type));
 
-        let list = [ssts, components, doc_type].join(", ");
+        let list = [ssts, components, doc_type]
+            .into_iter()
+            // Take only the `Some` variants.
+            .flatten()
+            .collect::<Vec<String>>()
+            .join(", ");
 
         format!("overrides: {{{}}}", list)
     }
@@ -95,7 +95,8 @@ impl TryFrom<CornEntry> for String {
 
         let overrides = item.overrides.map(Overrides::into_new_format);
 
-        let new_entry = [Some(prefix), overrides].into_iter()
+        let new_entry = [Some(prefix), overrides]
+            .into_iter()
             // Take only the `Some` variants.
             .flatten()
             .collect::<Vec<String>>()
