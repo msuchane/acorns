@@ -29,7 +29,7 @@ struct CornConfig {
     ids: Vec<CornEntry>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CornEntry {
     id: String,
@@ -76,7 +76,7 @@ pub fn convert(legacy: &Path, _new: &Path) -> Result<()> {
 
     for entry in legacy_config.ids {
         let new_entry = String::try_from(entry)?;
-        println!("{}", new_entry);
+        println!("- {}", new_entry);
     }
 
     Ok(())
@@ -89,13 +89,31 @@ impl TryFrom<CornEntry> for String {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
         let prefix = match key_or_search {
-            KeyOrSearch::Key(key) => format!("- !key [{}, \"{}\"", service, key),
-            KeyOrSearch::Search(search) => format!("- !search [{}, \"{}\"", service, search),
+            KeyOrSearch::Key(key) => format!("!key [{}, \"{}\"", service, key),
+            KeyOrSearch::Search(search) => format!("!search [{}, \"{}\"", service, search),
         };
 
         let overrides = item.overrides.map(Overrides::into_new_format);
 
-        let new_entry = [Some(prefix), overrides]
+        let references: Vec<String> = item
+            .references
+            .into_iter()
+            .map(|reference| {
+                let legacy_entry = CornEntry {
+                    id: reference,
+                    ..Default::default()
+                };
+                String::try_from(legacy_entry)
+            })
+            .collect::<Result<_>>()?;
+
+        let references = if references.is_empty() {
+            None
+        } else {
+            Some(format!("references: [{}]", references.join(", ")))
+        };
+
+        let new_entry = [Some(prefix), overrides, references]
             .into_iter()
             // Take only the `Some` variants.
             .flatten()
