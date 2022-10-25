@@ -4,7 +4,7 @@ authors = ["Marek Suchánek <msuchane@redhat.com>"]
 version = "0.14.0"
 edition = "2021"
 # Check the Rust version using `cargo msrv verify`.
-rust-version = "1.59"
+rust-version = "1.58"
 description = "Generate an AsciiDoc release notes document from tracking tickets."
 license = "GPL-3.0-or-later"
 readme = "README.md"
@@ -31,6 +31,8 @@ chrono = "^0.4"
 counter = "^0.5"
 regex = "1.5"
 once_cell = "1.15"
+# Temporary to keep MSRV at 1.58
+time = "=0.3.13"
 
 [package.metadata.rpm]
 package = "cizrna"
