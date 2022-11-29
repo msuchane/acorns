@@ -71,6 +71,88 @@ impl Module {
     }
 }
 
+/// Convert a section title to an ID that's sanitized for AsciiDoc and HTML.
+///
+/// This function is taken from `newdoc` (<https://github.com/redhat-documentation/newdoc>).
+fn id_fragment(title: &str) -> String {
+    // The ID is all lower-case
+    let mut title_with_replacements: String = title.to_lowercase();
+
+    // Replace characters that aren't allowed in the ID, usually with a dash or an empty string
+    let substitutions = [
+        (" ", "-"),
+        ("(", ""),
+        (")", ""),
+        ("?", ""),
+        ("!", ""),
+        ("'", ""),
+        ("\"", ""),
+        ("#", ""),
+        ("%", ""),
+        ("&", ""),
+        ("*", ""),
+        (",", "-"),
+        (".", "-"),
+        ("/", "-"),
+        (":", "-"),
+        (";", ""),
+        ("@", "-at-"),
+        ("\\", ""),
+        ("`", ""),
+        ("$", ""),
+        ("^", ""),
+        ("|", ""),
+        ("=", "-"),
+        // Remove known semantic markup from the ID:
+        ("[package]", ""),
+        ("[option]", ""),
+        ("[parameter]", ""),
+        ("[variable]", ""),
+        ("[command]", ""),
+        ("[replaceable]", ""),
+        ("[filename]", ""),
+        ("[literal]", ""),
+        ("[systemitem]", ""),
+        ("[application]", ""),
+        ("[function]", ""),
+        ("[gui]", ""),
+        // Remove square brackets only after semantic markup:
+        ("[", ""),
+        ("]", ""),
+        // TODO: Curly braces shouldn't appear in the title in the first place.
+        // They'd be interpreted as attributes there.
+        // Print an error in that case? Escape them with AsciiDoc escapes?
+        ("{", ""),
+        ("}", ""),
+    ];
+
+    // Perform all the defined replacements on the title
+    for (old, new) in substitutions {
+        title_with_replacements = title_with_replacements.replace(old, new);
+    }
+
+    // Replace remaining characters that aren't ASCII, or that are non-alphanumeric ASCII,
+    // with dashes. For example, this replaces diacritics and typographic quotation marks.
+    title_with_replacements = title_with_replacements
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect();
+
+    // Ensure the converted ID doesn't contain double dashes ("--"), because
+    // that breaks references to the ID
+    while title_with_replacements.contains("--") {
+        title_with_replacements = title_with_replacements.replace("--", "-");
+    }
+
+    // Ensure that the ID doesn't end with a dash
+    if title_with_replacements.ends_with('-') {
+        let len = title_with_replacements.len();
+        title_with_replacements = title_with_replacements[..len - 1].to_string();
+    }
+
+    title_with_replacements
+}
+
 impl config::Section {
     /// Convert the body of the section into AsciiDoc text that will serve
     /// as the body of the resulting module.
@@ -132,7 +214,7 @@ impl config::Section {
             .copied()
             .collect();
 
-        let module_id_fragment = self.title.to_lowercase().replace(' ', "-");
+        let module_id_fragment = id_fragment(&self.title);
         let module_id = if let Some(prefix) = prefix {
             format!("{}-{}", prefix, module_id_fragment)
         } else {
