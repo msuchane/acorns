@@ -132,6 +132,7 @@ pub mod tracker {
     /// An issue-tracking service, as in the platform.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize)]
     pub enum Service {
+        #[serde(alias = "BZ")]
         Bugzilla,
         Jira,
     }
