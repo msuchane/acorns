@@ -14,7 +14,7 @@ keywords = ["release notes", "asciidoc", "documentation", "Red Hat"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.2", features = ["cargo", "derive"] }
+clap = { version = "4.0", features = ["cargo", "derive"] }
 log = "0.4"
 simplelog = "0.12"
 # Disable support for tracing_error and SpanTrace in eyre

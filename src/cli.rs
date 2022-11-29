@@ -27,13 +27,13 @@ pub fn arguments() -> Cli {
 }
 
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 pub struct Cli {
     /// Display more detailed progress messages.
-    #[clap(short, long, action = clap::ArgAction::Count)]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     pub verbose: u8,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 
@@ -42,7 +42,7 @@ pub enum Commands {
     /// Build release notes from a configuration directory.
     Build {
         /// Path to the configuration directory. The default is the current working directory.
-        #[clap(value_parser, value_name = "DIR", default_value = ".")]
+        #[arg(value_parser, value_name = "DIR", default_value = ".")]
         project: PathBuf,
         // Disabling the optional config paths for now.
         // It's questionable if it's even useful to specify these separately.
@@ -61,14 +61,14 @@ pub enum Commands {
     /// Query a single ticket.
     Ticket {
         /// The type of the issue tracker service.
-        #[clap(value_name = "SERVICE")]
+        #[arg(value_name = "SERVICE")]
         //tracker: crate::config::tracker::Service,
         tracker: String,
         /// The ID of the ticket.
-        #[clap(value_name = "ID")]
+        #[arg(value_name = "ID")]
         id: String,
         /// The trackers configuration file.
-        #[clap(
+        #[arg(
             short,
             long,
             value_parser,
@@ -77,13 +77,13 @@ pub enum Commands {
         )]
         config: PathBuf,
         /// The API key to access the tracker.
-        #[clap(short, long, value_name = "FILE")]
+        #[arg(short, long, value_name = "FILE")]
         api_key: Option<String>,
     },
     /// Convert a CoRN 3 configuration file to the new format.
     Convert {
         /// The legacy corn.yaml configuration file.
-        #[clap(
+        #[arg(
             short,
             long,
             value_parser,
@@ -92,7 +92,7 @@ pub enum Commands {
         )]
         legacy_config: PathBuf,
         /// The legacy corn.yaml configuration file.
-        #[clap(
+        #[arg(
             short,
             long,
             value_parser,

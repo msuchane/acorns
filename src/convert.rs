@@ -152,7 +152,9 @@ impl TryFrom<CornEntry> for String {
 
         let prefix = match key_or_search {
             KeyOrSearch::Key(key) => format!("!key [{}, {}", service.short_name(), key),
-            KeyOrSearch::Search(search) => format!("!search [{}, \"{}\"", service.short_name(), search),
+            KeyOrSearch::Search(search) => {
+                format!("!search [{}, \"{}\"", service.short_name(), search)
+            }
         };
 
         let overrides = item.overrides.map(Overrides::into_new_format);
