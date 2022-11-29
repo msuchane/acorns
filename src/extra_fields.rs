@@ -308,6 +308,6 @@ impl ExtraFields for Issue {
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {
-        format!("{}/browse/{}", tracker.host, &self.id)
+        format!("{}/browse/{}", tracker.host, &self.key)
     }
 }
