@@ -151,8 +151,8 @@ impl TryFrom<CornEntry> for String {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
         let prefix = match key_or_search {
-            KeyOrSearch::Key(key) => format!("!key [{}, \"{}\"", service, key),
-            KeyOrSearch::Search(search) => format!("!search [{}, \"{}\"", service, search),
+            KeyOrSearch::Key(key) => format!("!key [{}, {}", service.short_name(), key),
+            KeyOrSearch::Search(search) => format!("!search [{}, \"{}\"", service.short_name(), search),
         };
 
         let overrides = item.overrides.map(Overrides::into_new_format);

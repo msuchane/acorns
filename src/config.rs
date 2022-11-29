@@ -169,6 +169,17 @@ pub mod tracker {
         }
     }
 
+    impl Service {
+        /// Return the short name or acronym of the service, if any.
+        /// Otherwise, return the regular name.
+        pub fn short_name(self) -> &'static str {
+            match self {
+                Self::Bugzilla => "BZ",
+                Self::Jira => "Jira",
+            }
+        }
+    }
+
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     pub struct Fields {
         pub doc_type: String,
