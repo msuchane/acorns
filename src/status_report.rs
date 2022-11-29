@@ -266,10 +266,10 @@ impl Status {
 
         match content_lines.len() {
             // If the doc text contains too few paragraphs, return with an error.
-            0 => Self::Error("The release note is empty.".into()),
+            0 => Self::Error("Empty RN.".into()),
             // TODO: If the project configuration auto-generates titles, release notes
             // can normally have just one paragraph. Revisit when the option is available.
-            1 => Self::Error("All in a single paragraph.".into()),
+            1 => Self::Error("Text in one paragraph.".into()),
             _ => {
                 // If the doc text contains at least two paragraphs, it can be a release note.
                 // In that case, proceed with the analysis.
@@ -297,12 +297,12 @@ impl Status {
             // Measure the title length in characters, not bytes.
             let length = title.chars().count();
             if length > MAX_TITLE_LENGTH {
-                Self::Error(format!("Title too long: {} characters.", length))
+                Self::Warning(format!("Long title: {} characters.", length))
             } else {
                 Self::Ok
             }
         } else {
-            Self::Error("First line is not a title.".into())
+            Self::Error("Missing title.".into())
         }
     }
 
@@ -348,8 +348,8 @@ impl From<DocTextStatus> for Status {
     fn from(item: DocTextStatus) -> Self {
         match item {
             DocTextStatus::Approved => Self::Ok,
-            DocTextStatus::InProgress => Self::Error("Release note not approved.".into()),
-            DocTextStatus::NoDocumentation => Self::Error("Release note disabled.".into()),
+            DocTextStatus::InProgress => Self::Error("RN not approved.".into()),
+            DocTextStatus::NoDocumentation => Self::Error("RN rejected.".into()),
         }
     }
 }
