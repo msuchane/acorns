@@ -23,6 +23,8 @@ impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     #[must_use]
     pub fn release_note(&self, variant: DocumentVariant) -> String {
+        let anchor = self.anchor();
+
         let docs_contact_placeholder = "No docs contact";
 
         // TODO: Handle the empty docs contact earlier as an error.
@@ -41,8 +43,8 @@ impl AbstractTicket {
 
         // A placeholder for release notes with an empty doc text.
         let empty = format!(
-            ".🚧 {} {} \n\n**No release note.**",
-            self.summary, debug_info,
+            "{}\n.🚧 {} {} \n\n**No release note.**",
+            anchor, self.summary, debug_info,
         );
 
         // TODO: Handle the empty doc text earlier as an error.
@@ -55,14 +57,15 @@ impl AbstractTicket {
 
             // This is the resulting release note:
             format!(
-                "{}\n\n{} {}",
+                "{}\n{}\n\n{} {}",
+                anchor,
                 doc_text_unix,
                 self.all_signatures(),
                 // In the internal variant, add the debug information line.
                 if variant == DocumentVariant::Internal {
-                    debug_info
+                    &debug_info
                 } else {
-                    String::new()
+                    ""
                 },
             )
         }
@@ -90,6 +93,14 @@ impl AbstractTicket {
         }
 
         format!("({})", signatures.join(", "))
+    }
+
+    /// Format an AsciiDoc ID line, which sets an HTML anchor.
+    fn anchor(&self) -> String {
+        let service = self.id.tracker.short_name();
+        let key = &self.id.key;
+
+        format!("[id=\"{}-{}\"]", service, key)
     }
 }
 
