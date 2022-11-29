@@ -68,7 +68,7 @@ enum TicketQueryEntry {
     #[serde(rename = "key")]
     Key(
         tracker::Service,
-        String,
+        Identifier,
         #[serde(default)] TicketQueryOptions,
     ),
     #[serde(rename = "search")]
@@ -77,6 +77,28 @@ enum TicketQueryEntry {
         String,
         #[serde(default)] TicketQueryOptions,
     ),
+}
+
+/// A simple enum between a string and an integer.
+///
+/// This increases ergonomics in specifying the tickets in the configuration file,
+/// because you can specify Bugzilla keys as numbers without any quotes, such as `[BZ, 12345]`.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum Identifier {
+    String(String),
+    Number(i32),
+}
+
+impl Identifier {
+    /// Convert the enum to a string:
+    /// either returns the string variant as is, or stringify the integer.
+    fn into_string(self) -> String {
+        match self {
+            Self::String(s) => s,
+            Self::Number(n) => n.to_string(),
+        }
+    }
 }
 
 /// A shared options entry in a ticket query written
@@ -94,7 +116,7 @@ impl From<TicketQueryEntry> for TicketQuery {
         // and to avoid cloning.
         let (tracker, using, options) = match item {
             TicketQueryEntry::Key(tracker, key, options) => {
-                (tracker, KeyOrSearch::Key(key), options)
+                (tracker, KeyOrSearch::Key(key.into_string()), options)
             }
             TicketQueryEntry::Search(tracker, search, options) => {
                 (tracker, KeyOrSearch::Search(search), options)
