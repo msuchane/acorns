@@ -125,48 +125,49 @@ fn build_rn_project(project_dir: &Path) -> Result<()> {
 /// Holds all the data generated from the project configuration before writing them to disk.
 struct Document {
     internal_modules: Vec<Module>,
-    public_modules: Vec<Module>,
+    external_modules: Vec<Module>,
     status_table: String,
     internal_summary: String,
-    public_summary: String,
+    external_summary: String,
 }
 
 impl Document {
     /// Prepare all populated and formatted modules that result from the RN project configuration.
-    /// Returns a tuple with the document generated in two variants: (Internal, Public).
+    /// Returns a tuple with the document generated in two variants: (Internal, External).
     fn new(project: &Project) -> Result<Self> {
         let abstract_tickets =
             ticket_abstraction::from_queries(&project.tickets, &project.trackers)?;
 
-        // Filter internal and public tickets here before formatting the document.
+        // Filter internal and external tickets here before formatting the document.
         // That way, functions in `templating` don't have to keep checking if they're
         // working on the right ticket subset.
         let tickets_for_internal = variant_tickets(&abstract_tickets, DocumentVariant::Internal);
-        let tickets_for_public = variant_tickets(&abstract_tickets, DocumentVariant::Public);
+        let tickets_for_external = variant_tickets(&abstract_tickets, DocumentVariant::External);
 
         let internal_modules = templating::format_document(
             &tickets_for_internal,
             &project.templates,
             DocumentVariant::Internal,
         );
-        let public_modules = templating::format_document(
-            &tickets_for_public,
+        let external_modules = templating::format_document(
+            &tickets_for_external,
             &project.templates,
-            DocumentVariant::Public,
+            DocumentVariant::External,
         );
 
         let status_table = status_report::analyze_status(&abstract_tickets)?;
 
         let internal_summary =
             summary_list::appendix(&tickets_for_internal, DocumentVariant::Internal)?;
-        let public_summary = summary_list::appendix(&tickets_for_public, DocumentVariant::Public)?;
+        let external_summary =
+            summary_list::appendix(&tickets_for_external, DocumentVariant::External)?;
 
         Ok(Self {
             internal_modules,
-            public_modules,
+            external_modules,
             status_table,
             internal_summary,
-            public_summary,
+            external_summary,
         })
     }
 
@@ -206,7 +207,7 @@ impl Document {
         }
 
         let internal_dir = generated_dir.join("internal");
-        let public_dir = generated_dir.join("public");
+        let external_dir = generated_dir.join("external");
 
         // Save the newly generated files.
         Self::write_variant(
@@ -214,7 +215,11 @@ impl Document {
             &self.internal_summary,
             &internal_dir,
         )?;
-        Self::write_variant(&self.public_modules, &self.public_summary, &public_dir)?;
+        Self::write_variant(
+            &self.external_modules,
+            &self.external_summary,
+            &external_dir,
+        )?;
 
         // Save the status table.
         let status_file = generated_dir.join("status-table.html");
@@ -225,7 +230,7 @@ impl Document {
     }
 }
 
-/// Select only those tickets that belong in the Internal or Public variant.
+/// Select only those tickets that belong in the Internal or External variant.
 fn variant_tickets(
     all_tickets: &[AbstractTicket],
     variant: DocumentVariant,
@@ -233,8 +238,8 @@ fn variant_tickets(
     match variant {
         // The internal variant accepts all tickets.
         DocumentVariant::Internal => all_tickets.iter().collect(),
-        // The public variant accepts only finished and approved tickets.
-        DocumentVariant::Public => all_tickets
+        // The external variant accepts only finished and approved tickets.
+        DocumentVariant::External => all_tickets
             .iter()
             .filter(|t| t.doc_text_status == extra_fields::DocTextStatus::Approved)
             .collect(),

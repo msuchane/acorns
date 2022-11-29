@@ -49,15 +49,15 @@ struct SummaryList<'a> {
 }
 
 /// A wrapper around tickets components. It keeps all internal components separate
-/// in the `Internal` variant. Public components are unchanged in the `Public` variant.
+/// in the `Internal` variant. External components are unchanged in the `External` variant.
 #[derive(Eq, Hash, PartialEq, PartialOrd, Ord)]
 enum PresentableComponent<'a> {
-    Public(&'a str),
+    External(&'a str),
     Internal,
 }
 
 impl<'a> PresentableComponent<'a> {
-    /// Store the component either as public or as internal.
+    /// Store the component either as external or as internal.
     fn from(component: &'a str) -> Self {
         if THROWAWAY_COMPONENTS.contains(&component)
             || THROWAWAY_PREFIXES
@@ -66,7 +66,7 @@ impl<'a> PresentableComponent<'a> {
         {
             Self::Internal
         } else {
-            Self::Public(component)
+            Self::External(component)
         }
     }
 }
@@ -76,7 +76,7 @@ impl fmt::Display for PresentableComponent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             // If the variant is an actual component, format it with backticks as a code literal.
-            PresentableComponent::Public(component) => write!(f, "`{}`", component),
+            PresentableComponent::External(component) => write!(f, "`{}`", component),
             // If the variant is a throwaway component, replace it with an unformatted placeholder.
             PresentableComponent::Internal => write!(f, "{}", COMPONENT_PLACEHOLDER),
         }
@@ -117,14 +117,14 @@ fn groups<'a>(
         .collect()
 }
 
-/// A filter function that limits the tickets that are listed in the public document variant:
+/// A filter function that limits the tickets that are listed in the external document variant:
 ///
-/// * In the public variant, only list tickets with an approved doc text.
+/// * In the external variant, only list tickets with an approved doc text.
 /// * In the internal variant, list all tickets.
 fn filter_doc_text(ticket: &AbstractTicket, variant: DocumentVariant) -> bool {
     match variant {
         DocumentVariant::Internal => true,
-        DocumentVariant::Public => ticket.doc_text_status == DocTextStatus::Approved,
+        DocumentVariant::External => ticket.doc_text_status == DocTextStatus::Approved,
     }
 }
 

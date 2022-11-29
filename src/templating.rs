@@ -48,11 +48,11 @@ struct Assembly<'a> {
 
 /// The variant of the generated, output document:
 ///
-/// * `Public`: The external variant intended for publishing the release notes.
+/// * `External`: The external variant intended for publishing the release notes.
 /// * `Internal`: The debugging variant intended for preparing the release notes.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DocumentVariant {
-    Public,
+    External,
     Internal,
 }
 
