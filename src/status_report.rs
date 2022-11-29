@@ -286,7 +286,11 @@ impl Status {
     fn from_title(text: &str) -> Self {
         // Identify the title as a line that starts with a dot (`.`) followed by a character,
         // and capture everything after the dot for analysis.
-        let title_regex = Regex::new(r"\.(\S+.*)").expect("Failed to parse a regular expression.");
+        // Also match if the line starts with spaces and then such a title,
+        // because Jira inserts a space at the start of the doc text,
+        // so make sure to detect that error.
+        let title_regex =
+            Regex::new(r"^ *\.(\S+.*)").expect("Failed to parse a regular expression.");
 
         let title: Option<&str> = title_regex
             .captures(text)
@@ -296,7 +300,12 @@ impl Status {
         if let Some(title) = title {
             // Measure the title length in characters, not bytes.
             let length = title.chars().count();
-            if length > MAX_TITLE_LENGTH {
+
+            // Report leading spaces.
+            if text.starts_with(' ') {
+                Self::Error("Title starts with a space.".into())
+            // Report a long title.
+            } else if length > MAX_TITLE_LENGTH {
                 Self::Warning(format!("Long title: {} characters.", length))
             } else {
                 Self::Ok
