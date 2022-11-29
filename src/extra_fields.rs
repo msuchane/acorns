@@ -174,14 +174,21 @@ impl ExtraFields for Bug {
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let flag = &config.doc_text_status;
-        let rdt = self
-            .get_flag(flag)
-            // TODO: Make sure it's okay to quit with an error if RDT is missing.
-            .ok_or_else(|| eyre!("The `{}` flag is missing.", flag));
+        // If the RDT flag is unset, use this:
+        let default_rdt = "?";
 
-        rdt.map(DocTextStatus::try_from)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text status of bug {}.", self.id))?
+        let flag = &config.doc_text_status;
+
+        // If the flag is unset, treat it only as a warning, not a breaking error,
+        // and proceed with the default value.
+        // An unset RDT is a relatively common occurence on Bugzilla.
+        let rdt = self.get_flag(flag).unwrap_or_else(|| {
+            log::warn!("The `{}` flag is missing in bug {}.", flag, self.id);
+            default_rdt
+        });
+
+        DocTextStatus::try_from(rdt)
+            .wrap_err_with(|| eyre!("Failed to extract the doc text status of bug {}.", self.id))
     }
 
     fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
