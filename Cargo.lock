@@ -129,9 +129,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bugzilla_query"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a597cee1ecf01e327908c19b7782cf15317b0854674a5c3cd0759b15763082be"
+checksum = "dbdf1a8c78fe8b1880078b01f77a4e7e0ed56e8efae83cec0460112285dd06e5"
 dependencies = [
  "chrono",
  "log",
@@ -1342,9 +1342,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.8.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
+checksum = "5ec8ecbbb74d42a8dd0ce8ea9bfc38ad13e2ed5203c4f272dbe144f4e17d70ac"
 dependencies = [
  "proc-macro2",
  "quote",
