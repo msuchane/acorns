@@ -174,10 +174,10 @@ impl Document {
     /// Write the formatted RN modules of a document variant as files to the output directory.
     fn write_variant(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
         // Make sure that the output directory exists.
-        fs::create_dir_all(&generated_dir)?;
+        fs::create_dir_all(generated_dir)?;
 
         for module in modules {
-            let out_file = &generated_dir.join(&module.file_name);
+            let out_file = generated_dir.join(&module.file_name);
             log::debug!("Writing file: {}", out_file.display());
             fs::write(out_file, &module.text).wrap_err("Failed to write generated module.")?;
 
@@ -203,7 +203,7 @@ impl Document {
 
         // Remove all previously generated content so that it doesn't interfere with the new build.
         if generated_dir.exists() {
-            fs::remove_dir_all(&generated_dir)?;
+            fs::remove_dir_all(generated_dir)?;
         }
 
         let internal_dir = generated_dir.join("internal");
