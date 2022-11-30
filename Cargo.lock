@@ -173,12 +173,13 @@ dependencies = [
 
 [[package]]
 name = "cizrna"
-version = "0.15.4"
+version = "0.15.5"
 dependencies = [
  "askama",
  "bugzilla_query",
  "chrono",
  "clap",
+ "clap_mangen",
  "color-eyre",
  "counter",
  "jira_query",
@@ -228,6 +229,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d4198f73e42b4936b35b5bb248d81d2b595ecb170da0bac7655c54eedfa8da8"
 dependencies = [
  "os_str_bytes",
+]
+
+[[package]]
+name = "clap_mangen"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e503c3058af0a0854668ea01db55c622482a080092fede9dd2e00a00a9436504"
+dependencies = [
+ "clap",
+ "roff",
 ]
 
 [[package]]
@@ -1097,6 +1108,12 @@ dependencies = [
  "tokio",
  "url",
 ]
+
+[[package]]
+name = "roff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b833d8d034ea094b1ea68aa6d5c740e0d04bad9d16568d08ba6f76823a114316"
 
 [[package]]
 name = "rustc-demangle"
