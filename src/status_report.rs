@@ -358,7 +358,7 @@ impl From<DocTextStatus> for Status {
         match item {
             DocTextStatus::Approved => Self::Ok,
             DocTextStatus::InProgress => Self::Error("RN not approved.".into()),
-            DocTextStatus::NoDocumentation => Self::Error("RN rejected.".into()),
+            DocTextStatus::NoDocumentation => Self::Error("RN not needed.".into()),
         }
     }
 }
