@@ -91,7 +91,7 @@ pub enum Commands {
             default_value = "./corn.yaml"
         )]
         legacy_config: PathBuf,
-        /// The legacy corn.yaml configuration file.
+        /// The new, converted configuration file.
         #[arg(
             short,
             long,
