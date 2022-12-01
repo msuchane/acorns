@@ -132,7 +132,9 @@ fn convert_format(legacy_format: &str) -> Result<String> {
         .into_iter()
         .map(|entry| format!("- {}", entry))
         .collect::<Vec<_>>()
-        .join("\n");
+        .join("\n")
+        // End the whole file with a trailing newline.
+        + "\n";
 
     log::debug!("The new configuration:\n{:#?}", new_config);
 
@@ -151,9 +153,9 @@ impl TryFrom<CornEntry> for String {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
         let prefix = match key_or_search {
-            KeyOrSearch::Key(key) => format!("!key [{}, {}", service.short_name(), key),
+            KeyOrSearch::Key(key) => format!("[{}, key: {}", service.short_name(), key),
             KeyOrSearch::Search(search) => {
-                format!("!search [{}, \"{}\"", service.short_name(), search)
+                format!("[{}, search: \"{}\"", service.short_name(), search)
             }
         };
 
