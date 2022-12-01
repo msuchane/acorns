@@ -50,47 +50,87 @@ pub struct TicketQuery {
 ///
 /// * `Key`: Requests a specific ticket by its key.
 /// * `Free`: Requests all tickets that match a free-form query.
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 pub enum KeyOrSearch {
     Key(String),
     Search(String),
 }
 
 /// A ticket query as defined in the user configuration file.
-/// This entry enum is separate from `TicketQuery` because
-/// this enum format is more ergonomic to write in config files,
+/// This entry struct is separate from `TicketQuery` because
+/// this tuple format is more ergonomic to write in config files,
 /// and it enables us to wrap references in `Arc` when converting
 /// from this struct to `TicketQuery`.
 /// Otherwise, `Arc` doesn't implement `Deserialize`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-enum TicketQueryEntry {
-    #[serde(rename = "key")]
-    Key(
-        tracker::Service,
-        Identifier,
-        #[serde(default)] TicketQueryOptions,
-    ),
-    #[serde(rename = "search")]
-    Search(
-        tracker::Service,
-        String,
-        #[serde(default)] TicketQueryOptions,
-    ),
+struct TicketQueryEntry(
+    tracker::Service,
+    Identifier,
+    #[serde(default)] TicketQueryOptions,
+);
+
+impl From<TicketQueryEntry> for TicketQuery {
+    fn from(item: TicketQueryEntry) -> Self {
+        // Destructure all the parts of the query to avoid trouble with partial moves
+        // and to avoid cloning.
+        let (tracker, identifier, options) = (item.0, item.1, item.2);
+        let references: Vec<Arc<TicketQuery>> = options
+            .references
+            .into_iter()
+            .map(Self::from)
+            .map(Arc::new)
+            .collect();
+
+        Self {
+            using: identifier.into(),
+            tracker,
+            overrides: options.overrides,
+            references,
+        }
+    }
+}
+
+/// The string that identifies tickets to pull from the tracker,
+/// either in the form of a ticket key (which can be a string or a number),
+/// or in the form of a search string.
+///
+/// This is practically an enum. The later processing of this struct rejects
+/// variants where both or none of the fields are `Some`.
+/// However, using an actual enum would cause problems with teh YaML representation
+/// in the configuration file, because serde_yaml distinguishes variants using tags,
+/// which aren't well supported in editors. Therefore, this struct emulates an enum
+/// and provides a readable YaML syntax.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Identifier {
+    key: Option<KeyFormats>,
+    search: Option<String>,
+}
+
+impl From<Identifier> for KeyOrSearch {
+    fn from(item: Identifier) -> Self {
+        match (item.key.clone(), item.search.clone()) {
+            (Some(key), None) => KeyOrSearch::Key(key.into_string()),
+            (None, Some(search)) => KeyOrSearch::Search(search),
+            (Some(_), Some(_)) => panic!("Please specify only one entry:\n{:#?}", item),
+            (None, None) => panic!("Please specify at least one entry:\n{:#?}", item),
+        }
+    }
 }
 
 /// A simple enum between a string and an integer.
 ///
 /// This increases ergonomics in specifying the tickets in the configuration file,
 /// because you can specify Bugzilla keys as numbers without any quotes, such as `[BZ, 12345]`.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum Identifier {
+enum KeyFormats {
     String(String),
     Number(i32),
 }
 
-impl Identifier {
+impl KeyFormats {
     /// Convert the enum to a string:
     /// either returns the string variant as is, or stringify the integer.
     fn into_string(self) -> String {
@@ -108,34 +148,6 @@ impl Identifier {
 struct TicketQueryOptions {
     overrides: Option<Overrides>,
     references: Vec<TicketQueryEntry>,
-}
-
-impl From<TicketQueryEntry> for TicketQuery {
-    fn from(item: TicketQueryEntry) -> Self {
-        // Destructure all the parts of the query to avoid trouble with partial moves
-        // and to avoid cloning.
-        let (tracker, using, options) = match item {
-            TicketQueryEntry::Key(tracker, key, options) => {
-                (tracker, KeyOrSearch::Key(key.into_string()), options)
-            }
-            TicketQueryEntry::Search(tracker, search, options) => {
-                (tracker, KeyOrSearch::Search(search), options)
-            }
-        };
-        let references: Vec<Arc<TicketQuery>> = options
-            .references
-            .into_iter()
-            .map(Self::from)
-            .map(Arc::new)
-            .collect();
-
-        Self {
-            using,
-            tracker,
-            overrides: options.overrides,
-            references,
-        }
-    }
 }
 
 /// Optional, configurable overrides that modify an `AbstractTicket`.
