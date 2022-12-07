@@ -160,11 +160,11 @@ pub struct Overrides {
 }
 
 pub mod tracker {
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use std::fmt;
 
     /// An issue-tracking service, as in the platform.
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
     pub enum Service {
         #[serde(alias = "BZ")]
         Bugzilla,

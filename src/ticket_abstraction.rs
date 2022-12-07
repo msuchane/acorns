@@ -24,6 +24,8 @@ use std::sync::Arc;
 use bugzilla_query::{Bug, Component};
 use color_eyre::eyre::{bail, Result};
 use jira_query::Issue;
+use serde::ser::SerializeStruct;
+use serde::{Serialize, Serializer};
 
 use crate::config::{tracker, TicketQuery};
 use crate::extra_fields::{DocTextStatus, ExtraFields};
@@ -60,8 +62,42 @@ pub struct AbstractTicket {
     pub references: Option<Vec<String>>,
 }
 
+// This is a manual implementation of serde serialization purely because we can't
+// automatically derive Serialize on Rc<TicketId>.
+impl Serialize for AbstractTicket {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // 3 is the number of fields in the struct.
+        let mut state = serializer.serialize_struct("Color", 3)?;
+        state.serialize_field("id", &self.id.to_string())?;
+        state.serialize_field("summary", &self.summary)?;
+        state.serialize_field("description", &self.description)?;
+        state.serialize_field("doc_type", &self.doc_type)?;
+        state.serialize_field("doc_text", &self.doc_text)?;
+        state.serialize_field("docs_contact", &self.docs_contact)?;
+        state.serialize_field("doc_text_status", &self.doc_text_status.to_string())?;
+        state.serialize_field("status", &self.status)?;
+        state.serialize_field("is_open", &self.is_open)?;
+        state.serialize_field("priority", &self.priority)?;
+        state.serialize_field("url", &self.url)?;
+        state.serialize_field("assignee", &self.assignee)?;
+        state.serialize_field("components", &self.components)?;
+        state.serialize_field("product", &self.product)?;
+        state.serialize_field("labels", &self.labels)?;
+        state.serialize_field("flags", &self.flags)?;
+        state.serialize_field("target_releases", &self.target_releases)?;
+        state.serialize_field("subsystems", &self.subsystems)?;
+        state.serialize_field("groups", &self.groups)?;
+        state.serialize_field("public", &self.public)?;
+        state.serialize_field("references", &self.references)?;
+        state.end()
+    }
+}
+
 /// An identification of the original ticket on the issue tracker.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize)]
 pub struct TicketId {
     pub key: String,
     pub tracker: tracker::Service,

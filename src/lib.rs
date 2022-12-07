@@ -127,6 +127,7 @@ struct Document {
     internal_modules: Vec<Module>,
     external_modules: Vec<Module>,
     status_table: String,
+    json_status: String,
     internal_summary: String,
     external_summary: String,
 }
@@ -155,7 +156,7 @@ impl Document {
             DocumentVariant::External,
         );
 
-        let status_table = status_report::analyze_status(&abstract_tickets)?;
+        let (status_table, json_status) = status_report::analyze_status(&abstract_tickets)?;
 
         let internal_summary =
             summary_list::appendix(&tickets_for_internal, DocumentVariant::Internal)?;
@@ -166,6 +167,7 @@ impl Document {
             internal_modules,
             external_modules,
             status_table,
+            json_status,
             internal_summary,
             external_summary,
         })
@@ -222,9 +224,16 @@ impl Document {
         )?;
 
         // Save the status table.
-        let status_file = generated_dir.join("status-table.html");
-        log::debug!("Writing file: {}", status_file.display());
-        fs::write(status_file, &self.status_table).wrap_err("Failed to write generated module.")?;
+        let html_status_file = generated_dir.join("status-table.html");
+        log::debug!("Writing file: {}", html_status_file.display());
+        fs::write(html_status_file, &self.status_table)
+            .wrap_err("Failed to write the status table.")?;
+
+        // Save the JSON status.
+        let json_status_file = generated_dir.join("status-table.json");
+        log::debug!("Writing file: {}", json_status_file.display());
+        fs::write(json_status_file, &self.json_status)
+            .wrap_err("Failed to write teh JSON status.")?;
 
         Ok(())
     }

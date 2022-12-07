@@ -26,6 +26,7 @@ use chrono::prelude::*;
 use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
 use regex::Regex;
+use serde::Serialize;
 
 use crate::extra_fields::DocTextStatus;
 use crate::note::content_lines;
@@ -42,7 +43,7 @@ const UNCHECKED_DOC_TYPES: [&str; 3] = [
 const MAX_TITLE_LENGTH: usize = 120;
 
 /// An overview of the completeness status across all tickets.
-#[derive(Default)]
+#[derive(Default, Serialize)]
 struct OverallProgress {
     all: usize,
     complete: usize,
@@ -97,7 +98,7 @@ fn percentage(part: usize, total: usize) -> f64 {
 
 /// Records all tickets that belong to a writer and stores statistics
 /// on the overall completeness of the release notes.
-#[derive(Default)]
+#[derive(Default, Serialize)]
 struct WriterStats<'a> {
     name: &'a str,
     total: i32,
@@ -162,7 +163,7 @@ fn calculate_writer_stats<'a>(
 
 /// Several checks on a ticket, which capture the status of properties
 /// relevant to documentation.
-#[derive(Default)]
+#[derive(Default, Serialize)]
 struct Checks {
     development: Status,
     doc_type: Status,
@@ -226,6 +227,7 @@ impl Checks {
 
 /// The status of a particular ticket property. It can be either okay,
 /// a non-serious warning with a message, or a serious error with a message.
+#[derive(Serialize)]
 enum Status {
     Ok,
     Warning(String),
@@ -494,7 +496,7 @@ fn list_or_placeholder(list: &[&str], name: &str) -> String {
 }
 
 /// All the data that the status table needs to render.
-#[derive(Template)] // this will generate the code...
+#[derive(Template, Serialize)] // this will generate the code...
 #[template(path = "status-table.html")] // using the template in this path, relative
                                         // to the `templates` dir in the crate root
 struct StatusTableTemplate<'a> {
@@ -506,8 +508,11 @@ struct StatusTableTemplate<'a> {
     generated_date: &'a str,
 }
 
-/// Analyze all tickets and release notes, and produce a status table as text with HTML markup.
-pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
+/// Analyze all tickets and release notes, and produce a status table in two variants:
+///
+/// * As text with HTML markup.
+/// * As a JSON map in text form.
+pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
     let products = combined_products(tickets);
     let products_display = list_or_placeholder(&products, "products");
 
@@ -539,7 +544,12 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<String> {
         generated_date: &date_today,
     };
 
-    status_table
+    let as_html = status_table
         .render()
-        .wrap_err("Failed to prepare the status table.")
+        .wrap_err("Failed to prepare the status table.")?;
+
+    let as_json = serde_json::to_string(&status_table)
+        .wrap_err("Failed to prepare the JSON status output.")?;
+
+    Ok((as_html, as_json))
 }
