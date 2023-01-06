@@ -43,7 +43,7 @@ install -m 0755 target/release/%{name} %{buildroot}%{_bindir}/%{name}
 # An alternative way to install the binary using cargo.
 # cargo install --path . --root %{buildroot}/usr
 # Install the man page into the chroot environment.
-# install -m 0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
+install -m 0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
 
 %clean
 rm -rf %{buildroot}
@@ -53,6 +53,6 @@ rm -rf %{buildroot}
 %doc README.md
 # %doc CHANGELOG.md
 %license LICENSE
-# %{_mandir}/man1/%{name}.1
+%{_mandir}/man1/%{name}.1
 # Pick the binary from the virtual, chroot system.
 %{_bindir}/%{name}
