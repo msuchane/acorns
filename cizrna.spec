@@ -1,7 +1,7 @@
 Name: cizrna
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
 Version: 0.18.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv3+
 URL: https://github.com/msuchane/cizrna
 Group: Applications/Text
@@ -42,20 +42,19 @@ install -d %{buildroot}%{_mandir}/man1
 install -m 0755 target/release/%{name} %{buildroot}%{_bindir}/%{name}
 # An alternative way to install the binary using cargo.
 # cargo install --path . --root %{buildroot}/usr
+# Compress the man page.
+gzip cizrna.1
 # Install the man page into the chroot environment.
-install -m 0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
-# Debug:
-ls -l $(realpath %{buildroot}%{_mandir}/man1/%{name}.1)
-du -h $(realpath %{buildroot}%{_mandir}/man1/%{name}.1)
+install -m 0644 %{name}.1.gz %{buildroot}%{_mandir}/man1/%{name}.1.gz
 
-# %clean
-# rm -rf %{buildroot}
+%clean
+rm -rf %{buildroot}
 
 %files
 # Pick documentation and license files from the source directory.
 %doc README.md
 # %doc CHANGELOG.md
 %license LICENSE
-%{_mandir}/man1/%{name}.1
+%{_mandir}/man1/%{name}.1.gz
 # Pick the binary from the virtual, chroot system.
 %{_bindir}/%{name}
