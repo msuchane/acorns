@@ -102,8 +102,8 @@ fn groups<'a>(
 
                 components
                     .entry(presentable)
-                    .and_modify(|c| c.push(ticket.signature()))
-                    .or_insert_with(|| vec![ticket.signature()]);
+                    .and_modify(|c| c.push(ticket.xref()))
+                    .or_insert_with(|| vec![ticket.xref()]);
             }
         });
 

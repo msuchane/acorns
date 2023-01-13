@@ -23,7 +23,7 @@ impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     #[must_use]
     pub fn release_note(&self, variant: DocumentVariant) -> String {
-        let anchor = self.anchor();
+        let anchor = self.anchor_declaration();
 
         let docs_contact_placeholder = "No docs contact";
 
@@ -73,6 +73,8 @@ impl AbstractTicket {
 
     /// Prepare the link or the non-clickable signature that marks the ticket
     /// belonging to this release note.
+    ///
+    /// For example, `link:https://...bugzilla...12345[BZ#12345]`.
     #[must_use]
     pub fn signature(&self) -> String {
         if self.public {
@@ -95,12 +97,35 @@ impl AbstractTicket {
         format!("({})", signatures.join(", "))
     }
 
-    /// Format an AsciiDoc ID line, which sets an HTML anchor.
-    fn anchor(&self) -> String {
+    /// Format an ID, or an anchor, that this release note can set and that you can use
+    /// to refer back to this release note from elsewhere.
+    ///
+    /// For example, `BZ-12345`.
+    #[must_use]
+    pub fn anchor(&self) -> String {
         let service = self.id.tracker.short_name();
         let key = &self.id.key;
 
-        format!("[id=\"{service}-{key}\"]")
+        // TODO: This anchor isn't unique across the document if the RN is reused.
+        format!("{service}-{key}")
+    }
+
+    /// Format an AsciiDoc ID line that sets an HTML anchor.
+    ///
+    /// For example, `[id="BZ-12345"]`.
+    fn anchor_declaration(&self) -> String {
+        let anchor = self.anchor();
+
+        format!("[id=\"{anchor}\"]")
+    }
+
+    /// Format a reference using the xref syntax that points back to this release note.
+    #[must_use]
+    pub fn xref(&self) -> String {
+        let anchor = self.anchor();
+        let id = self.id.to_string();
+
+        format!("xref:{anchor}[{id}]")
     }
 }
 
