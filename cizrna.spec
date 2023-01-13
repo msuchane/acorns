@@ -44,6 +44,8 @@ install -m 0755 target/release/%{name} %{buildroot}%{_bindir}/%{name}
 # cargo install --path . --root %{buildroot}/usr
 # Install the man page into the chroot environment.
 install -m 0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
+# Debug:
+ls -l $(realpath %{buildroot}%{_mandir}/man1/%{name}.1)
 
 %clean
 rm -rf %{buildroot}
