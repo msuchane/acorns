@@ -113,8 +113,8 @@ impl From<Identifier> for KeyOrSearch {
         match (item.key.clone(), item.search.clone()) {
             (Some(key), None) => KeyOrSearch::Key(key.into_string()),
             (None, Some(search)) => KeyOrSearch::Search(search),
-            (Some(_), Some(_)) => panic!("Please specify only one entry:\n{:#?}", item),
-            (None, None) => panic!("Please specify at least one entry:\n{:#?}", item),
+            (Some(_), Some(_)) => panic!("Please specify only one entry:\n{item:#?}"),
+            (None, None) => panic!("Please specify at least one entry:\n{item:#?}"),
         }
     }
 }
@@ -177,7 +177,7 @@ pub mod tracker {
                 Self::Bugzilla => "Bugzilla",
                 Self::Jira => "Jira",
             };
-            write!(f, "{}", name)
+            write!(f, "{name}")
         }
     }
 

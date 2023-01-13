@@ -61,7 +61,7 @@ impl fmt::Display for DocTextStatus {
             Self::InProgress => "WIP",
             Self::NoDocumentation => "No docs",
         };
-        write!(f, "{}", display)
+        write!(f, "{display}")
     }
 }
 

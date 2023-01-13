@@ -76,7 +76,7 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
         std::env::var(BZ_API_KEY_VAR)
-            .wrap_err_with(|| format!("Set the {} environment variable.", BZ_API_KEY_VAR))?
+            .wrap_err_with(|| format!("Set the {BZ_API_KEY_VAR} environment variable."))?
     };
 
     Ok(
@@ -93,7 +93,7 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
     } else {
         // TODO: Store the name of the variable in a constant, or make it configurable.
         std::env::var(JIRA_API_KEY_VAR)
-            .wrap_err_with(|| format!("Set the {} environment variable.", JIRA_API_KEY_VAR))?
+            .wrap_err_with(|| format!("Set the {JIRA_API_KEY_VAR} environment variable."))?
     };
 
     Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?

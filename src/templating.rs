@@ -216,14 +216,14 @@ impl config::Section {
 
         let module_id_fragment = id_fragment(&self.title);
         let module_id = if let Some(prefix) = prefix {
-            format!("{}-{}", prefix, module_id_fragment)
+            format!("{prefix}-{module_id_fragment}")
         } else {
             module_id_fragment
         };
 
         // If the section includes other sections, treat it as an assembly.
         if let Some(sections) = &self.sections {
-            let file_name = format!("assembly_{}.adoc", module_id);
+            let file_name = format!("assembly_{module_id}.adoc");
             let included_modules: Vec<Module> = sections
                 .iter()
                 .filter_map(|s| {
@@ -263,7 +263,7 @@ impl config::Section {
             // Otherwise, return the module formatted with its release notes.
             self.render(&module_id, tickets, variant, ticket_stats)
                 .map(|text| Module {
-                    file_name: format!("ref_{}.adoc", module_id),
+                    file_name: format!("ref_{module_id}.adoc"),
                     text,
                     included_modules: None,
                 })

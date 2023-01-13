@@ -308,7 +308,7 @@ impl Status {
                 Self::Error("Title starts with a space.".into())
             // Report a long title.
             } else if length > MAX_TITLE_LENGTH {
-                Self::Warning(format!("Long title: {} characters.", length))
+                Self::Warning(format!("Long title: {length} characters."))
             } else {
                 Self::Ok
             }
@@ -489,7 +489,7 @@ fn combined_releases(tickets: &[AbstractTicket]) -> Vec<&str> {
 /// If the list is empty, provide a placeholder instead.
 fn list_or_placeholder(list: &[&str], name: &str) -> String {
     if list.is_empty() {
-        format!("no {}", name)
+        format!("no {name}")
     } else {
         list.join(", ")
     }

@@ -100,7 +100,7 @@ impl AbstractTicket {
         let service = self.id.tracker.short_name();
         let key = &self.id.key;
 
-        format!("[id=\"{}-{}\"]", service, key)
+        format!("[id=\"{service}-{key}\"]")
     }
 }
 

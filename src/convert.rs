@@ -71,13 +71,13 @@ impl Overrides {
     /// Convert the legacy overrides into a string that conforms to the current
     /// configuration format.
     fn into_new_format(self) -> String {
-        let ssts = self.subsystem.map(|sst| format!("subsystems: [{}]", sst));
+        let ssts = self.subsystem.map(|sst| format!("subsystems: [{sst}]"));
         let components = self
             .component
-            .map(|component| format!("components: [{}]", component));
+            .map(|component| format!("components: [{component}]"));
         let doc_type = self
             .doc_type
-            .map(|doc_type| format!("doc_type: {}", doc_type));
+            .map(|doc_type| format!("doc_type: {doc_type}"));
 
         let list = [ssts, components, doc_type]
             .into_iter()
@@ -86,7 +86,7 @@ impl Overrides {
             .collect::<Vec<String>>()
             .join(", ");
 
-        format!("overrides: {{{}}}", list)
+        format!("overrides: {{{list}}}")
     }
 }
 
@@ -119,7 +119,7 @@ fn convert_format(legacy_format: &str) -> Result<String> {
     let legacy_config: CornConfig = serde_yaml::from_str(legacy_format)
         .wrap_err("Cannot parse the legacy configuration file.")?;
 
-    log::debug!("The legacy configuration:\n{:#?}", legacy_config);
+    log::debug!("The legacy configuration:\n{legacy_config:#?}");
 
     let new_entries: Vec<String> = legacy_config
         .ids
@@ -130,13 +130,13 @@ fn convert_format(legacy_format: &str) -> Result<String> {
 
     let new_config = new_entries
         .into_iter()
-        .map(|entry| format!("- {}", entry))
+        .map(|entry| format!("- {entry}"))
         .collect::<Vec<_>>()
         .join("\n")
         // End the whole file with a trailing newline.
         + "\n";
 
-    log::debug!("The new configuration:\n{:#?}", new_config);
+    log::debug!("The new configuration:\n{new_config:#?}");
 
     Ok(new_config)
 }
@@ -153,9 +153,9 @@ impl TryFrom<CornEntry> for String {
         let (service, key_or_search) = parse_stamp(&item.id)?;
 
         let prefix = match key_or_search {
-            KeyOrSearch::Key(key) => format!("[{}, key: {}", service.short_name(), key),
+            KeyOrSearch::Key(key) => format!("[{}, key: {key}", service.short_name()),
             KeyOrSearch::Search(search) => {
-                format!("[{}, search: \"{}\"", service.short_name(), search)
+                format!("[{}, search: \"{search}\"", service.short_name())
             }
         };
 
@@ -185,7 +185,7 @@ impl TryFrom<CornEntry> for String {
                 .flatten()
                 .collect::<Vec<String>>()
                 .join(", ");
-            Some(format!("{{ {} }}", list))
+            Some(format!("{{ {list} }}"))
         } else {
             None
         };

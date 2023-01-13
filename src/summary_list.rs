@@ -76,9 +76,9 @@ impl fmt::Display for PresentableComponent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             // If the variant is an actual component, format it with backticks as a code literal.
-            PresentableComponent::External(component) => write!(f, "`{}`", component),
+            PresentableComponent::External(component) => write!(f, "`{component}`"),
             // If the variant is a throwaway component, replace it with an unformatted placeholder.
-            PresentableComponent::Internal => write!(f, "{}", COMPONENT_PLACEHOLDER),
+            PresentableComponent::Internal => write!(f, "{COMPONENT_PLACEHOLDER}"),
         }
     }
 }
