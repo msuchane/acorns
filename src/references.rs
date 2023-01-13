@@ -59,6 +59,15 @@ impl ReferenceSignatures {
         Self::store(&mut signatures, ref_bugs, &config.bugzilla)?;
         Self::store(&mut signatures, ref_issues, &config.jira)?;
 
+        // For each ticket, sort its references alphabetically.
+        // Otherwise, the order changes based on the response from the ticket tracker,
+        // which is random and produces distracting noise in output diffs.
+        //
+        // TODO: Is alphabetical sorting okay, or do we have to sort by the config file order instead?
+        for references in signatures.values_mut() {
+            references.sort_unstable();
+        }
+
         Ok(Self(signatures))
     }
 
@@ -80,7 +89,7 @@ impl ReferenceSignatures {
         Ok(())
     }
 
-    /// Find references that belong to a ticket a return a list of them as signature strings.
+    /// Find references that belong to a ticket and return a list of them as signature strings.
     pub fn reattach_to(&self, main_query: &Arc<TicketQuery>) -> Vec<String> {
         let needed_references = &main_query.references;
         self.0
