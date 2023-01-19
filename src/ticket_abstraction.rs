@@ -28,7 +28,7 @@ use serde::ser::SerializeStruct;
 use serde::{Serialize, Serializer};
 
 use crate::config::{tracker, TicketQuery};
-use crate::extra_fields::{DocTextStatus, ExtraFields};
+use crate::extra_fields::{DocTextStatus, DocsContact, ExtraFields};
 use crate::tracker_access::{self, AnnotatedTicket};
 
 /// An abstract ticket representation that generalizes over Bugzilla, Jira, and any other issue trackers.
@@ -40,7 +40,7 @@ pub struct AbstractTicket {
     pub description: Option<String>,
     pub doc_type: String,
     pub doc_text: String,
-    pub docs_contact: String,
+    pub docs_contact: DocsContact,
     pub status: String,
     pub is_open: bool,
     pub priority: String,
@@ -76,7 +76,7 @@ impl Serialize for AbstractTicket {
         state.serialize_field("description", &self.description)?;
         state.serialize_field("doc_type", &self.doc_type)?;
         state.serialize_field("doc_text", &self.doc_text)?;
-        state.serialize_field("docs_contact", &self.docs_contact)?;
+        state.serialize_field("docs_contact", &self.docs_contact.as_str())?;
         state.serialize_field("doc_text_status", &self.doc_text_status.to_string())?;
         state.serialize_field("status", &self.status)?;
         state.serialize_field("is_open", &self.is_open)?;
@@ -137,7 +137,7 @@ impl IntoAbstract for Bug {
             target_releases: self.target_releases(&tracker.fields)?,
             subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
             doc_text_status: self.doc_text_status(&tracker.fields)?,
-            docs_contact: self.docs_contact(&tracker.fields)?,
+            docs_contact: self.docs_contact(&tracker.fields),
             url: self.url(tracker),
             summary: self.summary,
             status: self.status,
@@ -178,7 +178,7 @@ impl IntoAbstract for Issue {
             // The target release is non-essential. Discard the error and store as Option.
             target_releases: self.target_releases(&tracker.fields)?,
             doc_text_status: self.doc_text_status(&tracker.fields)?,
-            docs_contact: self.docs_contact(&tracker.fields)?,
+            docs_contact: self.docs_contact(&tracker.fields),
             subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
             url: self.url(tracker),
             // The ID in particular is wrapped in Rc because it's involved in various filters

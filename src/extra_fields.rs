@@ -65,6 +65,45 @@ impl fmt::Display for DocTextStatus {
     }
 }
 
+/// A wrapper around `Option<String>` that stores the docs contact email address.
+///
+/// On top of `Option`, this wrapper implements the `Display` trait:
+///
+/// * If the docs contact is `Some(String)`, the wrapper displays the string,
+///   unless the string is empty, in which case it reverts to a placeholder.
+/// * If the docs contact is `None`, the wrapper displays a placeholder.
+#[derive(Clone, Debug)]
+pub struct DocsContact(pub Option<String>);
+
+impl fmt::Display for DocsContact {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let display = self.as_str();
+        write!(f, "{display}")
+    }
+}
+
+impl DocsContact {
+    /// Provide the docs contact as a string slice, either of the actual docs contact,
+    /// or a slice of a place holder if the docs contact is empty.
+    ///
+    /// This slice method is useful as a way to avoid the complete `.to_string` method,
+    /// and to get a slice owned by this struct itself.
+    pub fn as_str(&self) -> &str {
+        let placeholder = "Missing docs contact";
+
+        match &self.0 {
+            Some(text) => {
+                if text.is_empty() {
+                    placeholder
+                } else {
+                    text
+                }
+            }
+            None => placeholder,
+        }
+    }
+}
+
 pub trait ExtraFields {
     /// Extract the doc type from the ticket.
     fn doc_type(&self, config: &tracker::Fields) -> Result<String>;
@@ -77,7 +116,7 @@ pub trait ExtraFields {
     /// Extract the doc text status ("requires doc text") from the ticket.
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus>;
     /// Extract the docs contact from the ticket.
-    fn docs_contact(&self, config: &tracker::Fields) -> Result<String>;
+    fn docs_contact(&self, config: &tracker::Fields) -> DocsContact;
     /// Construct a URL back to the original ticket online.
     fn url(&self, tracker: &tracker::Instance) -> String;
 }
@@ -191,11 +230,13 @@ impl ExtraFields for Bug {
             .wrap_err_with(|| eyre!("Failed to extract the doc text status of bug {}.", self.id))
     }
 
-    fn docs_contact(&self, _config: &tracker::Fields) -> Result<String> {
+    fn docs_contact(&self, _config: &tracker::Fields) -> DocsContact {
+        if self.docs_contact.is_none() {
+            log::warn!("The `docs_contact` field is missing in bug {}.", self.id);
+        }
+
         // TODO: There's probably a way to avoid this clone.
-        self.docs_contact
-            .clone()
-            .ok_or_else(|| eyre!("The `docs_contact` field is missing in bug {}.", self.id))
+        DocsContact(self.docs_contact.clone())
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {
@@ -290,21 +331,25 @@ impl ExtraFields for Issue {
         DocTextStatus::try_from(rdt_field)
     }
 
-    fn docs_contact(&self, config: &tracker::Fields) -> Result<String> {
+    fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
         let field = &config.docs_contact;
-        self.fields
+        let contact = self
+            .fields
             .extra
             .get(field)
             .and_then(|cf| cf.get("emailAddress"))
             .and_then(Value::as_str)
-            .map(ToString::to_string)
-            .ok_or_else(|| {
-                eyre!(
-                    "The `{}` field is missing or has an unexpected structure in issue {}.",
-                    field,
-                    self.key
-                )
-            })
+            .map(ToString::to_string);
+
+        if contact.is_none() {
+            log::warn!(
+                "The `{}` field is missing or has an unexpected structure in issue {}.",
+                field,
+                self.key
+            );
+        }
+
+        DocsContact(contact)
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {

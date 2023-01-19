@@ -142,7 +142,7 @@ fn calculate_writer_stats<'a>(
     let mut writers_map: HashMap<&str, WriterStats> = HashMap::new();
 
     for (ticket, checks) in tickets_with_checks {
-        let name = &ticket.docs_contact;
+        let name = ticket.docs_contact.as_str();
         writers_map
             .entry(name)
             .and_modify(|stats| stats.update(checks))
@@ -383,7 +383,7 @@ impl AbstractTicket {
 
     /// Extract the account name before `@` from the docs contact email address.
     fn docs_contact_short(&self) -> &str {
-        email_prefix(&self.docs_contact)
+        email_prefix(self.docs_contact.as_str())
     }
 
     /// Extract the account name before `@` from the assignee email address.

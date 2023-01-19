@@ -25,20 +25,11 @@ impl AbstractTicket {
     pub fn release_note(&self, variant: DocumentVariant) -> String {
         let anchor = self.anchor_declaration();
 
-        let docs_contact_placeholder = "No docs contact";
-
-        // TODO: Handle the empty docs contact earlier as an error.
-        let docs_contact = if self.docs_contact.is_empty() {
-            docs_contact_placeholder
-        } else {
-            &self.docs_contact
-        };
-
         // This debug information line appears at empty release notes
         // and everywhere in the Internal document variant.
         let debug_info = format!(
             "| {} | {} | link:{}[]",
-            docs_contact, self.doc_text_status, &self.url
+            &self.docs_contact, self.doc_text_status, &self.url
         );
 
         // A placeholder for release notes with an empty doc text.
