@@ -135,13 +135,13 @@ struct BzTeam {
 /// from a custom Bugzilla or Jira field.
 ///
 /// Returns an error is the field is missing or if it is not a string.
-fn extract_field(extra: &Value, field: &str) -> Result<String> {
+fn extract_field(extra: &Value, field: &str, id: impl fmt::Display) -> Result<String> {
     let field_value = extra.get(field);
 
     // This check covers the case where the field exists, but its value
     // is unset. I think it's safe to treat it as an empty string.
     if let Some(Value::Null) = field_value {
-        log::warn!("Field {} is unset in a ticket.", field);
+        log::warn!("Field {} is unset in ticket {}.", field, id);
         return Ok(String::new());
     }
 
@@ -160,19 +160,19 @@ fn extract_field(extra: &Value, field: &str) -> Result<String> {
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_type;
-        extract_field(&self.extra, field)
+        extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        extract_field(&self.extra, field)
+        extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let field = &config.target_release;
-        let release = if let Ok(release) = extract_field(&self.extra, field) {
+        let release = if let Ok(release) = extract_field(&self.extra, field, self.id) {
             release
         } else {
             // The target release field isn't critical. Log the problem
@@ -276,8 +276,8 @@ impl ExtraFields for Issue {
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let field = &config.doc_text;
-        extract_field(&self.fields.extra, field)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", self.key))
+        extract_field(&self.fields.extra, field, &self.key)
+            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", &self.key))
     }
 
     fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
