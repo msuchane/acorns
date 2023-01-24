@@ -1,25 +1,32 @@
-= Generating release notes using Cizrna
+:toc: left
+:name: Cizrna
+:bin-name: cizrna
 
-== Installing Cizrna
+= Generating release notes using {name}
 
-. Enable the Cizrna package repository:
+== Installing {name}
+
+. Enable the {name} package repository:
 +
+[subs="+quotes,+attributes"]
 ----
-# dnf copr enable mareksu/cizrna
+# dnf copr enable mareksu/{bin-name}
 ----
 
 . Install the package:
 +
+[subs="+quotes,+attributes"]
 ----
-# dnf install cizrna
+# dnf install {bin-name}
 ----
 
 == Building release notes
 
 . Navigate to your release notes project:
 +
+[subs=+quotes]
 ----
-$ cd my-release-notes
+$ cd _my-release-notes_
 ----
 
 . Set your API keys for Bugzilla and Jira:
@@ -32,8 +39,9 @@ $ export JIRA_API_KEY=__my-jira-key__
 
 . Generate release notes:
 +
+[subs="+quotes,+attributes"]
 ----
-$ cizrna build
+$ {bin-name} build
 ----
 
 . Compile the AsciiDoc files:
@@ -55,19 +63,19 @@ $ gio open main.html
 ** In the `main.adoc` file, edit the line that says `:variant: internal` to `:variant: public`, or vice versa.
 ////
 
-== Differences between Cizrna and CoRN
+== Differences between {name} and CoRN
 
 Compare the different format of the configuration files:
 
-* `corn-template` and `cizrna/templates.yaml`
+* `corn-template` and `{bin-name}/templates.yaml`
 
-* `corn.yaml` and `cizrna/tickets.yaml`
+* `corn.yaml` and `{bin-name}/tickets.yaml`
 
 Also compare the structure of the generated files:
 
-* `corn-generated-external/` and `cizrna/generated/`
+* `corn-generated-external/` and `{bin-name}/generated/`
 
 == Known issues and limitations
 
-See the issues in the Cizrna repository: link:https://github.com/msuchane/cizrna/issues[].
+See the issues in the {name} repository: link:https://github.com/msuchane/{bin-name}/issues[].
 
