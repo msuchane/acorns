@@ -1,1 +1,73 @@
-TODO
+= Generating release notes using Cizrna
+
+== Installing Cizrna
+
+. Enable the Cizrna package repository:
++
+----
+# dnf copr enable mareksu/cizrna
+----
+
+. Install the package:
++
+----
+# dnf install cizrna
+----
+
+== Building release notes
+
+. Navigate to your release notes project:
++
+----
+$ cd my-release-notes
+----
+
+. Set your API keys for Bugzilla and Jira:
++
+[subs=+quotes]
+----
+$ export BZ_API_KEY=__my-bugzilla-key__
+$ export JIRA_API_KEY=__my-jira-key__
+----
+
+. Generate release notes:
++
+----
+$ cizrna build
+----
+
+. Compile the AsciiDoc files:
++
+----
+$ asciidoctor --safe -vn main.adoc
+----
+
+. Preview the document:
++
+----
+$ gio open main.html
+----
+
+////
+. Switch between the internal and external (public) version of the document. Use either of the following ways:
+
+** When building the document, add the `--attribute=variant=internal` or `--attribute=variant=public` option on the command line.
+** In the `main.adoc` file, edit the line that says `:variant: internal` to `:variant: public`, or vice versa.
+////
+
+== Differences between Cizrna and CoRN
+
+Compare the different format of the configuration files:
+
+* `corn-template` and `cizrna/templates.yaml`
+
+* `corn.yaml` and `cizrna/tickets.yaml`
+
+Also compare the structure of the generated files:
+
+* `corn-generated-external/` and `cizrna/generated/`
+
+== Known issues and limitations
+
+See the issues in the Cizrna repository: link:https://github.com/msuchane/cizrna/issues[].
+
