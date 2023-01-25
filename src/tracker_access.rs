@@ -81,7 +81,7 @@ fn bz_instance(trackers: &tracker::Config) -> Result<bugzilla_query::BzInstance>
 
     Ok(
         bugzilla_query::BzInstance::at(trackers.bugzilla.host.clone())?
-            .authenticate(bugzilla_query::Auth::ApiKey(api_key))?
+            .authenticate(bugzilla_query::Auth::ApiKey(api_key))
             .paginate(bugzilla_query::Pagination::Unlimited)
             .include_fields(BZ_INCLUDED_FIELDS.iter().map(ToString::to_string).collect()),
     )
@@ -97,7 +97,7 @@ fn jira_instance(trackers: &tracker::Config) -> Result<jira_query::JiraInstance>
     };
 
     Ok(jira_query::JiraInstance::at(trackers.jira.host.clone())?
-        .authenticate(jira_query::Auth::ApiKey(api_key))?
+        .authenticate(jira_query::Auth::ApiKey(api_key))
         .paginate(jira_query::Pagination::ChunkSize(JIRA_CHUNK_SIZE)))
 }
 
