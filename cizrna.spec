@@ -1,6 +1,6 @@
 Name: cizrna
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
-Version: 0.20.1
+Version: 0.20.2
 Release: 1%{?dist}
 License: GPLv3+
 URL: https://github.com/msuchane/cizrna
