@@ -159,19 +159,19 @@ fn extract_field(extra: &Value, field: &str, id: impl fmt::Display) -> Result<St
 
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_type;
+        let field = &config.doc_type[0];
         extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_text;
+        let field = &config.doc_text[0];
         extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.target_release;
+        let field = &config.target_release[0];
         let release = if let Ok(release) = extract_field(&self.extra, field, self.id) {
             release
         } else {
@@ -194,7 +194,7 @@ impl ExtraFields for Bug {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.subsystems;
+        let field = &config.subsystems[0];
         let pool_field = self
             .extra
             .get(field)
@@ -216,7 +216,7 @@ impl ExtraFields for Bug {
         // If the RDT flag is unset, use this:
         let default_rdt = "?";
 
-        let flag = &config.doc_text_status;
+        let flag = &config.doc_text_status[0];
 
         // If the flag is unset, treat it only as a warning, not a breaking error,
         // and proceed with the default value.
@@ -256,7 +256,7 @@ struct JiraSST {
 
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_type;
+        let field = &config.doc_type[0];
         let doc_type_field = self
             .fields
             .extra
@@ -275,7 +275,7 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_text;
+        let field = &config.doc_text[0];
         extract_field(&self.fields.extra, field, &self.key)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", &self.key))
     }
@@ -291,7 +291,7 @@ impl ExtraFields for Issue {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.subsystems;
+        let field = &config.subsystems[0];
 
         let pool = self.fields.extra.get(field).ok_or_else(|| {
             eyre!(
@@ -313,7 +313,7 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let field = &config.doc_text_status;
+        let field = &config.doc_text_status[0];
         let rdt_field = self
             .fields
             .extra
@@ -332,7 +332,7 @@ impl ExtraFields for Issue {
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
-        let field = &config.docs_contact;
+        let field = &config.docs_contact[0];
         let contact = self
             .fields
             .extra

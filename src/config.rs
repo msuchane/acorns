@@ -196,12 +196,12 @@ pub mod tracker {
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct Fields {
-        pub doc_type: String,
-        pub doc_text: String,
-        pub doc_text_status: String,
-        pub docs_contact: String,
-        pub target_release: String,
-        pub subsystems: String,
+        pub doc_type: Vec<String>,
+        pub doc_text: Vec<String>,
+        pub doc_text_status: Vec<String>,
+        pub docs_contact: Vec<String>,
+        pub target_release: Vec<String>,
+        pub subsystems: Vec<String>,
     }
 
     /// The particular instance of an issue tracker,
