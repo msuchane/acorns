@@ -313,43 +313,51 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let field = &config.doc_text_status[0];
-        let rdt_field = self
-            .fields
-            .extra
-            .get(field)
-            .and_then(|rdt| rdt.get("value"))
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                eyre!(
-                    "The `{}` field is missing or has an unexpected structure in issue {}.",
-                    field,
-                    self.key
-                )
-            })?;
+        for field in &config.doc_text_status {
+            let rdt_field = self
+                .fields
+                .extra
+                .get(field)
+                .and_then(|rdt| rdt.get("value"))
+                .and_then(Value::as_str);
 
-        DocTextStatus::try_from(rdt_field)
+            if let Some(rdt_field) = rdt_field {
+                return DocTextStatus::try_from(rdt_field);
+            };
+        }
+
+        // No field produced a `Some` value.
+        Err(eyre!(
+            "The doc text status field is missing or has an unexpected structure in issue {}.\n\
+                    The configured fields are: {:?}",
+            self.key,
+            &config.doc_text_status
+        ))
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
-        let field = &config.docs_contact[0];
-        let contact = self
-            .fields
-            .extra
-            .get(field)
-            .and_then(|cf| cf.get("emailAddress"))
-            .and_then(Value::as_str)
-            .map(ToString::to_string);
+        for field in &config.docs_contact {
+            let contact = self
+                .fields
+                .extra
+                .get(field)
+                .and_then(|cf| cf.get("emailAddress"))
+                .and_then(Value::as_str)
+                .map(ToString::to_string);
 
-        if contact.is_none() {
-            log::warn!(
-                "The `{}` field is missing or has an unexpected structure in issue {}.",
-                field,
-                self.key
-            );
+            if contact.is_some() {
+                return DocsContact(contact);
+            }
         }
 
-        DocsContact(contact)
+        // No field produced a `Some` value.
+        log::warn!(
+            "The docs contact field is missing or has an unexpected structure in issue {}.",
+            self.key
+        );
+        log::warn!("The configured fields are: {:?}", &config.docs_contact);
+
+        DocsContact(None)
     }
 
     fn url(&self, tracker: &tracker::Instance) -> String {
