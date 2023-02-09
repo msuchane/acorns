@@ -153,6 +153,7 @@ struct TicketQueryOptions {
 /// Optional, configurable overrides that modify an `AbstractTicket`.
 /// The selected fields that you can modify affect the sorting of the ticket in the document.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Overrides {
     pub doc_type: Option<String>,
     pub components: Option<Vec<String>>,
@@ -193,6 +194,7 @@ pub mod tracker {
     }
 
     #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(deny_unknown_fields)]
     pub struct Fields {
         pub doc_type: String,
         pub doc_text: String,
@@ -205,6 +207,7 @@ pub mod tracker {
     /// The particular instance of an issue tracker,
     /// with a host URL and access credentials.
     #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(deny_unknown_fields)]
     pub struct Instance {
         pub host: String,
         pub api_key: Option<String>,
@@ -213,6 +216,7 @@ pub mod tracker {
 
     /// The issue tracker instances configured in the current release notes project.
     #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(deny_unknown_fields)]
     pub struct Config {
         pub jira: Instance,
         pub bugzilla: Instance,
@@ -225,6 +229,7 @@ pub mod tracker {
 /// appear several times in different places. They have to be defined
 /// on the top level, outside the actual chapters.
 #[derive(Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Template {
     pub chapters: Vec<Section>,
     pub sections: Option<Vec<Section>>,
@@ -237,6 +242,7 @@ pub struct Template {
 /// The `filter` field narrows down the tickets that can appear in this module
 /// or in the modules that are included in this assembly.
 #[derive(Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Section {
     pub title: String,
     pub intro_abstract: Option<String>,
@@ -247,6 +253,7 @@ pub struct Section {
 /// The configuration of a filter, which narrows down the tickets
 /// that can appear in the section that the filter belongs to.
 #[derive(Debug, Eq, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Filter {
     pub doc_type: Option<Vec<String>>,
     pub subsystem: Option<Vec<String>>,
