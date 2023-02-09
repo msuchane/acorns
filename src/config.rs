@@ -193,15 +193,24 @@ pub mod tracker {
         }
     }
 
+    /// In the fields configuration, you can either specify a single field
+    /// or a list of fields. This enum handles and captures both cases.
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(untagged)]
+    pub enum OneOrMore {
+        One(String),
+        More(Vec<String>),
+    }
+
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct Fields {
-        pub doc_type: String,
-        pub doc_text: String,
-        pub doc_text_status: String,
-        pub docs_contact: String,
-        pub target_release: String,
-        pub subsystems: String,
+        pub doc_type: OneOrMore,
+        pub doc_text: OneOrMore,
+        pub doc_text_status: OneOrMore,
+        pub docs_contact: OneOrMore,
+        pub target_release: OneOrMore,
+        pub subsystems: OneOrMore,
     }
 
     /// The particular instance of an issue tracker,
