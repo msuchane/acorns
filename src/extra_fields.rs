@@ -30,7 +30,7 @@ use serde_json::value::Value;
 use bugzilla_query::Bug;
 use jira_query::Issue;
 
-use crate::config::tracker::{self, OneOrMore};
+use crate::config::tracker;
 
 /// The status or progress of the release note.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -157,28 +157,21 @@ fn extract_field(extra: &Value, field: &str, id: impl fmt::Display) -> Result<St
         })
 }
 
-fn just_one(e: &OneOrMore) -> &str {
-    match e {
-        OneOrMore::One(string) => string,
-        OneOrMore::More(_) => todo!("Multiple values are currently unsupported."),
-    }
-}
-
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = just_one(&config.doc_type);
+        let field = &config.doc_type;
         extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = just_one(&config.doc_text);
+        let field = &config.doc_text;
         extract_field(&self.extra, field, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = just_one(&config.target_release);
+        let field = &config.target_release;
         let release = if let Ok(release) = extract_field(&self.extra, field, self.id) {
             release
         } else {
@@ -201,7 +194,7 @@ impl ExtraFields for Bug {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = just_one(&config.subsystems);
+        let field = &config.subsystems;
         let pool_field = self
             .extra
             .get(field)
@@ -223,7 +216,7 @@ impl ExtraFields for Bug {
         // If the RDT flag is unset, use this:
         let default_rdt = "?";
 
-        let flag = just_one(&config.doc_text_status);
+        let flag = &config.doc_text_status;
 
         // If the flag is unset, treat it only as a warning, not a breaking error,
         // and proceed with the default value.
@@ -263,7 +256,7 @@ struct JiraSST {
 
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = just_one(&config.doc_type);
+        let field = &config.doc_type;
         let doc_type_field = self
             .fields
             .extra
@@ -282,7 +275,7 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = just_one(&config.doc_text);
+        let field = &config.doc_text;
         extract_field(&self.fields.extra, field, &self.key)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", &self.key))
     }
@@ -298,7 +291,7 @@ impl ExtraFields for Issue {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = just_one(&config.subsystems);
+        let field = &config.subsystems;
 
         let pool = self.fields.extra.get(field).ok_or_else(|| {
             eyre!(
@@ -320,7 +313,7 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let field = just_one(&config.doc_text_status);
+        let field = &config.doc_text_status;
         let rdt_field = self
             .fields
             .extra
@@ -339,7 +332,7 @@ impl ExtraFields for Issue {
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
-        let field = just_one(&config.docs_contact);
+        let field = &config.docs_contact;
         let contact = self
             .fields
             .extra
