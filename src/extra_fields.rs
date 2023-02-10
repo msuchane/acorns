@@ -135,44 +135,91 @@ struct BzTeam {
 /// from a custom Bugzilla or Jira field.
 ///
 /// Returns an error is the field is missing or if it is not a string.
-fn extract_field(extra: &Value, field: &str, id: impl fmt::Display) -> Result<String> {
-    let field_value = extra.get(field);
+fn extract_field(extra: &Value, fields: &[String], id: impl fmt::Display) -> Result<String> {
+    // Record all errors that occur with tried fields that exist.
+    let mut errors: Vec<String> = Vec::new();
+    // Record all empty but potentially okay fields.
+    let mut empty_fields: Vec<&str> = Vec::new();
 
-    // This check covers the case where the field exists, but its value
-    // is unset. I think it's safe to treat it as an empty string.
-    if let Some(Value::Null) = field_value {
-        log::warn!("Field {} is unset in ticket {}.", field, id);
-        return Ok(String::new());
+    for field in fields {
+        let field_value = extra.get(field);
+
+        // See if the field even exists in the first place.
+        if let Some(value) = field_value {
+            // This check covers the case where the field exists, but its value
+            // is unset. I think it's safe to treat it as an empty string.
+            if let Value::Null = value {
+                empty_fields.push(field);
+            }
+
+            // The field exists and has a Some value. Try converting it to a string.
+            let try_string = value.as_str().map(ToString::to_string);
+
+            match try_string {
+                Some(string) => {
+                    return Ok(string);
+                }
+                None => {
+                    let error = format!(
+                        "Field `{}` is not a string in ticket {}: {:?}",
+                        field, id, value
+                    );
+                    errors.push(error);
+                }
+            }
+        } else {
+            // The field doesn't exist.
+            let error = format!("Field `{}` is missing in ticket {}.", field, id);
+            errors.push(error);
+        }
     }
 
-    field_value
-        .and_then(Value::as_str)
-        .map(ToString::to_string)
-        .ok_or_else(|| {
-            eyre!(
-                "The `{}` field is missing or has an unexpected structure:\n{:#?}",
-                field,
-                extra.get(field)
-            )
-        })
+    // If all we've got are errors, return an error with the complete errors report.
+    if empty_fields.is_empty() {
+        let listed_errors = readable_errors(&errors);
+        Err(eyre!(
+            "Fields are missing or malformed in ticket {}:\n{}{}",
+            id,
+            fields.join(", "),
+            listed_errors
+        ))
+    // If we at least got an existing but empty field, return an empty string.
+    // I think it's safe to treat it as such.
+    } else {
+        log::warn!(
+            "Fields are empty in ticket {}: {}",
+            id,
+            empty_fields.join(", ")
+        );
+        Ok(String::new())
+    }
+}
+
+/// Prepare a user-readable list of errors, if any occurred.
+fn readable_errors(errors: &[String]) -> String {
+    if errors.is_empty() {
+        String::new()
+    } else {
+        format!("\nThe following errors occurred:\n{}", errors.join("\n"))
+    }
 }
 
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_type[0];
-        extract_field(&self.extra, field, self.id)
+        let fields = &config.doc_type;
+        extract_field(&self.extra, fields, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_text[0];
-        extract_field(&self.extra, field, self.id)
+        let fields = &config.doc_text;
+        extract_field(&self.extra, fields, self.id)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.target_release[0];
-        let release = if let Ok(release) = extract_field(&self.extra, field, self.id) {
+        let fields = &config.target_release;
+        let release = if let Ok(release) = extract_field(&self.extra, fields, self.id) {
             release
         } else {
             // The target release field isn't critical. Log the problem
@@ -275,8 +322,8 @@ impl ExtraFields for Issue {
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_text[0];
-        extract_field(&self.fields.extra, field, &self.key)
+        let fields = &config.doc_text;
+        extract_field(&self.fields.extra, fields, &self.key)
             .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", &self.key))
     }
 
@@ -317,11 +364,7 @@ impl ExtraFields for Issue {
 
         // No field produced a `Some` value.
         // Prepare a user-readable list of errors, if any occurred.
-        let listed_errors = if errors.is_empty() {
-            String::new()
-        } else {
-            format!("\nThe following errors occurred:\n{}", errors.join("\n\n"))
-        };
+        let listed_errors = readable_errors(&errors);
 
         // Return the combined error.
         Err(eyre!(
