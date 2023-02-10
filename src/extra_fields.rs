@@ -235,22 +235,40 @@ impl ExtraFields for Bug {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.subsystems[0];
-        let pool_field = self
-            .extra
-            .get(field)
-            .ok_or_else(|| eyre!("Field {} is missing.", field))?;
-        let pool: BzPool = serde_json::from_value(pool_field.clone()).wrap_err_with(|| {
-            eyre!(
-                "The pool field has an unexpected structure in bug {}:\n{:#?}",
-                self.id,
-                pool_field
-            )
-        })?;
+        let mut errors = Vec::new();
 
-        // In Bugzilla, the bug always has just one subsystem. Therefore,
-        // this returns a vector with a single item, or an empty vector.
-        Ok(vec![pool.team.name])
+        for field in &config.subsystems {
+            let pool_field = self.extra.get(field);
+
+            if let Some(pool_field) = pool_field {
+                let pool: Result<BzPool, serde_json::Error> =
+                    serde_json::from_value(pool_field.clone());
+
+                match pool {
+                    // In Bugzilla, the bug always has just one subsystem. Therefore,
+                    // this returns a vector with a single item, or an empty vector.
+                    Ok(pool) => {
+                        return Ok(vec![pool.team.name]);
+                    }
+
+                    // If the parsing resulted in an error, save the error for later.
+                    Err(error) => errors.push(error.to_string()),
+                }
+            } else {
+                let error = format!("Field `{}` is missing in bug {}.", field, self.id);
+                errors.push(error);
+            }
+        }
+
+        let listed_errors = readable_errors(&errors);
+
+        Err(eyre!(
+            "The pool field is missing or malformed in bug {}.\n\
+            The configured fields are: {:?}{}",
+            self.id,
+            &config.subsystems,
+            listed_errors
+        ))
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
