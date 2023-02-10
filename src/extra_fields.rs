@@ -291,25 +291,47 @@ impl ExtraFields for Issue {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let field = &config.subsystems[0];
+        // Record all errors that occur with tried fields that exist.
+        let mut errors = Vec::new();
 
-        let pool = self.fields.extra.get(field).ok_or_else(|| {
-            eyre!(
-                "The `{}` field is missing or has an unexpected structure in issue {}.",
-                field,
-                self.key
-            )
-        })?;
+        for field in &config.subsystems {
+            let pool = self.fields.extra.get(field);
 
-        let ssts: Vec<JiraSST> = serde_json::from_value(pool.clone()).wrap_err(eyre!(
-            "The subsystems field has an unexpected structure in issue {}:\n{:#?}",
+            if let Some(pool) = pool {
+                let ssts: Result<Vec<JiraSST>, serde_json::Error> =
+                    serde_json::from_value(pool.clone());
+
+                // If the field exist, try parsing it and returning the result.
+                // If the parsing fails, record the error for later.
+                match ssts {
+                    Ok(ssts) => {
+                        let sst_names = ssts.into_iter().map(|sst| sst.value).collect();
+                        return Ok(sst_names);
+                    }
+                    Err(error) => {
+                        errors.push(error.to_string());
+                    }
+                }
+            }
+        }
+
+        // No field produced a `Some` value.
+        // Prepare a user-readable list of errors, if any occurred.
+        let listed_errors = if errors.is_empty() {
+            String::new()
+        } else {
+            format!("\nThe following errors occurred:\n{}", errors.join("\n\n"))
+        };
+
+        // Return the combined error.
+        Err(eyre!(
+            "The subsystems field is missing or has an unexpected structure in issue {}.\n\
+                The configured fields are: {:?}\
+                {}",
             self.key,
-            pool
-        ))?;
-
-        let sst_names = ssts.into_iter().map(|sst| sst.value).collect();
-
-        Ok(sst_names)
+            &config.subsystems,
+            listed_errors
+        ))
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
