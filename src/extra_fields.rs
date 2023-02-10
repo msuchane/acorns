@@ -155,21 +155,15 @@ fn extract_field(extra: &Value, fields: &[String], id: impl fmt::Display) -> Res
             // The field exists and has a Some value. Try converting it to a string.
             let try_string = value.as_str().map(ToString::to_string);
 
-            match try_string {
-                Some(string) => {
-                    return Ok(string);
-                }
-                None => {
-                    let error = format!(
-                        "Field `{}` is not a string in ticket {}: {:?}",
-                        field, id, value
-                    );
-                    errors.push(error);
-                }
+            if let Some(string) = try_string {
+                return Ok(string);
+            } else {
+                let error = format!("Field `{field}` is not a string in ticket {id}: {value:?}");
+                errors.push(error);
             }
         } else {
             // The field doesn't exist.
-            let error = format!("Field `{}` is missing in ticket {}.", field, id);
+            let error = format!("Field `{field}` is missing in ticket {id}.");
             errors.push(error);
         }
     }
