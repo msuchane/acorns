@@ -115,7 +115,7 @@ pub trait IntoAbstract {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        config: &tracker::Instance,
+        config: &impl tracker::FieldsConfig,
     ) -> Result<AbstractTicket>;
 }
 
@@ -123,7 +123,7 @@ impl IntoAbstract for Bug {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        tracker: &tracker::Instance,
+        config: &impl tracker::FieldsConfig,
     ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
             id: Rc::new(TicketId {
@@ -132,13 +132,13 @@ impl IntoAbstract for Bug {
             }),
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: self.doc_type(&tracker.fields)?,
-            doc_text: self.doc_text(&tracker.fields)?,
-            target_releases: self.target_releases(&tracker.fields)?,
-            subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
-            doc_text_status: self.doc_text_status(&tracker.fields)?,
-            docs_contact: self.docs_contact(&tracker.fields),
-            url: self.url(tracker),
+            doc_type: self.doc_type(config)?,
+            doc_text: self.doc_text(config)?,
+            target_releases: self.target_releases(config)?,
+            subsystems: self.subsystems(config).map_err(|e| e.to_string()),
+            doc_text_status: self.doc_text_status(config)?,
+            docs_contact: self.docs_contact(config),
+            url: self.url(config),
             summary: self.summary,
             status: self.status,
             is_open: self.is_open,
@@ -170,17 +170,17 @@ impl IntoAbstract for Issue {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        tracker: &tracker::Instance,
+        config: &impl tracker::FieldsConfig,
     ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
-            doc_type: self.doc_type(&tracker.fields)?,
-            doc_text: self.doc_text(&tracker.fields)?,
+            doc_type: self.doc_type(config)?,
+            doc_text: self.doc_text(config)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_releases: self.target_releases(&tracker.fields)?,
-            doc_text_status: self.doc_text_status(&tracker.fields)?,
-            docs_contact: self.docs_contact(&tracker.fields),
-            subsystems: self.subsystems(&tracker.fields).map_err(|e| e.to_string()),
-            url: self.url(tracker),
+            target_releases: self.target_releases(config)?,
+            doc_text_status: self.doc_text_status(config)?,
+            docs_contact: self.docs_contact(config),
+            subsystems: self.subsystems(config).map_err(|e| e.to_string()),
+            url: self.url(config),
             // The ID in particular is wrapped in Rc because it's involved in various filters
             // and comparisons where ownership is complicated.
             id: Rc::new(TicketId {

@@ -193,14 +193,27 @@ pub mod tracker {
         }
     }
 
+    /// The required fields in the Bugzilla configuration.
+    /// They are slightly different from the required Jira fields.
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Fields {
+    pub struct BugzillaFields {
+        pub doc_type: Vec<String>,
+        pub doc_text: Vec<String>,
+        pub doc_text_status: Vec<String>,
+        pub target_release: Vec<String>,
+        pub subsystems: Vec<String>,
+    }
+
+    /// The required fields in the Jira configuration.
+    /// They are slightly different from the required Bugzilla fields.
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct JiraFields {
         pub doc_type: Vec<String>,
         pub doc_text: Vec<String>,
         pub doc_text_status: Vec<String>,
         pub docs_contact: Vec<String>,
-        pub target_release: Vec<String>,
         pub subsystems: Vec<String>,
     }
 
@@ -208,18 +221,97 @@ pub mod tracker {
     /// with a host URL and access credentials.
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Instance {
+    pub struct BugzillaInstance {
         pub host: String,
         pub api_key: Option<String>,
-        pub fields: Fields,
+        pub fields: BugzillaFields,
+    }
+
+    /// The particular instance of an issue tracker,
+    /// with a host URL and access credentials.
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct JiraInstance {
+        pub host: String,
+        pub api_key: Option<String>,
+        pub fields: JiraFields,
     }
 
     /// The issue tracker instances configured in the current release notes project.
     #[derive(Debug, Eq, PartialEq, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct Config {
-        pub jira: Instance,
-        pub bugzilla: Instance,
+        pub jira: JiraInstance,
+        pub bugzilla: BugzillaInstance,
+    }
+
+    /// Generalize over the different required fields in the Bugzilla and Jira configuration.
+    /// These trait methods expose a unified interface to both configurations.
+    pub trait FieldsConfig {
+        /// The configured names of the doc type field.
+        fn doc_type(&self) -> &[String];
+        /// The configured names of the doc text field.
+        fn doc_text(&self) -> &[String];
+        /// The configured names of the target release field.
+        fn target_release(&self) -> &[String];
+        /// The configured names of the subsystems field.
+        fn subsystems(&self) -> &[String];
+        /// The configured names of the doc text status field.
+        fn doc_text_status(&self) -> &[String];
+        /// The configured names of the docs contact field.
+        fn docs_contact(&self) -> &[String];
+        /// The configured URL to the instance host.
+        fn host(&self) -> &str;
+    }
+
+    impl FieldsConfig for BugzillaInstance {
+        fn doc_type(&self) -> &[String] {
+            &self.fields.doc_type
+        }
+        fn doc_text_status(&self) -> &[String] {
+            &self.fields.doc_text_status
+        }
+        fn target_release(&self) -> &[String] {
+            &self.fields.target_release
+        }
+        fn subsystems(&self) -> &[String] {
+            &self.fields.subsystems
+        }
+        fn doc_text(&self) -> &[String] {
+            &self.fields.doc_text
+        }
+        /// The docs contact field is standard in Bugzilla, so there's no configuration.
+        fn docs_contact(&self) -> &[String] {
+            &[]
+        }
+        fn host(&self) -> &str {
+            &self.host
+        }
+    }
+
+    impl FieldsConfig for JiraInstance {
+        fn doc_type(&self) -> &[String] {
+            &self.fields.doc_type
+        }
+        fn doc_text_status(&self) -> &[String] {
+            &self.fields.doc_text_status
+        }
+        /// The target release field is standard in Jira, so there's no configuration.
+        fn target_release(&self) -> &[String] {
+            &[]
+        }
+        fn subsystems(&self) -> &[String] {
+            &self.fields.subsystems
+        }
+        fn doc_text(&self) -> &[String] {
+            &self.fields.doc_text
+        }
+        fn docs_contact(&self) -> &[String] {
+            &self.fields.docs_contact
+        }
+        fn host(&self) -> &str {
+            &self.host
+        }
     }
 }
 

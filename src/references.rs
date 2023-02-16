@@ -76,7 +76,7 @@ impl ReferenceSignatures {
     fn store<T: IntoAbstract>(
         signatures: &mut HashMap<Arc<TicketQuery>, Vec<String>>,
         ref_issues: Vec<(Arc<TicketQuery>, T)>,
-        config: &tracker::Instance,
+        config: &impl tracker::FieldsConfig,
     ) -> Result<()> {
         for (query, issue) in ref_issues {
             let ticket = issue.into_abstract(None, config)?;

@@ -131,19 +131,19 @@ impl fmt::Display for Field {
 
 pub trait ExtraFields {
     /// Extract the doc type from the ticket.
-    fn doc_type(&self, config: &tracker::Fields) -> Result<String>;
+    fn doc_type(&self, config: &impl tracker::FieldsConfig) -> Result<String>;
     /// Extract the doc text from the ticket.
-    fn doc_text(&self, config: &tracker::Fields) -> Result<String>;
+    fn doc_text(&self, config: &impl tracker::FieldsConfig) -> Result<String>;
     /// Extract the target release from the ticket.
-    fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>>;
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>>;
     /// Extract the subsystems from the ticket.
-    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>>;
+    fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
-    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus>;
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus>;
     /// Extract the docs contact from the ticket.
-    fn docs_contact(&self, config: &tracker::Fields) -> DocsContact;
+    fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact;
     /// Construct a URL back to the original ticket online.
-    fn url(&self, tracker: &tracker::Instance) -> String;
+    fn url(&self, tracker: &impl tracker::FieldsConfig) -> String;
 }
 
 #[derive(Deserialize, Debug)]
@@ -200,7 +200,7 @@ fn extract_field(field_name: Field, extra: &Value, fields: &[String], id: Id) ->
     // If we at least got an existing but empty field, return an empty string.
     // I think it's safe to treat it as such.
     } else {
-        log::warn!("Fields are empty in {}: {}", id, empty_fields.join(", "));
+        log::warn!("Fields are empty in {}: {:?}", id, empty_fields);
         Ok(String::new())
     }
 }
@@ -242,18 +242,18 @@ fn error_chain(mut errors: Vec<Report>, field_name: Field, fields: &[String], id
 }
 
 impl ExtraFields for Bug {
-    fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let fields = &config.doc_type;
+    fn doc_type(&self, config: &impl tracker::FieldsConfig) -> Result<String> {
+        let fields = config.doc_type();
         extract_field(Field::DocType, &self.extra, fields, Id::BZ(self.id))
     }
 
-    fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let fields = &config.doc_text;
+    fn doc_text(&self, config: &impl tracker::FieldsConfig) -> Result<String> {
+        let fields = config.doc_text();
         extract_field(Field::DocText, &self.extra, fields, Id::BZ(self.id))
     }
 
-    fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let fields = &config.target_release;
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+        let fields = config.target_release();
 
         let release =
             match extract_field(Field::TargetRelease, &self.extra, fields, Id::BZ(self.id)) {
@@ -278,8 +278,8 @@ impl ExtraFields for Bug {
         }
     }
 
-    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let fields = &config.subsystems;
+    fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+        let fields = config.subsystems();
         let mut errors = Vec::new();
 
         for field in fields {
@@ -312,8 +312,8 @@ impl ExtraFields for Bug {
     /// If the flag is unset, treat it only as a warning, not a breaking error,
     /// and proceed with the default value.
     /// An unset RDT is a relatively common occurrence on Bugzilla.
-    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let fields = &config.doc_text_status;
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus> {
+        let fields = config.doc_text_status();
         let mut errors = Vec::new();
         // Record all empty but potentially okay fields.
         let mut empty_fields: Vec<&str> = Vec::new();
@@ -355,7 +355,7 @@ impl ExtraFields for Bug {
         }
     }
 
-    fn docs_contact(&self, _config: &tracker::Fields) -> DocsContact {
+    fn docs_contact(&self, _config: &impl tracker::FieldsConfig) -> DocsContact {
         if self.docs_contact.is_none() {
             log::warn!(
                 "The `docs_contact` field is missing in {}.",
@@ -367,8 +367,8 @@ impl ExtraFields for Bug {
         DocsContact(self.docs_contact.clone())
     }
 
-    fn url(&self, tracker: &tracker::Instance) -> String {
-        format!("{}/show_bug.cgi?id={}", tracker.host, &self.id)
+    fn url(&self, tracker: &impl tracker::FieldsConfig) -> String {
+        format!("{}/show_bug.cgi?id={}", tracker.host(), self.id)
     }
 }
 
@@ -383,8 +383,8 @@ struct JiraSST {
 }
 
 impl ExtraFields for Issue {
-    fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let fields = &config.doc_type;
+    fn doc_type(&self, config: &impl tracker::FieldsConfig) -> Result<String> {
+        let fields = config.doc_type();
         let mut errors = Vec::new();
 
         for field in fields {
@@ -416,8 +416,8 @@ impl ExtraFields for Issue {
         Err(report)
     }
 
-    fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
-        let fields = &config.doc_text;
+    fn doc_text(&self, config: &impl tracker::FieldsConfig) -> Result<String> {
+        let fields = config.doc_text();
         extract_field(
             Field::DocText,
             &self.fields.extra,
@@ -426,7 +426,7 @@ impl ExtraFields for Issue {
         )
     }
 
-    fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
+    fn target_releases(&self, _config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
         Ok(self
             .fields
             .fix_versions
@@ -436,8 +436,8 @@ impl ExtraFields for Issue {
             .collect())
     }
 
-    fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
-        let fields = &config.subsystems;
+    fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+        let fields = config.subsystems();
         // Record all errors that occur with tried fields that exist.
         let mut errors = Vec::new();
 
@@ -470,8 +470,8 @@ impl ExtraFields for Issue {
         Err(report)
     }
 
-    fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        let fields = &config.doc_text_status;
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus> {
+        let fields = config.doc_text_status();
         for field in fields {
             let rdt_field = self
                 .fields
@@ -495,8 +495,8 @@ impl ExtraFields for Issue {
         Err(report)
     }
 
-    fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
-        let fields = &config.docs_contact;
+    fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact {
+        let fields = config.docs_contact();
 
         for field in fields {
             let contact = self
@@ -520,7 +520,7 @@ impl ExtraFields for Issue {
         DocsContact(None)
     }
 
-    fn url(&self, tracker: &tracker::Instance) -> String {
-        format!("{}/browse/{}", tracker.host, &self.key)
+    fn url(&self, tracker: &impl tracker::FieldsConfig) -> String {
+        format!("{}/browse/{}", tracker.host(), &self.key)
     }
 }

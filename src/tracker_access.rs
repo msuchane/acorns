@@ -161,7 +161,7 @@ pub async fn unsorted_tickets(
 /// Convert bugs and issues into abstract tickets.
 fn into_annotated_tickets(
     issues: Vec<(Arc<TicketQuery>, impl IntoAbstract)>,
-    config: &tracker::Instance,
+    config: &impl tracker::FieldsConfig,
     ref_signatures: &ReferenceSignatures,
 ) -> Result<Vec<AnnotatedTicket>> {
     // Using an imperative style so that each `into_abstract` call can return an error.
