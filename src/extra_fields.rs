@@ -21,7 +21,7 @@ use std::fmt;
 use std::string::ToString;
 
 use color_eyre::{
-    eyre::{bail, eyre, WrapErr},
+    eyre::{bail, eyre},
     Report, Result,
 };
 use serde::Deserialize;
@@ -104,6 +104,31 @@ impl DocsContact {
     }
 }
 
+/// All the extra fields, so that we can implement a standardized
+/// user display string on them.
+#[derive(Clone, Copy)]
+enum Field {
+    DocType,
+    DocText,
+    TargetRelease,
+    Subsystems,
+    DocTextStatus,
+    DocsContact,
+}
+
+impl fmt::Display for Field {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::DocType => write!(f, "doc type"),
+            Self::DocText => write!(f, "doc text"),
+            Self::TargetRelease => write!(f, "target release"),
+            Self::Subsystems => write!(f, "subsystems"),
+            Self::DocTextStatus => write!(f, "doc text status"),
+            Self::DocsContact => write!(f, "docs contact"),
+        }
+    }
+}
+
 pub trait ExtraFields {
     /// Extract the doc type from the ticket.
     fn doc_type(&self, config: &tracker::Fields) -> Result<String>;
@@ -135,7 +160,7 @@ struct BzTeam {
 /// from a custom Bugzilla or Jira field.
 ///
 /// Returns an error is the field is missing or if it is not a string.
-fn extract_field(field_name: &str, extra: &Value, fields: &[String], id: Id) -> Result<String> {
+fn extract_field(field_name: Field, extra: &Value, fields: &[String], id: Id) -> Result<String> {
     // Record all errors that occur with tried fields that exist.
     let mut errors = Vec::new();
     // Record all empty but potentially okay fields.
@@ -158,12 +183,12 @@ fn extract_field(field_name: &str, extra: &Value, fields: &[String], id: Id) -> 
             if let Some(string) = try_string {
                 return Ok(string);
             } else {
-                let error = eyre!("Field `{field}` is not a string in ticket {id}: {value:?}");
+                let error = eyre!("Field `{field}` is not a string: {value:?}");
                 errors.push(error);
             }
         } else {
             // The field doesn't exist.
-            let error = eyre!("Field `{field}` is missing in ticket {id}.");
+            let error = eyre!("Field `{field}` is missing.");
             errors.push(error);
         }
     }
@@ -197,7 +222,7 @@ impl fmt::Display for Id<'_> {
 }
 
 /// Prepare a user-readable list of errors, reported in the order that they occurred.
-fn error_chain(mut errors: Vec<Report>, field_name: &str, fields: &[String], id: Id) -> Report {
+fn error_chain(mut errors: Vec<Report>, field_name: Field, fields: &[String], id: Id) -> Report {
     let top_error = eyre!(
         "The {} field is missing or malformed in {}.\n\
         The configured fields are: {:?}",
@@ -219,25 +244,27 @@ fn error_chain(mut errors: Vec<Report>, field_name: &str, fields: &[String], id:
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_type;
-        extract_field("doc type", &self.extra, fields, Id::BZ(self.id))
+        extract_field(Field::DocType, &self.extra, fields, Id::BZ(self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_text;
-        extract_field("doc text", &self.extra, fields, Id::BZ(self.id))
+        extract_field(Field::DocText, &self.extra, fields, Id::BZ(self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let fields = &config.target_release;
-        let release = match extract_field("target release", &self.extra, fields, Id::BZ(self.id)) {
-            Ok(release) => release,
-            Err(error) => {
-                // The target release field isn't critical. Log the problem
-                // and return an empty list of releases.
-                log::warn!("{error}");
-                return Ok(vec![]);
-            }
-        };
+
+        let release =
+            match extract_field(Field::TargetRelease, &self.extra, fields, Id::BZ(self.id)) {
+                Ok(release) => release,
+                Err(error) => {
+                    // The target release field isn't critical. Log the problem
+                    // and return an empty list of releases.
+                    log::warn!("{error}");
+                    return Ok(vec![]);
+                }
+            };
 
         // Bugzilla uses the "---" placeholder to represent an unset release.
         // TODO: Are there any more placeholder?
@@ -252,9 +279,10 @@ impl ExtraFields for Bug {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
+        let fields = &config.subsystems;
         let mut errors = Vec::new();
 
-        for field in &config.subsystems {
+        for field in fields {
             let pool_field = self.extra.get(field);
 
             if let Some(pool_field) = pool_field {
@@ -277,7 +305,7 @@ impl ExtraFields for Bug {
             }
         }
 
-        let report = error_chain(errors, "subsystems", &config.subsystems, Id::BZ(self.id));
+        let report = error_chain(errors, Field::Subsystems, fields, Id::BZ(self.id));
         Err(report)
     }
 
@@ -285,6 +313,7 @@ impl ExtraFields for Bug {
     /// and proceed with the default value.
     /// An unset RDT is a relatively common occurrence on Bugzilla.
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
+        let fields = &config.doc_text_status;
         let mut errors = Vec::new();
         // Record all empty but potentially okay fields.
         let mut empty_fields: Vec<&str> = Vec::new();
@@ -292,7 +321,7 @@ impl ExtraFields for Bug {
         // If the RDT flag is unset, use this:
         let default_rdt = DocTextStatus::InProgress;
 
-        for flag in &config.doc_text_status {
+        for flag in fields {
             if let Some(rdt) = self.get_flag(flag) {
                 match DocTextStatus::try_from(rdt) {
                     Ok(status) => {
@@ -313,12 +342,7 @@ impl ExtraFields for Bug {
 
         // If all we've got are errors, return an error with the complete errors report.
         if empty_fields.is_empty() {
-            let report = error_chain(
-                errors,
-                "doc text status",
-                &config.doc_text_status,
-                Id::BZ(self.id),
-            );
+            let report = error_chain(errors, Field::DocTextStatus, fields, Id::BZ(self.id));
             Err(report)
         // If we at least got an existing but empty field, return the default value.
         } else {
@@ -333,7 +357,10 @@ impl ExtraFields for Bug {
 
     fn docs_contact(&self, _config: &tracker::Fields) -> DocsContact {
         if self.docs_contact.is_none() {
-            log::warn!("The `docs_contact` field is missing in bug {}.", self.id);
+            log::warn!(
+                "The `docs_contact` field is missing in {}.",
+                Id::BZ(self.id)
+            );
         }
 
         // TODO: There's probably a way to avoid this clone.
@@ -357,9 +384,10 @@ struct JiraSST {
 
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
+        let fields = &config.doc_type;
         let mut errors = Vec::new();
 
-        for field in &config.doc_type {
+        for field in fields {
             let doc_type_field = self.fields.extra.get(field);
 
             if let Some(doc_type_field) = doc_type_field {
@@ -384,13 +412,18 @@ impl ExtraFields for Issue {
             };
         }
 
-        let report = error_chain(errors, "doc type", &config.doc_type, Id::Jira(&self.key));
+        let report = error_chain(errors, Field::DocType, fields, Id::Jira(&self.key));
         Err(report)
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_text;
-        extract_field("doc text", &self.fields.extra, fields, Id::Jira(&self.key))
+        extract_field(
+            Field::DocText,
+            &self.fields.extra,
+            fields,
+            Id::Jira(&self.key),
+        )
     }
 
     fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
@@ -404,10 +437,11 @@ impl ExtraFields for Issue {
     }
 
     fn subsystems(&self, config: &tracker::Fields) -> Result<Vec<String>> {
+        let fields = &config.subsystems;
         // Record all errors that occur with tried fields that exist.
         let mut errors = Vec::new();
 
-        for field in &config.subsystems {
+        for field in fields {
             let pool = self.fields.extra.get(field);
 
             if let Some(pool) = pool {
@@ -430,19 +464,15 @@ impl ExtraFields for Issue {
 
         // No field produced a `Some` value.
         // Prepare a user-readable list of errors, if any occurred.
-        let report = error_chain(
-            errors,
-            "subsystems",
-            &config.subsystems,
-            Id::Jira(&self.key),
-        );
+        let report = error_chain(errors, Field::Subsystems, fields, Id::Jira(&self.key));
 
         // Return the combined error.
         Err(report)
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
-        for field in &config.doc_text_status {
+        let fields = &config.doc_text_status;
+        for field in fields {
             let rdt_field = self
                 .fields
                 .extra
@@ -458,15 +488,17 @@ impl ExtraFields for Issue {
         // No field produced a `Some` value.
         let report = error_chain(
             Vec::new(),
-            "doc text status",
-            &config.doc_text_status,
+            Field::DocTextStatus,
+            fields,
             Id::Jira(&self.key),
         );
         Err(report)
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
-        for field in &config.docs_contact {
+        let fields = &config.docs_contact;
+
+        for field in fields {
             let contact = self
                 .fields
                 .extra
@@ -481,12 +513,7 @@ impl ExtraFields for Issue {
         }
 
         // No field produced a `Some` value.
-        let report = error_chain(
-            Vec::new(),
-            "docs contact",
-            &config.docs_contact,
-            Id::Jira(&self.key),
-        );
+        let report = error_chain(Vec::new(), Field::DocsContact, fields, Id::Jira(&self.key));
         // This field is non-critical.
         log::warn!("{report}");
 
