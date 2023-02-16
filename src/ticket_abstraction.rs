@@ -191,7 +191,7 @@ impl IntoAbstract for Issue {
             description: self.fields.description,
             is_open: &self.fields.status.name != "Closed",
             status: self.fields.status.name,
-            priority: self.fields.priority.name,
+            priority: self.fields.priority.map_or_else(|| "Missing".to_string(),|p| p.name),
             // Issues might not be assigned to anyone.
             assignee: self.fields.assignee.map(|a| a.name),
             components: self.fields.components.into_iter().map(|c| c.name).collect(),
