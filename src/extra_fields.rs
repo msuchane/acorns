@@ -22,7 +22,7 @@ use std::string::ToString;
 
 use color_eyre::{
     eyre::{bail, eyre, WrapErr},
-    Result,
+    Report, Result,
 };
 use serde::Deserialize;
 use serde_json::value::Value;
@@ -135,9 +135,9 @@ struct BzTeam {
 /// from a custom Bugzilla or Jira field.
 ///
 /// Returns an error is the field is missing or if it is not a string.
-fn extract_field(extra: &Value, fields: &[String], id: impl fmt::Display) -> Result<String> {
+fn extract_field(field_name: &str, extra: &Value, fields: &[String], id: Id) -> Result<String> {
     // Record all errors that occur with tried fields that exist.
-    let mut errors: Vec<String> = Vec::new();
+    let mut errors = Vec::new();
     // Record all empty but potentially okay fields.
     let mut empty_fields: Vec<&str> = Vec::new();
 
@@ -158,68 +158,85 @@ fn extract_field(extra: &Value, fields: &[String], id: impl fmt::Display) -> Res
             if let Some(string) = try_string {
                 return Ok(string);
             } else {
-                let error = format!("Field `{field}` is not a string in ticket {id}: {value:?}");
+                let error = eyre!("Field `{field}` is not a string in ticket {id}: {value:?}");
                 errors.push(error);
             }
         } else {
             // The field doesn't exist.
-            let error = format!("Field `{field}` is missing in ticket {id}.");
+            let error = eyre!("Field `{field}` is missing in ticket {id}.");
             errors.push(error);
         }
     }
 
     // If all we've got are errors, return an error with the complete errors report.
     if empty_fields.is_empty() {
-        let listed_errors = readable_errors(&errors);
-        Err(eyre!(
-            "Fields are missing or malformed in ticket {}:\n{}{}",
-            id,
-            fields.join(", "),
-            listed_errors
-        ))
+        let report = error_chain(errors, field_name, fields, id);
+        Err(report)
     // If we at least got an existing but empty field, return an empty string.
     // I think it's safe to treat it as such.
     } else {
-        log::warn!(
-            "Fields are empty in ticket {}: {}",
-            id,
-            empty_fields.join(", ")
-        );
+        log::warn!("Fields are empty in {}: {}", id, empty_fields.join(", "));
         Ok(String::new())
     }
 }
 
-/// Prepare a user-readable list of errors, if any occurred.
-fn readable_errors(errors: &[String]) -> String {
-    if errors.is_empty() {
-        String::new()
-    } else {
-        format!("\nThe following errors occurred:\n{}", errors.join("\n"))
+/// An enum to standardize the error reporting of Bugzilla and Jira tickets.
+#[derive(Clone, Copy)]
+enum Id<'a> {
+    BZ(i32),
+    Jira(&'a str),
+}
+
+impl fmt::Display for Id<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::BZ(id) => write!(f, "bug {id}"),
+            Self::Jira(id) => write!(f, "ticket {id}"),
+        }
+    }
+}
+
+/// Prepare a user-readable list of errors, reported in the order that they occurred.
+fn error_chain(mut errors: Vec<Report>, field_name: &str, fields: &[String], id: Id) -> Report {
+    let top_error = eyre!(
+        "The {} field is missing or malformed in {}.\n\
+        The configured fields are: {:?}",
+        field_name,
+        id,
+        fields
+    );
+
+    errors.reverse();
+
+    let report = errors.into_iter().reduce(Report::wrap_err);
+
+    match report {
+        Some(report) => report.wrap_err(top_error),
+        None => top_error,
     }
 }
 
 impl ExtraFields for Bug {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_type;
-        extract_field(&self.extra, fields, self.id)
-            .wrap_err_with(|| eyre!("Failed to extract the doc type of bug {}.", self.id))
+        extract_field("doc type", &self.extra, fields, Id::BZ(self.id))
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_text;
-        extract_field(&self.extra, fields, self.id)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text of bug {}.", self.id))
+        extract_field("doc text", &self.extra, fields, Id::BZ(self.id))
     }
 
     fn target_releases(&self, config: &tracker::Fields) -> Result<Vec<String>> {
         let fields = &config.target_release;
-        let release = if let Ok(release) = extract_field(&self.extra, fields, self.id) {
-            release
-        } else {
-            // The target release field isn't critical. Log the problem
-            // and return an empty list of releases.
-            log::warn!("Failed to extract the target release of bug {}.", self.id);
-            return Ok(vec![]);
+        let release = match extract_field("target release", &self.extra, fields, Id::BZ(self.id)) {
+            Ok(release) => release,
+            Err(error) => {
+                // The target release field isn't critical. Log the problem
+                // and return an empty list of releases.
+                log::warn!("{error}");
+                return Ok(vec![]);
+            }
         };
 
         // Bugzilla uses the "---" placeholder to represent an unset release.
@@ -252,41 +269,66 @@ impl ExtraFields for Bug {
                     }
 
                     // If the parsing resulted in an error, save the error for later.
-                    Err(error) => errors.push(error.to_string()),
+                    Err(error) => errors.push(error.into()),
                 }
             } else {
-                let error = format!("Field `{}` is missing in bug {}.", field, self.id);
+                let error = eyre!("Field `{}` is missing", field);
                 errors.push(error);
             }
         }
 
-        let listed_errors = readable_errors(&errors);
-
-        Err(eyre!(
-            "The pool field is missing or malformed in bug {}.\n\
-            The configured fields are: {:?}{}",
-            self.id,
-            &config.subsystems,
-            listed_errors
-        ))
+        let report = error_chain(errors, "subsystems", &config.subsystems, Id::BZ(self.id));
+        Err(report)
     }
 
+    /// If the flag is unset, treat it only as a warning, not a breaking error,
+    /// and proceed with the default value.
+    /// An unset RDT is a relatively common occurrence on Bugzilla.
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
+        let mut errors = Vec::new();
+        // Record all empty but potentially okay fields.
+        let mut empty_fields: Vec<&str> = Vec::new();
+
         // If the RDT flag is unset, use this:
-        let default_rdt = "?";
+        let default_rdt = DocTextStatus::InProgress;
 
-        let flag = &config.doc_text_status[0];
+        for flag in &config.doc_text_status {
+            if let Some(rdt) = self.get_flag(flag) {
+                match DocTextStatus::try_from(rdt) {
+                    Ok(status) => {
+                        return Ok(status);
+                    }
+                    Err(error) => {
+                        errors.push(eyre!(
+                            "Failed to extract the doc text status from flag {}.",
+                            flag
+                        ));
+                        errors.push(error);
+                    }
+                }
+            } else {
+                empty_fields.push(flag);
+            }
+        }
 
-        // If the flag is unset, treat it only as a warning, not a breaking error,
-        // and proceed with the default value.
-        // An unset RDT is a relatively common occurence on Bugzilla.
-        let rdt = self.get_flag(flag).unwrap_or_else(|| {
-            log::warn!("The `{}` flag is missing in bug {}.", flag, self.id);
-            default_rdt
-        });
-
-        DocTextStatus::try_from(rdt)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text status of bug {}.", self.id))
+        // If all we've got are errors, return an error with the complete errors report.
+        if empty_fields.is_empty() {
+            let report = error_chain(
+                errors,
+                "doc text status",
+                &config.doc_text_status,
+                Id::BZ(self.id),
+            );
+            Err(report)
+        // If we at least got an existing but empty field, return the default value.
+        } else {
+            log::warn!(
+                "Flags are empty in {}: {}",
+                Id::BZ(self.id),
+                empty_fields.join(", ")
+            );
+            Ok(default_rdt)
+        }
     }
 
     fn docs_contact(&self, _config: &tracker::Fields) -> DocsContact {
@@ -335,8 +377,7 @@ impl ExtraFields for Issue {
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
         let fields = &config.doc_text;
-        extract_field(&self.fields.extra, fields, &self.key)
-            .wrap_err_with(|| eyre!("Failed to extract the doc text of issue {}.", &self.key))
+        extract_field("doc text", &self.fields.extra, fields, Id::Jira(&self.key))
     }
 
     fn target_releases(&self, _config: &tracker::Fields) -> Result<Vec<String>> {
@@ -368,7 +409,7 @@ impl ExtraFields for Issue {
                         return Ok(sst_names);
                     }
                     Err(error) => {
-                        errors.push(error.to_string());
+                        errors.push(error.into());
                     }
                 }
             }
@@ -376,17 +417,15 @@ impl ExtraFields for Issue {
 
         // No field produced a `Some` value.
         // Prepare a user-readable list of errors, if any occurred.
-        let listed_errors = readable_errors(&errors);
+        let report = error_chain(
+            errors,
+            "subsystems",
+            &config.subsystems,
+            Id::Jira(&self.key),
+        );
 
         // Return the combined error.
-        Err(eyre!(
-            "The subsystems field is missing or has an unexpected structure in issue {}.\n\
-                The configured fields are: {:?}\
-                {}",
-            self.key,
-            &config.subsystems,
-            listed_errors
-        ))
+        Err(report)
     }
 
     fn doc_text_status(&self, config: &tracker::Fields) -> Result<DocTextStatus> {
