@@ -357,22 +357,35 @@ struct JiraSST {
 
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &tracker::Fields) -> Result<String> {
-        let field = &config.doc_type[0];
-        let doc_type_field = self
-            .fields
-            .extra
-            .get(field)
-            .ok_or_else(|| eyre!("The `{}` field is missing in issue {}.", field, self.key))?;
-        let doc_type: JiraDocType =
-            serde_json::from_value(doc_type_field.clone()).wrap_err_with(|| {
-                eyre!(
-                    "The doc type field has an unexpected structure in issue {}:\n{:#?}",
-                    self.key,
-                    doc_type_field
-                )
-            })?;
+        let mut errors = Vec::new();
 
-        Ok(doc_type.value)
+        for field in &config.doc_type {
+            let doc_type_field = self.fields.extra.get(field);
+
+            if let Some(doc_type_field) = doc_type_field {
+                let doc_type: Result<JiraDocType, serde_json::Error> =
+                    serde_json::from_value(doc_type_field.clone());
+
+                match doc_type {
+                    Ok(doc_type) => {
+                        return Ok(doc_type.value);
+                    }
+                    Err(error) => {
+                        errors.push(eyre!(
+                            "The `{}` field has an unexpected structure:\n{:#?}",
+                            field,
+                            doc_type_field
+                        ));
+                        errors.push(error.into());
+                    }
+                }
+            } else {
+                errors.push(eyre!("The `{}` field is missing.", field));
+            };
+        }
+
+        let report = error_chain(errors, "doc type", &config.doc_type, Id::Jira(&self.key));
+        Err(report)
     }
 
     fn doc_text(&self, config: &tracker::Fields) -> Result<String> {
@@ -443,12 +456,13 @@ impl ExtraFields for Issue {
         }
 
         // No field produced a `Some` value.
-        Err(eyre!(
-            "The doc text status field is missing or has an unexpected structure in issue {}.\n\
-                    The configured fields are: {:?}",
-            self.key,
-            &config.doc_text_status
-        ))
+        let report = error_chain(
+            Vec::new(),
+            "doc text status",
+            &config.doc_text_status,
+            Id::Jira(&self.key),
+        );
+        Err(report)
     }
 
     fn docs_contact(&self, config: &tracker::Fields) -> DocsContact {
@@ -467,11 +481,14 @@ impl ExtraFields for Issue {
         }
 
         // No field produced a `Some` value.
-        log::warn!(
-            "The docs contact field is missing or has an unexpected structure in issue {}.",
-            self.key
+        let report = error_chain(
+            Vec::new(),
+            "docs contact",
+            &config.docs_contact,
+            Id::Jira(&self.key),
         );
-        log::warn!("The configured fields are: {:?}", &config.docs_contact);
+        // This field is non-critical.
+        log::warn!("{report}");
 
         DocsContact(None)
     }
