@@ -276,9 +276,9 @@ fn parse_tickets(tickets_file: &Path) -> Result<Vec<TicketQuery>> {
 /// Parse the specified tracker file into the trackers configuration.
 fn parse_trackers(trackers_file: &Path) -> Result<tracker::Config> {
     let text = fs::read_to_string(trackers_file)
-        .wrap_err("Cannot read the tickets configuration file.")?;
+        .wrap_err("Cannot read the trackers configuration file.")?;
     let trackers: tracker::Config =
-        serde_yaml::from_str(&text).wrap_err("Cannot parse the tickets configuration file.")?;
+        serde_yaml::from_str(&text).wrap_err("Cannot parse the trackers configuration file.")?;
     log::debug!("{:#?}", trackers);
 
     Ok(trackers)
