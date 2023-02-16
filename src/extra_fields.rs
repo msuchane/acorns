@@ -355,12 +355,26 @@ impl ExtraFields for Bug {
         }
     }
 
-    fn docs_contact(&self, _config: &impl tracker::FieldsConfig) -> DocsContact {
+    fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact {
+        let fields = config.docs_contact();
+        let mut errors = Vec::new();
+
+        // Try the custom overrides, if any.
+        let docs_contact = extract_field(Field::DocsContact, &self.extra, fields, Id::BZ(self.id));
+
+        match docs_contact {
+            Ok(docs_contact) => {
+                return DocsContact(Some(docs_contact));
+            }
+            Err(error) => {
+                errors.push(error);
+            }
+        }
+
+        // No override succeeded. See if there's a value in the standard field.
         if self.docs_contact.is_none() {
-            log::warn!(
-                "The `docs_contact` field is missing in {}.",
-                Id::BZ(self.id)
-            );
+            let report = error_chain(errors, Field::DocsContact, fields, Id::BZ(self.id));
+            log::warn!("{report}");
         }
 
         // TODO: There's probably a way to avoid this clone.

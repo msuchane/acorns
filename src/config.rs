@@ -203,6 +203,8 @@ pub mod tracker {
         pub doc_text_status: Vec<String>,
         pub target_release: Vec<String>,
         pub subsystems: Vec<String>,
+        /// This field is standard, but you can override it.
+        pub docs_contact: Option<Vec<String>>,
     }
 
     /// The required fields in the Jira configuration.
@@ -215,6 +217,8 @@ pub mod tracker {
         pub doc_text_status: Vec<String>,
         pub docs_contact: Vec<String>,
         pub subsystems: Vec<String>,
+        /// This field is standard, but you can override it.
+        pub target_release: Option<Vec<String>>,
     }
 
     /// The particular instance of an issue tracker,
@@ -280,9 +284,13 @@ pub mod tracker {
         fn doc_text(&self) -> &[String] {
             &self.fields.doc_text
         }
-        /// The docs contact field is standard in Bugzilla, so there's no configuration.
+        /// The docs contact field is standard in Bugzilla, but you can override it.
+        /// An empty slice signifies that the user entered no configuration.
         fn docs_contact(&self) -> &[String] {
-            &[]
+            match &self.fields.docs_contact {
+                Some(field) => field,
+                None => &[],
+            }
         }
         fn host(&self) -> &str {
             &self.host
@@ -296,9 +304,13 @@ pub mod tracker {
         fn doc_text_status(&self) -> &[String] {
             &self.fields.doc_text_status
         }
-        /// The target release field is standard in Jira, so there's no configuration.
+        /// The docs contact field is standard in Jira, but you can override it.
+        /// An empty slice signifies that the user entered no configuration.
         fn target_release(&self) -> &[String] {
-            &[]
+            match &self.fields.target_release {
+                Some(field) => field,
+                None => &[],
+            }
         }
         fn subsystems(&self) -> &[String] {
             &self.fields.subsystems
