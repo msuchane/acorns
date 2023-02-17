@@ -261,7 +261,7 @@ impl ExtraFields for Bug {
                 Err(error) => {
                     // The target release field isn't critical. Log the problem
                     // and return an empty list of releases.
-                    log::warn!("{error}");
+                    log::warn!("{:?}", error);
                     return Ok(vec![]);
                 }
             };
@@ -374,7 +374,7 @@ impl ExtraFields for Bug {
         // No override succeeded. See if there's a value in the standard field.
         if self.docs_contact.is_none() {
             let report = error_chain(errors, Field::DocsContact, fields, Id::BZ(self.id));
-            log::warn!("{report}");
+            log::warn!("{:?}", report);
         }
 
         // TODO: There's probably a way to avoid this clone.
@@ -422,7 +422,7 @@ impl ExtraFields for Issue {
                     }
                 }
             } else {
-                errors.push(eyre!("The `{}` field is missing.", field));
+                errors.push(eyre!("The `{field}` field is missing."));
             };
         }
 
@@ -440,14 +440,46 @@ impl ExtraFields for Issue {
         )
     }
 
-    fn target_releases(&self, _config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
-        Ok(self
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+        let fields = config.target_release();
+        let mut errors = Vec::new();
+
+        for field in fields {
+            if let Some(field) = self.extra.get(field) {
+                let jira_versions: Result<Vec<jira_query::Version>, serde_json::Error> =
+                    serde_json::from_value(field.clone());
+
+                match jira_versions {
+                    Ok(vec) => {
+                        let versions: Vec<String> =
+                            vec.iter().map(|version| version.name.clone()).collect();
+                        return Ok(versions);
+                    }
+                    Err(error) => {
+                        errors.push(error.into());
+                    }
+                }
+            } else {
+                errors.push(eyre!("The `{field}` field is missing."));
+            }
+        }
+
+        // If any errors occurred, report them as warnings and continue.
+        if !errors.is_empty() {
+            let report = error_chain(errors, Field::TargetRelease, fields, Id::Jira(&self.key));
+            log::warn!("The custom target releases failed. Falling back on the standard fix versions field.\n{:?}", report);
+        }
+
+        // Always fall back on the standard field.
+        let standard_field = self
             .fields
             .fix_versions
             .iter()
             // TODO: Get rid of the clone if possible
             .map(|version| version.name.clone())
-            .collect())
+            .collect();
+
+        Ok(standard_field)
     }
 
     fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
@@ -529,7 +561,7 @@ impl ExtraFields for Issue {
         // No field produced a `Some` value.
         let report = error_chain(Vec::new(), Field::DocsContact, fields, Id::Jira(&self.key));
         // This field is non-critical.
-        log::warn!("{report}");
+        log::warn!("{:?}", report);
 
         DocsContact(None)
     }
