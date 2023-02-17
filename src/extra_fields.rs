@@ -135,7 +135,7 @@ pub trait ExtraFields {
     /// Extract the doc text from the ticket.
     fn doc_text(&self, config: &impl tracker::FieldsConfig) -> Result<String>;
     /// Extract the target release from the ticket.
-    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>>;
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Vec<String>;
     /// Extract the subsystems from the ticket.
     fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
@@ -252,29 +252,43 @@ impl ExtraFields for Bug {
         extract_field(Field::DocText, &self.extra, fields, Id::BZ(self.id))
     }
 
-    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Vec<String> {
         let fields = config.target_release();
+        let mut errors = Vec::new();
 
-        let release =
-            match extract_field(Field::TargetRelease, &self.extra, fields, Id::BZ(self.id)) {
-                Ok(release) => release,
-                Err(error) => {
-                    // The target release field isn't critical. Log the problem
-                    // and return an empty list of releases.
-                    log::warn!("{:?}", error);
-                    return Ok(vec![]);
-                }
-            };
+        // Try the custom overrides, if any.
+        match extract_field(Field::TargetRelease, &self.extra, fields, Id::BZ(self.id)) {
+            Ok(release) => {
+                // Bugzilla uses the "---" placeholder to represent an unset release.
+                // TODO: Are there any more placeholder?
+                let empty_values = ["---"];
 
-        // Bugzilla uses the "---" placeholder to represent an unset release.
-        // TODO: Are there any more placeholder?
-        let empty_values = ["---"];
+                // If the release is unset, return no releases. If it's set, return that one release.
+                let in_list = if empty_values.contains(&release.as_str()) {
+                    vec![]
+                } else {
+                    vec![release]
+                };
+                return in_list
+            }
+            Err(error) => {
+                // The target release field isn't critical. Record the problem
+                // and proceed.
+                errors.push(error);
+            }
+        }
 
-        // If the release is unset, return no releases. If it's set, return that one release.
-        if empty_values.contains(&release.as_str()) {
-            Ok(vec![])
-        } else {
-            Ok(vec![release])
+        // Fall back on the standard field
+        match &self.target_release {
+            Some(bugzilla_query::Version::One(version)) => vec![version.clone()],
+            Some(bugzilla_query::Version::Many(versions)) => versions.clone(),
+            None => {
+                let report = error_chain(errors, Field::TargetRelease, fields, Id::BZ(self.id));
+                log::warn!("{report}");
+
+                // Finally, return an empty list if everything else failed.
+                Vec::new()
+            }
         }
     }
 
@@ -440,7 +454,7 @@ impl ExtraFields for Issue {
         )
     }
 
-    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {
+    fn target_releases(&self, config: &impl tracker::FieldsConfig) -> Vec<String> {
         let fields = config.target_release();
         let mut errors = Vec::new();
 
@@ -453,7 +467,7 @@ impl ExtraFields for Issue {
                     Ok(vec) => {
                         let versions: Vec<String> =
                             vec.iter().map(|version| version.name.clone()).collect();
-                        return Ok(versions);
+                        return versions;
                     }
                     Err(error) => {
                         errors.push(error.into());
@@ -465,7 +479,7 @@ impl ExtraFields for Issue {
                     serde_json::from_value(value.clone());
                 match string_versions {
                     Ok(vec) => {
-                        return Ok(vec);
+                        return vec;
                     }
                     Err(error) => {
                         errors.push(error.into());
@@ -481,7 +495,7 @@ impl ExtraFields for Issue {
                 );
                 match string {
                     Ok(string) => {
-                        return Ok(vec![string]);
+                        return vec![string];
                     }
                     Err(error) => {
                         errors.push(error);
@@ -494,8 +508,12 @@ impl ExtraFields for Issue {
 
         // If any errors occurred, report them as warnings and continue.
         if !errors.is_empty() {
-            let report = error_chain(errors, Field::TargetRelease, fields, Id::Jira(&self.key));
-            log::warn!("The custom target releases failed. Falling back on the standard fix versions field.\n{:?}", report);
+            let id = Id::Jira(&self.key);
+            let report = error_chain(errors, Field::TargetRelease, fields, id);
+            log::warn!("The custom target releases failed in {}. Falling back on the standard fix versions field.", id);
+
+            // Provide this additional information on demand.
+            log::debug!("{:?}", report);
         }
 
         // Always fall back on the standard field.
@@ -507,7 +525,7 @@ impl ExtraFields for Issue {
             .map(|version| version.name.clone())
             .collect();
 
-        Ok(standard_field)
+        standard_field
     }
 
     fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>> {

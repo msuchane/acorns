@@ -134,7 +134,7 @@ impl IntoAbstract for Bug {
             description: None,
             doc_type: self.doc_type(config)?,
             doc_text: self.doc_text(config)?,
-            target_releases: self.target_releases(config)?,
+            target_releases: self.target_releases(config),
             subsystems: self.subsystems(config).map_err(|e| e.to_string()),
             doc_text_status: self.doc_text_status(config)?,
             docs_contact: self.docs_contact(config),
@@ -176,7 +176,7 @@ impl IntoAbstract for Issue {
             doc_type: self.doc_type(config)?,
             doc_text: self.doc_text(config)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_releases: self.target_releases(config)?,
+            target_releases: self.target_releases(config),
             doc_text_status: self.doc_text_status(config)?,
             docs_contact: self.docs_contact(config),
             subsystems: self.subsystems(config).map_err(|e| e.to_string()),

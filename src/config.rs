@@ -201,9 +201,9 @@ pub mod tracker {
         pub doc_type: Vec<String>,
         pub doc_text: Vec<String>,
         pub doc_text_status: Vec<String>,
-        pub target_release: Vec<String>,
         pub subsystems: Vec<String>,
-        /// This field is standard, but you can override it.
+        /// These fields are standard, but you can override them.
+        pub target_release: Option<Vec<String>>,
         pub docs_contact: Option<Vec<String>>,
     }
 
@@ -276,7 +276,10 @@ pub mod tracker {
             &self.fields.doc_text_status
         }
         fn target_release(&self) -> &[String] {
-            &self.fields.target_release
+            match &self.fields.target_release {
+                Some(field) => field,
+                None => &[],
+            }
         }
         fn subsystems(&self) -> &[String] {
             &self.fields.subsystems
