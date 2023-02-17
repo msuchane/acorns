@@ -445,10 +445,10 @@ impl ExtraFields for Issue {
         let mut errors = Vec::new();
 
         for field in fields {
-            if let Some(field) = self.extra.get(field) {
+            if let Some(value) = self.fields.extra.get(field) {
+                // Try to deserialize as the standard fix versions, only in a custom field.
                 let jira_versions: Result<Vec<jira_query::Version>, serde_json::Error> =
-                    serde_json::from_value(field.clone());
-
+                    serde_json::from_value(value.clone());
                 match jira_versions {
                     Ok(vec) => {
                         let versions: Vec<String> =
@@ -459,8 +459,36 @@ impl ExtraFields for Issue {
                         errors.push(error.into());
                     }
                 }
+
+                // Try to deserialize as a simple list of strings.
+                let string_versions: Result<Vec<String>, serde_json::Error> =
+                    serde_json::from_value(value.clone());
+                match string_versions {
+                    Ok(vec) => {
+                        return Ok(vec);
+                    }
+                    Err(error) => {
+                        errors.push(error.into());
+                    }
+                }
+
+                // Try to deserialize as a single string.
+                let string = extract_field(
+                    Field::TargetRelease,
+                    &self.extra,
+                    &[field.clone()],
+                    Id::Jira(&self.key),
+                );
+                match string {
+                    Ok(string) => {
+                        return Ok(vec![string]);
+                    }
+                    Err(error) => {
+                        errors.push(error);
+                    }
+                }
             } else {
-                errors.push(eyre!("The `{field}` field is missing."));
+                errors.push(eyre!("The `{field}` field is missing"));
             }
         }
 
