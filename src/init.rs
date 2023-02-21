@@ -16,6 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*!
+a Cizrna subcommand that initializes an empty directory with all the necessary Cizrna configuration files.
+
+This makes it more convenient to set up a new release notes project from scratch.
+*/
+
 use std::fs;
 use std::path::Path;
 
