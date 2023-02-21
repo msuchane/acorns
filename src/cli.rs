@@ -101,4 +101,10 @@ pub enum Commands {
         )]
         new_config: PathBuf,
     },
+    /// Create a sample release notes project with basic configuration.
+    Init {
+        /// Path to the project directory. The default is the current working directory.
+        #[arg(value_parser, value_name = "DIR", default_value = ".")]
+        directory: PathBuf,
+    },
 }

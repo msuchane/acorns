@@ -75,6 +75,7 @@ pub fn run(cli: &Cli) -> Result<()> {
         } => {
             convert::convert(legacy_config, new_config)?;
         }
+        Commands::Init { directory } => todo!(),
     }
 
     Ok(())

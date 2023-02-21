@@ -269,7 +269,7 @@ impl ExtraFields for Bug {
                 } else {
                     vec![release]
                 };
-                return in_list
+                return in_list;
             }
             Err(error) => {
                 // The target release field isn't critical. Record the problem
