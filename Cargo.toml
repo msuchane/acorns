@@ -31,6 +31,7 @@ chrono = ">=0.4.20"
 counter = "^0.5"
 regex = "1.7"
 once_cell = "1.17"
+include_dir = "0.7"
 # To keep MSRV down:
 clap_lex = "=0.3.0"
 

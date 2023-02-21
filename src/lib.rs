@@ -37,6 +37,7 @@ pub mod cli;
 mod config;
 mod convert;
 mod extra_fields;
+mod init;
 mod logging;
 mod note;
 mod references;
@@ -75,7 +76,8 @@ pub fn run(cli: &Cli) -> Result<()> {
         } => {
             convert::convert(legacy_config, new_config)?;
         }
-        Commands::Init { directory } => todo!(),
+        Commands::Init { directory } => init::initialize_directory(directory)
+            .wrap_err("Failed to initialize the project directory.")?,
     }
 
     Ok(())
