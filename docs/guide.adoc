@@ -6,19 +6,49 @@
 
 == Installing {name}
 
-. Enable the {name} package repository:
+* On Fedora, CentOS Stream, or RHEL, use link:https://copr.fedorainfracloud.org/coprs/mareksu/cizrna/[the Copr repository]:
+
+.. Enable the repository:
 +
-[subs="+quotes,+attributes"]
 ----
-# dnf copr enable mareksu/{bin-name}
+# dnf copr enable mareksu/cizrna
 ----
 
-. Install the package:
+.. Install the `cizrna` package:
 +
-[subs="+quotes,+attributes"]
 ----
-# dnf install {bin-name}
+# dnf install cizrna
 ----
+
+* On any system that has the Docker or Podman container platform, you can use {name} as a container.
++
+On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following commands.
+
+.. Download the image:
++
+----
+$ docker pull quay.io/msuchane/cizrna
+----
+
+.. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
++
+----
+alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/cizrna:Z msuchane/cizrna cizrna"
+----
+
+.. Open a new terminal to reload the shell configuration.
+
+* On any system, including different Linux distributions and macOS, you can build {name} from source:
+
+.. Install the Rust toolchain se described at <https://rustup.rs/>.
+
+.. Build and install {name} from its Git repository:
++
+----
+$ cargo install --git https://github.com/msuchane/cizrna/
+----
++
+If the build fails due to a missing dependency, install the missing dependency on your system and start the build again.
 
 == Building release notes
 
