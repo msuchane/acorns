@@ -1,0 +1,16 @@
+:_content-type: REFERENCE
+
+[id="differences-between-cizrna-and-corn-3_{context}"]
+= Differences between Cizrna and CoRN 3
+
+{name} is a successor to the previous CoRN release notes generator, version 3. If you are migrating from CoRN 3 to {name}, compare the different format of the configuration files and generated files:
+
+[options="header"]
+|====
+| CoRN 3 files | {name} files
+| `corn.yaml` | `{bin-name}/tickets.yaml`
+| `corn-template/` | `{bin-name}/templates.yaml`
+| `corn-generated-external/` | `{bin-name}/generated/external/`
+| `corn-generated-internal/` | `{bin-name}/generated/internal/`
+| `corn-generated-internal/status-table.html` | `{bin-name}/generated/status-table.html`
+|====

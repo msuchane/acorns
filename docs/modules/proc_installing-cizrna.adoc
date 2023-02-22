@@ -1,0 +1,66 @@
+:_content-type: PROCEDURE
+
+[id="installing-cizrna_{context}"]
+= Installing Cizrna
+
+Install the {name} release notes generator on your system, so that you can run it locally.
+
+.Procedure
+
+* On Fedora, CentOS Stream, or RHEL, use link:{copr-repo}[the Copr repository]:
+
+.. Enable the repository:
++
+[subs="+attributes"]
+----
+# dnf copr enable {copr-repo-slug}
+----
+
+.. Install the `cizrna` package:
++
+[subs="+attributes"]
+----
+# dnf install {bin-name}
+----
+
+* On any system that has the Docker or Podman container platform, you can use {name} as a container.
++
+On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following commands.
+
+.. Download the image:
++
+[subs="+attributes"]
+----
+$ docker pull {container-repo}
+----
+
+.. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
++
+[subs="+attributes"]
+----
+alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
+----
+
+.. Open a new terminal to reload the shell configuration.
+
+* On any system, including different Linux distributions and macOS, you can build {name} from source:
+
+.. Install the Rust toolchain se described at <https://rustup.rs/>.
+
+.. Build and install {name} from its Git repository:
++
+[subs="+attributes"]
+----
+$ cargo install --git {git-repo}
+----
++
+If the build fails due to a missing dependency, install the missing dependency on your system and start the build again.
+
+.Verification
+
+* Try running `{bin-name}`:
++
+[subs="+attributes"]
+----
+$ {bin-name} --version
+----

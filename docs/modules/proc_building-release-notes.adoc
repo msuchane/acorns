@@ -1,0 +1,51 @@
+:_content-type: PROCEDURE
+
+[id="building-release-notes_{context}"]
+= Building release notes
+
+Build a release notes project in a local directory that contains your {name} configuration files.
+
+.Prerequisites
+
+* You have installed {name}.
+* You have directory with a valid release notes project configuration.
+
+.Procedure
+
+. Navigate to your release notes project:
++
+[subs=+quotes]
+----
+$ cd _my-release-notes_
+----
+
+. Set your API keys for Bugzilla and Jira:
++
+[subs=+quotes]
+----
+$ export BZ_API_KEY=__my-bugzilla-key__
+$ export JIRA_API_KEY=__my-jira-key__
+----
+
+. Generate release notes:
++
+[subs="+quotes,+attributes"]
+----
+$ {bin-name} build
+----
+
+. Compile the external and internal version of the AsciiDoc document:
++
+----
+$ asciidoctor --safe -vn main.adoc
+
+$ asciidoctor --safe -vn internal.adoc
+----
+
+. Preview the document:
++
+----
+$ gio open main.html
+
+$ gio open internal.html
+----

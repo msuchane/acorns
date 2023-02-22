@@ -1,124 +1,38 @@
-:toc: left
-:name: Cizrna
-:bin-name: cizrna
+include::attributes.adoc[]
 
 = Generating release notes using {name}
 
-== Installing {name}
+This guide describes how to use the {name} release notes generator to create, maintain, and publish release notes from a combination of manually written documentation and generated ticket descriptions.
 
-* On Fedora, CentOS Stream, or RHEL, use link:https://copr.fedorainfracloud.org/coprs/mareksu/cizrna/[the Copr repository]:
+== Prerequisites
 
-.. Enable the repository:
+* The commands listed in this guide assume that you are using a shell compatible with the Bourne shell syntax, such as Bash or ZSH.
 +
-----
-# dnf copr enable mareksu/cizrna
-----
-
-.. Install the `cizrna` package:
+If you are using an incompatible shell, such as Fish, adjust the syntax.
 +
-----
-# dnf install cizrna
-----
-
-* On any system that has the Docker or Podman container platform, you can use {name} as a container.
-+
-On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following commands.
-
-.. Download the image:
-+
-----
-$ docker pull quay.io/msuchane/cizrna
-----
-
-.. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
-+
-----
-alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/cizrna:Z msuchane/cizrna cizrna"
-----
-
-.. Open a new terminal to reload the shell configuration.
-
-* On any system, including different Linux distributions and macOS, you can build {name} from source:
-
-.. Install the Rust toolchain se described at <https://rustup.rs/>.
-
-.. Build and install {name} from its Git repository:
-+
-----
-$ cargo install --git https://github.com/msuchane/cizrna/
-----
-+
-If the build fails due to a missing dependency, install the missing dependency on your system and start the build again.
-
-== Creating a new release notes project
-
-. Create all configuration files that are necessary to generate release notes using {name}:
-+
-[subs="+quotes,+attributes"]
-----
-$ {bin-name} init __path-to-directory__
-----
-+
-Replace `__path-to-directory__` with the directory where you want to store your release notes configuration.
-
-. Examine the newly populated directory.
-+
-See the `README.adoc` file in the directory for a description of the directory layout.
-
-== Building release notes
-
-. Navigate to your release notes project:
+For example, the following Bourne shell syntax to declare a variable does not work in Fish:
 +
 [subs=+quotes]
 ----
-$ cd _my-release-notes_
-----
-
-. Set your API keys for Bugzilla and Jira:
-+
-[subs=+quotes]
-----
-$ export BZ_API_KEY=__my-bugzilla-key__
 $ export JIRA_API_KEY=__my-jira-key__
 ----
-
-. Generate release notes:
 +
-[subs="+quotes,+attributes"]
-----
-$ {bin-name} build
-----
-
-. Compile the external and internal version of the AsciiDoc document:
+Instead, use the Fish syntax:
 +
+[subs=+quotes]
 ----
-$ asciidoctor --safe -vn main.adoc
-
-$ asciidoctor --safe -vn internal.adoc
-----
-
-. Preview the document:
-+
-----
-$ gio open main.html
-
-$ gio open internal.html
+$ set -x JIRA_API_KEY __my-jira-key__
 ----
 
+include::modules/proc_installing-cizrna.adoc[leveloffset=+1]
 
-== Differences between {name} and CoRN
+include::modules/proc_creating-a-new-release-notes-project.adoc[leveloffset=+1]
 
-Compare the different format of the configuration files:
+include::modules/proc_building-release-notes.adoc[leveloffset=+1]
 
-* `corn-template` and `{bin-name}/templates.yaml`
+include::modules/ref_differences-between-cizrna-and-corn-3.adoc[leveloffset=+1]
 
-* `corn.yaml` and `{bin-name}/tickets.yaml`
-
-Also compare the structure of the generated files:
-
-* `corn-generated-external/` and `{bin-name}/generated/`
 
 == Known issues and limitations
 
-See the issues in the {name} repository: link:https://github.com/msuchane/{bin-name}/issues[].
-
+See the issues in the {name} repository: link:{git-repo}/issues[].
