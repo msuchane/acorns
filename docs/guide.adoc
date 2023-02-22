@@ -28,7 +28,13 @@ include::modules/proc_installing-cizrna.adoc[leveloffset=+1]
 
 include::modules/proc_creating-a-new-release-notes-project.adoc[leveloffset=+1]
 
+include::modules/proc_configuring-access-to-your-ticket-trackers.adoc[leveloffset=+1]
+
+include::modules/proc_adding-tickets-to-your-project.adoc[leveloffset=+1]
+
 include::modules/proc_building-release-notes.adoc[leveloffset=+1]
+
+include::modules/proc_sorting-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
 
 include::modules/ref_differences-between-cizrna-and-corn-3.adoc[leveloffset=+1]
 

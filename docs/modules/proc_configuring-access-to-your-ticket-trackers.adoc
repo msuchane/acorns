@@ -1,0 +1,42 @@
+:_content-type: PROCEDURE
+
+[id="configuring-access-to-your-ticket-trackers_{context}"]
+= Configuring access to your ticket trackers
+
+The default, sample project configuration tries to access ticket trackers that do not exist. Configure your release notes project to connect with trackers that host your tickets.
+
+For the purpose of this document, a _ticket tracker_ is either *Bugzilla* or *Jira*. In the future, {name} might add support for additional trackers or remove support for current ones.
+
+.Prerequisites
+
+* A bulleted list of conditions that must be satisfied before the user starts the steps in this module.
+* Prerequisites can be full sentences or sentence fragments; however, prerequisite list items must be parallel.
+
+.Procedure
+
+. Make each step an instruction.
+
+. Include one command or action for each step with the exception of simple follow-step, for example:
+.. Do this thing and then select *Next*.
+.. Do this other thing and then select *Next*.
+
+. Use an unnumbered bullet (*) if the procedure includes only one step.
+
+.Verification
+
+. Provide an example of expected command output or a pop-up window that the user receives when the procedure is successful.
+
+. List actions for the user to complete, such as entering a command, to determine the success or failure of the procedure.
+
+. Make each step an instruction.
+
+. Include one command or action per step.
+
+. Use an unnumbered bullet (*) if the verification includes only one step.
+
+[role="_additional-resources"]
+.Additional resources
+* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
+* For more details on writing procedure modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+
