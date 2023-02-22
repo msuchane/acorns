@@ -3,6 +3,8 @@
 [id="sorting-tickets-in-your-project-using-templates_{context}"]
 = Sorting tickets in your project using templates
 
+WARNING: This is currently just a template and a placeholder. The documentation will appear later.
+
 The default, sample project configuration sorts your release notes based on their doc type, as found in the tickets. You can configure your templates to sort release notes in a custom way, such as into sections nested by doc type and component.
 
 .Prerequisites
