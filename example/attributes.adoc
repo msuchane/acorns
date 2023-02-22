@@ -1,0 +1,28 @@
+// Show the table of contents
+:toc: left
+// Enable 'experimental' features like the kbd:[Key] macro.
+:experimental:
+
+// The product described by the release notes
+:ProductName: My Software Product
+:ProductShortName: MSP
+// The version of the product described in the release notes
+:ProductNumber: 1.2.3
+// The product name with the current version
+:Product: {ProductName}{nbsp}{ProductNumber}
+:ProductShort: {ProductName}{nbsp}{ProductNumber}
+
+// The name of the book
+:ProjectName: Release notes for {ProductShort}
+// The subtitle of the book
+:Subtitle: Release Notes for Red Hat Enterprise Linux 9.2 Beta
+
+// The abstract of the book
+:Abstract: The release notes provide high-level coverage of the improvements and additions that have been implemented in {Product} and document known problems in this release, as well as notable bug fixes, Technology Previews, deprecated functionality, and other details.
+
+// The name of the book for the purposes of {context}
+:ProjectNameID: release-notes
+
+:Year: 2023
+
+:imagesdir: images
