@@ -1,5 +1,6 @@
 :toc: left
 :doctype: book
+:source-highlighter: highlight.js
 
 :name: Cizrna
 :bin-name: cizrna

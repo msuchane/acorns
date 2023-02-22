@@ -36,7 +36,7 @@ $ docker pull {container-repo}
 
 .. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
 +
-[subs="+attributes"]
+[source,bash,subs="+attributes"]
 ----
 alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
 ----
