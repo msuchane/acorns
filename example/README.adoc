@@ -20,4 +20,4 @@ Configures access to your Bugzilla and Jira instance.
 Configures how your tickets are sorted into sections of the document.
 
 `cizrna/generated/internal/` and `cizrna/generated/internal/`::
-Store the generated assemblies and modules.
+Store the generated assemblies and modules. These directories only appear when you let Cizrna generate documentation files. At every run, Cizrna removes and recreates these files.
