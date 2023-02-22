@@ -61,26 +61,9 @@ $ {bin-name} init __path-to-directory__
 +
 Replace `__path-to-directory__` with the directory where you want to store your release notes configuration.
 
-. Examine the generated directory.
+. Examine the newly populated directory.
 +
-This directory provides a demo of a release notes documentation project. It uses the Cizrna tool to generate release notes from Bugzilla and Jira tickets.
-
-** The `master_template.adoc` file is the main AsciiDoc file. It includes both generated and manually written content.
-
-** The `master_internal.adoc` and `master_external.adoc` files are wrappers around `master_template.adoc`. They enable you to select between an internal preview and a public version of the documentation.
-
-** The `manual-sections` directory contains manually written AsciiDoc content that you can include from the main file.
-
-** The `cizrna/` directory contains generator configuration files and generated AsciiDoc content that you can include from the main file:
-
-*** `cizrna/tickets.yaml` lists the tickets and ticket queries that populate your release notes.
-
-*** `cizrna/tracker.yaml` configures access to your Bugzilla and Jira instance.
-
-*** `cizrna/templates.yaml` configures how your tickets are sorted into sections of the document.
-
-*** `cizrna/generated/internal/` and `cizrna/generated/internal/` store the generated assemblies and modules.
-
+See the `README.adoc` file in the directory for a description of the directory layout.
 
 == Building release notes
 
@@ -106,24 +89,22 @@ $ export JIRA_API_KEY=__my-jira-key__
 $ {bin-name} build
 ----
 
-. Compile the AsciiDoc files:
+. Compile the external and internal version of the AsciiDoc document:
 +
 ----
 $ asciidoctor --safe -vn main.adoc
+
+$ asciidoctor --safe -vn internal.adoc
 ----
 
 . Preview the document:
 +
 ----
 $ gio open main.html
+
+$ gio open internal.html
 ----
 
-////
-. Switch between the internal and external (public) version of the document. Use either of the following ways:
-
-** When building the document, add the `--attribute=variant=internal` or `--attribute=variant=public` option on the command line.
-** In the `main.adoc` file, edit the line that says `:variant: internal` to `:variant: public`, or vice versa.
-////
 
 == Differences between {name} and CoRN
 

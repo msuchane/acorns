@@ -1,0 +1,23 @@
+= Readme: Layout of the release notes project directory
+
+This directory provides configuration for a release notes documentation project. It uses the Cizrna tool to generate release notes from Bugzilla and Jira tickets.
+
+* The `main.adoc` file is the main, entry-point AsciiDoc file. It includes both generated and manually written content. It compiles as an external version of the document, suitable for publication.
+
+* The `internal.adoc` file is a wrapper around `main.adoc`. It enables you to select an internal preview of the documentation, rather than the default external version.
+
+* The `manual-content/` directory contains manually written AsciiDoc content that you can include from the main file.
+
+* The `cizrna/` directory contains generator configuration files and generated AsciiDoc content that you can include from the main file:
+
+`cizrna/tickets.yaml`::
+Lists the tickets and ticket queries that populate your release notes.
+
+`cizrna/tracker.yaml`::
+Configures access to your Bugzilla and Jira instance.
+
+`cizrna/templates.yaml`::
+Configures how your tickets are sorted into sections of the document.
+
+`cizrna/generated/internal/` and `cizrna/generated/internal/`::
+Store the generated assemblies and modules.
