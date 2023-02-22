@@ -30,7 +30,7 @@ include::modules/proc_creating-a-new-release-notes-project.adoc[leveloffset=+1]
 
 include::modules/proc_configuring-access-to-your-ticket-trackers.adoc[leveloffset=+1]
 
-include::modules/proc_identifying-field-code-names-in-jira.adoc[leveloffset=+1]
+include::modules/proc_identifying-code-names-of-tracker-fields.adoc[leveloffset=+1]
 
 include::modules/ref_required-and-optional-fields-in-tracker-configuration.adoc[leveloffset=+1]
 

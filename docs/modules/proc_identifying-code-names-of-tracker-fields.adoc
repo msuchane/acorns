@@ -1,0 +1,38 @@
+:_content-type: PROCEDURE
+
+[id="identifying-code-names-of-tracker-fields_{context}"]
+= Identifying code names of tracker fields
+
+To access your Bugzilla and Jira instance, you must know the internal code names that the tracker gives to your documentation fields. The following procedure identifies the field code names.
+
+.Prerequisites
+
+* You have logged into your ticket tracker.
+
+.Procedure
+
+. Open a ticket that has your documentation fields.
+
+. In Bugzilla, click *Show advanced fields* if you cannot see your documentation fields.
+
+. Right-click the name of a documentation field, such as the *Doc Type* or *Release note text* field.
+
+. In the right-click menu, select *Inspect*.
+
+. Your web browser displays a toolbar that lists the elements of the web page, and highlights the element that represents the selected documentation field.
+
+. Find the code name of the field in the `label` tag:
+
+** With Bugzilla:
++
+[source,html,subs="+quotes"]
+----
+<label for="__cf_release_notes__">
+----
+
+** With Jira:
++
+[source,html,subs="+quotes"]
+----
+<label for="__customfield_12345678__">
+----

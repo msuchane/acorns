@@ -79,5 +79,5 @@ jira:
 
 [role="_additional-resources"]
 .Additional resources
-* xref:identifying-field-code-names-in-jira_{context}[]
+* xref:identifying-code-names-of-tracker-fields_{context}[]
 * xref:required-and-optional-fields-in-tracker-configuration_{context}[]
