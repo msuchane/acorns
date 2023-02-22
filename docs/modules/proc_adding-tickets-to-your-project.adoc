@@ -17,7 +17,9 @@ The default, sample project configuration lists tickets that do not exist. Popul
 
 . Remove or comment out the sample configuration, which points to non-existent tickets.
 
-. Add several tickets that contain release note documentation in the following format:
+. Add several tickets that contain release note documentation in the following format.
++
+NOTE: To test a new release notes project, it is recommended to add tickets that cover all possible doc types.
 
 ** Bugzilla tickets are identified by their ID number:
 +
