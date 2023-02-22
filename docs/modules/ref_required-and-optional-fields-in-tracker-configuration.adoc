@@ -3,32 +3,120 @@
 [id="required-and-optional-fields-in-tracker-configuration_{context}"]
 = Required and optional fields in tracker configuration
 
-Write a short introductory paragraph that provides an overview of the module.
+The `{bin-name}/trackers.yaml` configuration file requires certain configuration fields and exposes several optional ones.
 
-A reference module provides data that users might want to look up, but do not need to remember. It has a very strict structure, often in the form of a list or a table.
-A well-organized reference module enables users to scan it quickly to find the details they want.
-AsciiDoc markup to consider for reference data:
+.Bugzilla configuration
 
-.Unordered list
-* For more details on writing reference modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles.
-For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+[source,yaml]
+----
+bugzilla:
+  host: "https://bugzilla.host.org"
+  fields:
+    # Required
+    doc_type:
+      - "cf_doc_type"
+    doc_text:
+      - "cf_release_notes"
+    doc_text_status:
+      - "requires_doc_text"
+    # Optional
+    docs_contact:
+      - "cf_my_docs_contact"
+    target_release:
+      - "cf_internal_target_release"
+    subsystems:
+      - "pool"
+----
 
-.Labeled list
-Term 1:: Definition
-Term 2:: Definition
+The following fields are required:
 
-.Table
-[options="header"]
-|====
-|Column 1|Column 2|Column 3
-|Row 1, column 1|Row 1, column 2|Row 1, column 3
-|Row 2, column 1|Row 2, column 2|Row 2, column 3
-|====
+`host`::
+The base URL to your Bugzilla instance.
 
-[role="_additional-resources"]
-.Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing reference modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+`doc_type`::
+The code name of the *Doc Type* field, which is probably a drop-down menu of values.
 
+`doc_text`::
+The code name of the *Doc Text* field, which is a text box that contains your release note.
+
+`doc_text_status`::
+The code name of the flag that describes the status of the release note.
+
+The following fields are optional:
+
+`docs_contact`::
+By default, {name} uses the standard Bugzilla *Docs Contact* field. You can override it with a custom field.
+
+`target_release`::
+By default, {name} uses the standard Bugzilla *Target Release* field. You can override it with a custom field.
+
+`subsystems`::
+This field is required only if you configure your templates to sort using the subsystem.
++
+Currently, this field expects an *Agile Pool* menu.
+
+
+.Jira configuration
+
+[source,yaml]
+----
+jira:
+  host: "https://jira.host.org"
+  fields:
+    # Required
+    doc_type:
+      - "customfield_12345678"
+    doc_text:
+      - "customfield_23456789"
+    doc_text_status:
+      - "customfield_34567890"
+    docs_contact:
+      - "customfield_45678901"
+    # Optional
+    target_release:
+      - "customfield_56789012"
+    subsystems:
+      - "customfield_67890123"
+
+----
+
+The following fields are required:
+
+`host`::
+The base URL to your Jira instance.
+
+`doc_type`::
+The code name of the field that lists the type of the release note. It is a drop-down menu of values.
+
+`doc_text`::
+The code name of the field that contains your release note. It is a text box.
+
+`doc_text_status`::
+The code name of the field that lists the status of the release note. It is a drop-down menu of values.
+
+The following fields are optional:
+
+`target_release`::
+By default, {name} uses the standard Jira *Fix Version/s* field. You can override it with a custom field.
+
+`subsystems`::
+This field is required only if you configure your templates to sort using the subsystem. It is a drop-down menu of values.
+
+
+.Several possible code names
+
+Settings in the `fields` section always accept a list of code names that {name} tries out successively.
+
+For example, if you use Jira tickets from three different projects that each set a different doc text field, you can list all field code names:
+
+[source,yaml]
+----
+jira:
+  host: "https://jira.host.org"
+  fields:
+    # All possible code names
+    doc_text:
+      - "customfield_23456789"
+      - "customfield_34567890"
+      - "customfield_45678901"
+----
