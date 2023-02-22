@@ -236,7 +236,7 @@ impl Document {
         let json_status_file = generated_dir.join("status-table.json");
         log::debug!("Writing file: {}", json_status_file.display());
         fs::write(json_status_file, &self.json_status)
-            .wrap_err("Failed to write teh JSON status.")?;
+            .wrap_err("Failed to write the JSON status.")?;
 
         Ok(())
     }

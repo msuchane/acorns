@@ -31,7 +31,7 @@ use include_dir::{include_dir, Dir, DirEntry};
 /// The `example` directory in the Cizrna source repository.
 static EXAMPLE_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/example");
 
-/// Copy example configuration files into teh selected directory.
+/// Copy example configuration files into the selected directory.
 ///
 /// If the directory doesn't exist, create it.
 pub fn initialize_directory(dir: &Path) -> Result<()> {

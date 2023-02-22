@@ -97,7 +97,7 @@ impl From<TicketQueryEntry> for TicketQuery {
 ///
 /// This is practically an enum. The later processing of this struct rejects
 /// variants where both or none of the fields are `Some`.
-/// However, using an actual enum would cause problems with teh YaML representation
+/// However, using an actual enum would cause problems with the YaML representation
 /// in the configuration file, because serde_yaml distinguishes variants using tags,
 /// which aren't well supported in editors. Therefore, this struct emulates an enum
 /// and provides a readable YaML syntax.

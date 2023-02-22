@@ -10,7 +10,7 @@ chapters:
     filter:
       # This filter sorts tickets by their doc type.
       # All tickets that have a doc type of "Enhancement", "Release Note", or "Feature"
-      # appear in the "New features" chapter of teh document.
+      # appear in the "New features" chapter of the document.
       doc_type: ["Enhancement", "Release Note", "Feature"]
 
   - title: "Bug fixes"
