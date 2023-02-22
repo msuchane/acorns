@@ -9,34 +9,75 @@ For the purpose of this document, a _ticket tracker_ is either *Bugzilla* or *Ji
 
 .Prerequisites
 
-* A bulleted list of conditions that must be satisfied before the user starts the steps in this module.
-* Prerequisites can be full sentences or sentence fragments; however, prerequisite list items must be parallel.
+* You have installed {name}.
+* You have initialized a directory with sample release notes project configuration.
 
 .Procedure
 
-. Make each step an instruction.
+. Navigate to your release notes project:
++
+[subs=+quotes]
+----
+$ cd _my-release-notes_
+----
 
-. Include one command or action for each step with the exception of simple follow-step, for example:
-.. Do this thing and then select *Next*.
-.. Do this other thing and then select *Next*.
+. Open the `{bin-name}/trackers.yaml` file in an editor.
 
-. Use an unnumbered bullet (*) if the procedure includes only one step.
+. Configure access to your Bugzilla and Jira instance.
++
+NOTE: Currently, {name} requires configuration for both trackers. If you are only using one, you can enter empty, invalid values for the other, unused trackers. {name} only uses the configuration on demand.
+
+** In the `bugzilla` section, fill out the following, required fields for Bugzilla:
++
+[source,yaml]
+----
+bugzilla:
+  host: "https://bugzilla.host.org"
+  fields:
+    doc_type:
+      - "cf_doc_type"
+    doc_text:
+      - "cf_release_notes"
+    doc_text_status:
+      - "requires_doc_text"
+----
++
+`host`:: The base URL to your Bugzilla instance.
+`doc_type`:: The code name of the *Doc Type* field, which is probably a drop-down menu of values.
+`doc_text`:: The code name of the *Doc Text* field, which is a text box that contains your release note.
+`doc_text_status`:: The code name of the flag that describes the status of the release note.
+
+
+** In the `jira` section, fill out the following, required fields for Jira:
++
+[source,yaml]
+----
+jira:
+  host: "https://jira.host.org"
+  fields:
+    doc_type:
+      - "customfield_12345678"
+    doc_text:
+      - "customfield_23456789"
+    doc_text_status:
+      - "customfield_34567890"
+    docs_contact:
+      - "customfield_45678901"
+----
++
+`host`:: The base URL to your Jira instance.
+`doc_type`:: The code name of the field that lists the type of the release note. It is a drop-down menu of values.
+`doc_text`:: The code name of the field that contains your release note. It is a text box.
+`doc_text_status`:: The code name of the field that lists the status of the release note. It is a drop-down menu of values.
 
 .Verification
 
-. Provide an example of expected command output or a pop-up window that the user receives when the procedure is successful.
+. Add tickets to your release notes project.
 
-. List actions for the user to complete, such as entering a command, to determine the success or failure of the procedure.
+. Build the release notes.
 
-. Make each step an instruction.
-
-. Include one command or action per step.
-
-. Use an unnumbered bullet (*) if the verification includes only one step.
 
 [role="_additional-resources"]
 .Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing procedure modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-
+* xref:identifying-field-code-names-in-jira_{context}[]
+* xref:required-and-optional-fields-in-tracker-configuration_{context}[]

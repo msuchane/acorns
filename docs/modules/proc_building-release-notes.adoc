@@ -8,7 +8,8 @@ Build a release notes project in a local directory that contains your {name} con
 .Prerequisites
 
 * You have installed {name}.
-* You have directory with a valid release notes project configuration.
+* You have configured access to your tickets trackers.
+* You have added tickets to your release notes project configuration.
 
 .Procedure
 
