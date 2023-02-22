@@ -7,34 +7,35 @@ The default, sample project configuration lists tickets that do not exist. Popul
 
 .Prerequisites
 
-* A bulleted list of conditions that must be satisfied before the user starts the steps in this module.
-* Prerequisites can be full sentences or sentence fragments; however, prerequisite list items must be parallel.
+* You have installed {name}.
+* You have initialized a directory with sample release notes project configuration.
+* You have configured tracker access.
 
 .Procedure
 
-. Make each step an instruction.
+. In your release notes project, open the `{bin-name}/tickets.yaml` file in an editor.
 
-. Include one command or action for each step with the exception of simple follow-step, for example:
-.. Do this thing and then select *Next*.
-.. Do this other thing and then select *Next*.
+. Remove or comment out the sample configuration, which points to non-existent tickets.
 
-. Use an unnumbered bullet (*) if the procedure includes only one step.
+. Add several tickets that contain release note documentation in the following format:
 
-.Verification
+** Bugzilla tickets are identified by their ID number:
++
+[source,yaml,subs="quotes"]
+----
+- [BZ, key: __1234567__]
+- [BZ, key: __2345678__]
+----
 
-. Provide an example of expected command output or a pop-up window that the user receives when the procedure is successful.
+** Jira tickets are identified by their key, which consists of the project name and a number:
++
+[source,yaml,subs="quotes"]
+----
+- [Jira, key: __PROJECTA-123456__]
+- [Jira, key: __PROJECTB-234567__]
+----
 
-. List actions for the user to complete, such as entering a command, to determine the success or failure of the procedure.
-
-. Make each step an instruction.
-
-. Include one command or action per step.
-
-. Use an unnumbered bullet (*) if the verification includes only one step.
 
 [role="_additional-resources"]
 .Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing procedure modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-
+* For additional ways to specify tickets, such as search or overrides, see xref:alternative-methods-to-specify-tickets_{context}[].

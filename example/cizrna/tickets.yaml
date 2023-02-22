@@ -20,4 +20,4 @@
 - [Jira, search: 'project="CentOS Stream" AND priority=Blocker']
 
 ### This JQL query identifies an existing filter and lists all tickets from the filter.
-- [Jira, search: 'filter = 12404639']
+- [Jira, search: 'filter = 12345678']

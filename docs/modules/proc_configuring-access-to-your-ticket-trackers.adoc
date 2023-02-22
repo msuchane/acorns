@@ -14,14 +14,7 @@ For the purpose of this document, a _ticket tracker_ is either *Bugzilla* or *Ji
 
 .Procedure
 
-. Navigate to your release notes project:
-+
-[subs=+quotes]
-----
-$ cd _my-release-notes_
-----
-
-. Open the `{bin-name}/trackers.yaml` file in an editor.
+. In your release notes project, open the `{bin-name}/trackers.yaml` file in an editor.
 
 . Configure access to your Bugzilla and Jira instance.
 +

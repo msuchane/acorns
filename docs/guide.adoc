@@ -36,6 +36,8 @@ include::modules/ref_required-and-optional-fields-in-tracker-configuration.adoc[
 
 include::modules/proc_adding-tickets-to-your-project.adoc[leveloffset=+1]
 
+include::modules/ref_alternative-methods-to-specify-tickets.adoc[leveloffset=+1]
+
 include::modules/proc_building-release-notes.adoc[leveloffset=+1]
 
 include::modules/proc_sorting-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
