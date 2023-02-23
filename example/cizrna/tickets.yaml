@@ -1,0 +1,23 @@
+# This file identifies tickets to download from ticket trackers and process as release notes.
+
+## These tickets are listed individually, using their IDs.
+
+### Jira tickets:
+- [Jira, key: PROJECTA-123456]
+- [Jira, key: PROJECTB-234567]
+- [Jira, key: PROJECTC-345678]
+
+### Bugzilla tickets:
+- [BZ, key: 1234567]
+- [BZ, key: 2345678]
+
+## These are queries that result in multiple tickets.
+
+### This is a Bugzilla query copied from the URL of a Bugzilla search.
+- [BZ, search: 'bug_status=VERIFIED&bug_status=CLOSED&product=Our Container Platform&target_release=1.23.0']
+
+### This is a standard JQL query.
+- [Jira, search: 'project="CentOS Stream" AND priority=Blocker']
+
+### This JQL query identifies an existing filter and lists all tickets from the filter.
+- [Jira, search: 'filter = 12345678']

@@ -1,0 +1,43 @@
+:_content-type: PROCEDURE
+
+[id="specifying-tickets_{context}"]
+= Specifying tickets
+
+To add tickets to your project, specify them in the `tickets.yaml` configuration file.
+
+.Prerequisites
+
+* You have installed {name}.
+* You have initialized a directory with sample release notes project configuration.
+* You have configured tracker access.
+
+.Procedure
+
+. In your release notes project, open the `{bin-name}/tickets.yaml` file in an editor.
+
+. Remove or comment out the sample configuration, which points to non-existent tickets.
+
+. Add several tickets that contain release note documentation in the following format.
++
+NOTE: To test a new release notes project, it is recommended to add tickets that cover all possible doc types.
+
+** Bugzilla tickets are identified by their ID number:
++
+[source,yaml,subs="quotes"]
+----
+- [BZ, key: __1234567__]
+- [BZ, key: __2345678__]
+----
+
+** Jira tickets are identified by their key, which consists of the project name and a number:
++
+[source,yaml,subs="quotes"]
+----
+- [Jira, key: __PROJECTA-123456__]
+- [Jira, key: __PROJECTB-234567__]
+----
+
+
+[role="_additional-resources"]
+.Additional resources
+* For additional ways to specify tickets, such as search or overrides, see xref:alternative-methods-to-specify-tickets_{context}[].

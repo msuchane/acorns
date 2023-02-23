@@ -1,0 +1,49 @@
+:_content-type: PROCEDURE
+
+[id="sorting-tickets-in-your-project-using-templates_{context}"]
+= Structuring templates
+
+To structure your templates, edit the settings in the `templates.yaml` configuration file.
+
+.Prerequisites
+
+* You have installed {name}.
+* You have configured access to your tickets trackers.
+* You have added tickets to your release notes project configuration.
+
+.Procedure
+
+. In your release notes project, open the `{bin-name}/templates.yaml` file in an editor.
+
+. Decide how you want to sort your release notes:
+
+** In a relatively small project with few release notes, you might want to continue sorting just by one property of release notes, such as just by doc type, just by component, or just by subsystem.
++
+In this case, keep the `chapters` section of the configuration file and edit the rules in it.
+
+** In a relatively large project with many release notes, you might want to further divide your release notes by several properties, which results in several levels of nested sections. For example, you can sort by doc type at the base level and further divide each doc type chapter into subsections based on components.
++
+In this case:
+
+.. Add the `sections` section at the top of the configuration file, where you define the deeper levels of nested sorting.
+.. Edit the rules in the `chapters` section of the configuration file. Include the sorting rules that you defined in the `sections` section. Use the YaML anchors syntax to include previously defined rules.
+
+. Rebuild your release notes and examine the generated files in the `{bin-name}/generated/internal/` directory.
+
+. Include the generated files in your `main.adoc` file.
+
+.Verification
+
+. Build an HTML preview of the internal document:
++
+----
+# asciidoctor --safe -vn internal.adoc
+----
+
+. Open the preview and check the section structure.
+
+
+[role="_additional-resources"]
+.Additional resources
+* For a complete description of the syntax in the `templates.yaml` file, see xref:available-options-to-sort-release-notes_{context}[].
+* For the process that creates AsciiDoc files from the template configuration, see xref:documentation-files-generated-from-templates_{context}[].

@@ -1,0 +1,45 @@
+include::attributes.adoc[]
+
+[id={context}]
+= Generating release notes using {name}
+
+This guide describes how to use the {name} release notes generator to create, maintain, and publish release notes from a combination of manually written documentation and generated ticket descriptions.
+
+== Prerequisites
+
+* The commands listed in this guide assume that you are using a shell compatible with the Bourne shell syntax, such as Bash or ZSH.
++
+If you are using an incompatible shell, such as Fish, adjust the syntax.
++
+For example, the following Bourne shell syntax to declare a variable does not work in Fish:
++
+[subs=+quotes]
+----
+$ export JIRA_API_KEY=__my-jira-key__
+----
++
+Instead, use the Fish syntax:
++
+[subs=+quotes]
+----
+$ set -x JIRA_API_KEY __my-jira-key__
+----
+
+include::modules/proc_installing-cizrna.adoc[leveloffset=+1]
+
+include::modules/proc_creating-a-new-release-notes-project.adoc[leveloffset=+1]
+
+include::assembly_enabling-access-to-your-ticket-trackers.adoc[leveloffset=+1]
+
+include::assembly_adding-tickets-to-your-project.adoc[leveloffset=+1]
+
+include::modules/proc_building-release-notes.adoc[leveloffset=+1]
+
+include::assembly_sorting-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
+
+include::modules/ref_differences-between-cizrna-and-corn-3.adoc[leveloffset=+1]
+
+
+== Known issues and limitations
+
+See the issues in the {name} repository: link:{git-repo}/issues[].

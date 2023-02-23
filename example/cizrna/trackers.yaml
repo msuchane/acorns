@@ -1,0 +1,23 @@
+# Configure your Bugzilla instance:
+bugzilla:
+  host: "https://bugzilla.host.org"
+  fields:
+    doc_type:
+      - "cf_doc_type"
+    doc_text:
+      - "cf_release_notes"
+    doc_text_status:
+      - "requires_doc_text"
+
+# Configure your Jira instance:
+jira:
+  host: "https://jira.host.org"
+  fields:
+    doc_type:
+      - "customfield_12345678"
+    doc_text:
+      - "customfield_23456789"
+    doc_text_status:
+      - "customfield_34567890"
+    docs_contact:
+      - "customfield_45678901"

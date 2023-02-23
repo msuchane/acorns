@@ -1,0 +1,28 @@
+ifdef::context[:parent-context-of-enabling-access-to-your-ticket-trackers: {context}]
+
+:_content-type: ASSEMBLY
+
+ifndef::context[]
+[id="enabling-access-to-your-ticket-trackers"]
+endif::[]
+ifdef::context[]
+[id="enabling-access-to-your-ticket-trackers_{context}"]
+endif::[]
+= Enabling access to your ticket trackers
+
+:context: enabling-access-to-your-ticket-trackers
+
+The default, sample project configuration tries to access ticket trackers that do not exist. Configure your release notes project to connect with trackers that host your tickets.
+
+For the purpose of this document, a _ticket tracker_ is either *Bugzilla* or *Jira*. In the future, {name} might add support for additional trackers or remove support for current ones.
+
+include::modules/proc_configuring-trackers.adoc[leveloffset=+1]
+
+include::modules/proc_identifying-code-names-of-tracker-fields.adoc[leveloffset=+1]
+
+include::modules/ref_required-and-optional-fields-in-tracker-configuration.adoc[leveloffset=+1]
+
+
+ifdef::parent-context-of-enabling-access-to-your-ticket-trackers[:context: {parent-context-of-enabling-access-to-your-ticket-trackers}]
+ifndef::parent-context-of-enabling-access-to-your-ticket-trackers[:!context:]
+

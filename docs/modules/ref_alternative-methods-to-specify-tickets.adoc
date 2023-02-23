@@ -1,0 +1,99 @@
+:_content-type: REFERENCE
+
+[id="alternative-methods-to-specify-tickets_{context}"]
+= Alternative methods to specify tickets
+
+The `{bin-name}/tickets.yaml` configuration file recognizes several kinds of syntax to identify tickets that belong into your release notes document.
+
+.The general structure of a ticket entry
+Each entry in the `{bin-name}/tickets.yaml` configuration file follows this structure:
+
+. The `-` character to start a list item.
+
+. A pair of square brackets (`[ ]`) to contain the entry.
+
+. A keyword that identifies the ticket tracker, followed by a comma. Either of the following:
+
+** `Jira`
+** `Bugzilla`
+** `BZ` as a shorthand for `Bugzilla`
+
+. A keyword that specifies the method to retrieve tickets. Either of the following:
+
+** `key` to select a single ticket, followed by the ID or key of the ticket.
+** `search` to select all tickets that match a search, followed by a string in the format that the ticket tracker recognizes as a search query.
+
+. Optional: The `overrides` keyword, which enables you to manually override the value of the ticket's doc type, components, or subsystems.
+
+. Optional: The `references` keyword, which enables you to set several other tickets that {name} adds as ID references to this release note.
+
+
+.Tickets listed individually, using their IDs or keys
+====
+
+.Jira tickets
+[source,yaml]
+----
+- [Jira, key: PROJECTA-123456]
+- [Jira, key: PROJECTB-234567]
+- [Jira, key: PROJECTC-345678]
+----
+
+.Bugzilla tickets
+[source,yaml]
+----
+- [BZ, key: 1234567]
+- [BZ, key: 2345678]
+----
+
+====
+
+.Queries that result in multiple tickets
+====
+
+.A Bugzilla query copied from the URL of a Bugzilla search
+[source,yaml]
+----
+- [BZ, search: 'bug_status=VERIFIED&bug_status=CLOSED&product=Our Container Platform&target_release=1.23.0']
+----
+
+.A standard JQL query
+[source,yaml]
+----
+- [Jira, search: 'project="CentOS Stream" AND priority=Blocker']
+----
+
+.A Jira issue filter identified using JQL
+[source,yaml]
+----
+- [Jira, search: 'filter = 12345678']
+----
+
+====
+
+.Overrides
+====
+
+.Overriding the subsystem value of a ticket
+[source,yaml]
+----
+- [BZ, key: 1234567, { overrides: {subsystems: [sst_different]} }]
+----
+
+.Overriding the doc type value of a whole search
+[source,yaml]
+----
+- [Jira, search: 'project="CentOS Stream" AND priority=Blocker', { overrides: {doc_type: "Known Issue"} }]
+----
+
+====
+
+.References
+====
+
+[source,yaml]
+----
+- [BZ, key: 1234567, { references: [[BZ, key: 2345678], [Jira, key: PROJECTC-345678]] }]
+----
+
+====

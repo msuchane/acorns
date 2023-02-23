@@ -1,0 +1,74 @@
+:_content-type: PROCEDURE
+
+[id="configuring-trackers_{context}"]
+= Configuring trackers
+
+To enable access to your ticket trackers, enter the required settings in the `trackers.yaml` configuration file.
+
+.Prerequisites
+
+* You have installed {name}.
+* You have initialized a directory with sample release notes project configuration.
+
+.Procedure
+
+. In your release notes project, open the `{bin-name}/trackers.yaml` file in an editor.
+
+. Configure access to your Bugzilla and Jira instance.
++
+NOTE: Currently, {name} requires configuration for both trackers. If you are only using one, you can enter empty, invalid values for the other, unused trackers. {name} only uses the configuration on demand.
+
+** In the `bugzilla` section, fill out the following, required fields for Bugzilla:
++
+[source,yaml]
+----
+bugzilla:
+  host: "https://bugzilla.host.org" <1>
+  fields:
+    doc_type: <2>
+      - "cf_doc_type"
+    doc_text: <3>
+      - "cf_release_notes"
+    doc_text_status: <4>
+      - "requires_doc_text"
+----
+<1> The base URL to your Bugzilla instance.
+<2> The code name of the *Doc Type* field, which is probably a drop-down menu of values.
+<3> The code name of the *Doc Text* field, which is a text box that contains your release note.
+<4> The code name of the flag that describes the status of the release note.
+
+
+** In the `jira` section, fill out the following, required fields for Jira:
++
+[source,yaml]
+----
+jira:
+  host: "https://jira.host.org" <1>
+  fields:
+    doc_type: <2>
+      - "customfield_12345678"
+    doc_text: <3>
+      - "customfield_23456789"
+    doc_text_status: <4>
+      - "customfield_34567890"
+    docs_contact: <5>
+      - "customfield_45678901"
+----
++
+<1> The base URL to your Jira instance.
+<2> The code name of the field that lists the type of the release note. It is a drop-down menu of values.
+<3> The code name of the field that contains your release note. It is a text box.
+<4> The code name of the field that lists the status of the release note. It is a drop-down menu of values.
+<5> The code name of the field that contains the docs contact for this release note. It is a Jira user entry.
+
+.Verification
+
+. Add tickets to your release notes project.
+
+. Build the release notes.
+
+
+[role="_additional-resources"]
+.Additional resources
+* xref:identifying-code-names-of-tracker-fields_{context}[]
+* xref:required-and-optional-fields-in-tracker-configuration_{context}[]

@@ -1,0 +1,25 @@
+:_content-type: PROCEDURE
+
+[id="creating-a-new-release-notes-project_{context}"]
+= Creating a new release notes project
+
+Populate a directory with sample configuration files that {name} uses to generate release notes.
+
+.Prerequisites
+
+* You have installed {name}.
+
+.Procedure
+
+. Create all configuration files that are necessary to generate release notes using {name}:
++
+[subs="+quotes,+attributes"]
+----
+$ {bin-name} init __path-to-directory__
+----
++
+Replace `__path-to-directory__` with the directory where you want to store your release notes configuration.
+
+. Examine the newly populated directory.
++
+See the `README.adoc` file in the directory for a description of the directory layout.

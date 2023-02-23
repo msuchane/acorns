@@ -1,0 +1,42 @@
+# The `chapters` list defines chapters at the base level of the document.
+# This sample configuration generates chapters for each doc type found in the tickets.
+chapters:
+
+  # This is the title, or heading, of the chapter.
+  - title: "New features"
+    # This is an optional introduction. This appears as the first paragraph after the title.
+    intro_abstract: "This part describes new features and major enhancements introduced in {PRODUCT}."
+    # The `filter` field defines what kinds of tickets populate this chapter.
+    filter:
+      # This filter sorts tickets by their doc type.
+      # All tickets that have a doc type of "Enhancement", "Release Note", or "Feature"
+      # appear in the "New features" chapter of the document.
+      doc_type: ["Enhancement", "Release Note", "Feature"]
+
+  - title: "Bug fixes"
+    intro_abstract: "This part describes bugs fixed in {PRODUCT} that have a significant impact on users."
+    filter:
+      doc_type: ["Bug Fix"]
+
+  - title: "Technology Previews"
+    # The introduction can span several paragraphs. Use the `|` YaML syntax to start a multiline string,
+    # with blank lines to separate paragraphs.
+    intro_abstract: |
+      This part provides a list of all Technology Previews available in {PRODUCT}.
+
+      For information on the scope of support for Technology Preview features, see link:https://example.org/[Example].
+    filter:
+      doc_type: ["Technology Preview"]
+
+  - title: "Deprecated functionality"
+    intro_abstract: |
+       This part provides an overview of functionality that has been _deprecated_ in {PRODUCT}.
+
+       Deprecated functionality will likely not be supported in future major releases of this product and is not recommended for new deployments.
+    filter:
+      doc_type: ["Deprecated Functionality"]
+
+  - title: "Known issues"
+    intro_abstract: "This part describes known issues in {PRODUCT}."
+    filter:
+      doc_type: ["Known Issue"]

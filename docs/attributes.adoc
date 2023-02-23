@@ -1,0 +1,14 @@
+:toc: left
+:doctype: book
+:source-highlighter: highlight.js
+:icons: font
+
+:name: Cizrna
+:bin-name: cizrna
+:git-repo: https://github.com/msuchane/cizrna
+:container-repo: quay.io/msuchane/cizrna
+:container-repo-slug: msuchane/cizrna
+:copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/cizrna
+:copr-repo-slug: mareksu/cizrna
+
+:context: generating-release-notes-using-{bin-name}

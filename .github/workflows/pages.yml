@@ -36,7 +36,7 @@ jobs:
       - name: Install tar
         run: apk add tar
       - name: Build documentation
-        run: asciidoctor --safe -vn docs/guide.adoc --out-file=docs/index.html
+        run: asciidoctor --safe -vn docs/main.adoc --out-file=docs/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact

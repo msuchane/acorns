@@ -1,0 +1,37 @@
+// Include the shared attributes
+include::attributes.adoc[]
+
+// By default, compile the external version of the document.
+ifndef::generated-dir[]
+:generated-dir: cizrna/generated/external
+endif::[]
+
+// The name and ID of the title is defined in attributes.adoc
+[id="{ProjectNameID}"]
+= {ProjectName}
+
+// Set context for all included assemblies
+:context: {ProjectNameID}
+
+// The abstract defined in attributes. Depending on your publishing platform, you might want to remove the abstract here and let your tooling insert it in its own way.
+{abstract}
+
+// Include all external files here:
+
+include::manual-content/making-open-source-more-inclusive.adoc[leveloffset=+1]
+
+include::manual-content/con_overview.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_new-features.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_bug-fixes.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_technology-previews.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_deprecated-functionality.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_known-issues.adoc[leveloffset=+1]
+
+include::{generated-dir}/ref_list-of-tickets-by-component.adoc[leveloffset=+1]
+
+include::manual-content/ref_revision-history.adoc[leveloffset=+1]
