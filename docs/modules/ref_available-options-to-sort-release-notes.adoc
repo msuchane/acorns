@@ -183,7 +183,7 @@ chapters:
     intro_abstract: |
       This part provides a list of all Technology Previews available in {Product}.
 
-      For information on the scope of support for Technology Preview features, see link:https://example.org/[Example]. <1>
+      For information on the scope of support for Technology Preview features, see link:https://example.org/[Example].
     filter:
       doc_type:
         - "Technology Preview"

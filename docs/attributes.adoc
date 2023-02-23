@@ -1,6 +1,7 @@
 :toc: left
 :doctype: book
 :source-highlighter: highlight.js
+:icons: font
 
 :name: Cizrna
 :bin-name: cizrna
