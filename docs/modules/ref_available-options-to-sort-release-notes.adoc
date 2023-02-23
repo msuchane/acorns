@@ -3,32 +3,215 @@
 [id="available-options-to-sort-release-notes_{context}"]
 = Available options to sort release notes
 
-Write a short introductory paragraph that provides an overview of the module.
+The `{bin-name}/templates.yaml` configuration file recognizes several options and properties to sort release notes in your document.
 
-A reference module provides data that users might want to look up, but do not need to remember. It has a very strict structure, often in the form of a list or a table.
-A well-organized reference module enables users to scan it quickly to find the details they want.
-AsciiDoc markup to consider for reference data:
+.The base level of sorting
+The configuration file always requires the `chapters` section, which defines the initial, base sorting level.
 
-.Unordered list
-* For more details on writing reference modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles.
-For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+This level is called `chapters` because it usually generates files that you include directly from your `main.adoc` file, either as reference modules or as assemblies.
 
-.Labeled list
-Term 1:: Definition
-Term 2:: Definition
+The `chapters` section has the following syntax:
 
-.Table
-[options="header"]
-|====
-|Column 1|Column 2|Column 3
-|Row 1, column 1|Row 1, column 2|Row 1, column 3
-|Row 2, column 1|Row 2, column 2|Row 2, column 3
-|====
+[source,yaml]
+----
+chapters:
 
-[role="_additional-resources"]
-.Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing reference modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+  - title: "Bug fixes" <1>
+    filter: <2>
+      doc_type: <3>
+        - "Bug Fix" <4>
 
+  - title: "New features"
+    intro_abstract: "This part describes new features and major enhancements introduced in {Product}." <5>
+    filter:
+      doc_type:
+        - "Enhancement"
+        - "Feature" <6>
+    sections: <7>
+      - *installer
+      - *networking
+      - *storage
+      - *virtualization
+----
+<1> The title (heading) of the generated AsciiDoc file.
+<2> Settings that define which tickets appear in this chapter (module or assembly).
+<3> The `filter` settings accept the following properties to select tickets:
+** `doc_type`
+** `component`
+** `subsystem`
+<4> This chapter lists all tickets that have the `Bug Fix` doc type.
+<5> Optional: An abstract (introduction) of this chapter. The text appears directly under the title and can contain arbitrary AsciiDoc syntax, including attributes.
+<6> Optional: This chapter lists all tickets that have either the `Enhancement` or `Feature` doc type. You can group multiple values together and they do not have to be related.
+<7> Optional: To enable a deeper level of nesting, this chapter includes sections with different sorting settings. This chapter starts with tickets of the `Enhancement` and `Feature` doc types, and divides them further by rules defined in the listed sections.
++
+The asterisk (`*`) at the start of each section name is the YaML anchor syntax that refers to elements written elsewhere in the configuration file, labeled with this anchor.
+
+
+.Deeper levels of sorting
+If you enable deeper levels of sorting by specifying the `sections` option in `chapters`, you must add the `sections` section at the top of the `templates.yaml` file.
+
+The `sections` section defines rules sorting at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
+
+The `sections` section has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
+
+[source,yaml]
+----
+sections:
+
+  - &networking <1>
+    title: "Networking" <2>
+    filter: <3>
+      subsystem:
+        - 'sst_networking' <4>
+
+  - &installer
+    title: "Installer and image creation"
+    intro_abstract: "Installing {Product} on physical and virtual systems."
+    filter:
+      subsystem:
+        - 'ssg_front_door'
+        - 'sst_front_door'
+        - 'sst_installer'
+        - 'sst_image_builder'
+        - 'sst_composer' <5>
+
+----
+<1> The ampersand (`&`) character is the YaML anchor syntax that names this section, so that you can later reuse it elsewhere in the configuration file by referring to this name.
+<2> The title (heading) of the generated AsciiDoc file.
+<3> A filter that further limits the tickets that come from the parent chapter.
+<4> This section only lists tickets within the chapter that belong to the `sst_networking` subsystem.
+<5> This section only lists tickets within the chapter that belong to any of the listed subsystems.
+
+
+.Release notes sorted by doc type
+====
+
+[source,yaml]
+----
+chapters:
+  - title: "New features"
+    intro_abstract: "This part describes new features and major enhancements introduced in {Product}."
+    filter:
+      doc_type:
+        - "Enhancement"
+        - "Release Note"
+        - "Feature"
+  - title: "Bug fixes"
+    intro_abstract: "This part describes bugs fixed in {Product} that have a significant impact on users."
+    filter:
+      doc_type:
+        - "Bug Fix"
+  - title: "Technology Previews"
+    intro_abstract: |
+      This part provides a list of all Technology Previews available in {Product}.
+
+      For information on the scope of support for Technology Preview features, see link:https://example.org/[Example]. <1>
+    filter:
+      doc_type:
+        - "Technology Preview"
+  - title: "Deprecated functionality"
+    intro_abstract: |
+       This part provides an overview of functionality that has been _deprecated_ in {Product}.
+
+       Deprecated functionality will likely not be supported in future major releases of this product and is not recommended for new deployments.
+    filter:
+      doc_type:
+        - "Deprecated Functionality"
+  - title: "Known issues"
+    intro_abstract: "This part describes known issues in {Product}."
+    filter:
+      doc_type:
+        - "Known Issue"
+----
+<1> The introduction can span several paragraphs. Use the `|` YaML syntax to start a multiline string, with blank lines to separate paragraphs.
+
+====
+
+
+.Release notes sorted by doc type and component
+====
+
+[source,yaml]
+----
+sections:
+  - &web_console
+    title: "Web console"
+    filter:
+      component:
+        - "Management Console"
+  - &oc
+    title: "OpenShift CLI (oc)"
+    filter:
+      component:
+        - "oc"
+  - &images
+    title: "Images"
+    filter:
+      component:
+        - "Image Registry"
+  - &olm
+    title: "Operator"
+    filter:
+      component:
+        - "OLM"
+        - "Operator SDK"
+
+chapters:
+  - title: "New features"
+    intro_abstract: "This part describes new features and major enhancements introduced in {Product}."
+    filter:
+      doc_type:
+        - "Enhancement"
+        - "Release Note"
+        - "Feature"
+    sections: <1>
+      - *web_console
+      - *oc
+      - *images
+      - *olm
+  - title: "Bug fixes"
+    intro_abstract: "This part describes bugs fixed in {Product} that have a significant impact on users."
+    filter:
+      doc_type:
+        - "Bug Fix"
+    sections:
+      - *web_console
+      - *oc
+      - *images
+      - *olm
+  - title: "Technology Previews"
+    intro_abstract: |
+      This part provides a list of all Technology Previews available in {Product}.
+
+      For information on the scope of support for Technology Preview features, see link:https://example.org/[Example]. <1>
+    filter:
+      doc_type:
+        - "Technology Preview"
+    sections:
+      - *web_console
+      - *oc
+      - *images
+      - *olm
+  - title: "Deprecated functionality"
+    intro_abstract: |
+       This part provides an overview of functionality that has been _deprecated_ in {Product}.
+
+       Deprecated functionality will likely not be supported in future major releases of this product and is not recommended for new deployments.
+    filter:
+      doc_type:
+        - "Deprecated Functionality"
+    sections:
+      - *web_console
+      - *oc
+      - *images
+      - *olm
+  - title: "Known issues" <2>
+    intro_abstract: "This part describes known issues in {Product}."
+    filter:
+      doc_type:
+        - "Known Issue"
+----
+<1> You must repeat the sections list in each chapter configuration that you want to subdivide into deeper sorting levels.
+<2> This chapter does not list any sections. As a result, all tickets in this chapter will appear together in the same chapter, with no further division into sections.
+
+====
