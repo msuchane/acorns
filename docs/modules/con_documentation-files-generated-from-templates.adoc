@@ -3,20 +3,37 @@
 [id="documentation-files-generated-from-templates_{context}"]
 = Documentation files generated from templates
 
-Write a short introductory paragraph that provides an overview of the module.
+Every chapter and section defined in the `templates.yaml` file attempts to generate a matching AsciiDoc file according to the following rules:
 
-The contents of a concept module give the user descriptions and explanations needed to understand and use a product.
+* If this chapter or section includes no other `sections` definitions, it generates a reference module. The file name of the module is:
++
+[subs="+quotes"]
+----
+ref___lowercase-title-with-certain-replacements__.adoc
+----
 
-* Look at nouns and noun phrases in related procedure modules and assemblies to find the concepts to explain to users.
-* Explain only things that are visible to users. Even if a concept is interesting, it probably does not require explanation if it is not visible to users.
-* Avoid including action items. Action items belong in procedure modules. However, in some cases a concept or reference can include suggested actions when those actions are simple, are highly dependent on the context of the module, and have no place in any procedure module. In such cases, ensure that the heading of the concept or reference remains a noun phrase and not a gerund.
+* If this chapter or section does include additional `sections` definitions, it generates an assembly file, which then includes other modules or assemblies in the same directory. The file name of the assembly is:
++
+[subs="+quotes"]
+----
+assembly___lowercase-title-with-certain-replacements__.adoc
+----
 
-.Image title
-image::image-file.png[A textual representation of the essential information conveyed by the image.]
+* If a section is included from another chapter or a section, its file name lists the complete include path:
++
+[subs="+quotes"]
+----
+ref___title-of-section__-__title-of-its-including-parent__.adoc
+----
 
-[role="_additional-resources"]
-.Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing concept modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
+* If no tickets in your project match the `filter` rules defined in this chapter or section, it does not generate any file.
++
+You must remove or comment out the include statement to this file in your `main.adoc` file, otherwise `asciidoctor` reports an error when you compile the document.
++
+For example:
 
+** A _Known issues_ chapter uses a filter that looks for tickets with the `Known Issue` doc type. However, none of your tickets in this project is a `Known Issue`. As a result, the `assembly_known-issues.adoc` file is not generated.
+
+** A chapter includes sections that look for three specific components. However, none of your tickets belong to these components. As a result, neither the section modules nor the chapter assembly files are generated.
+
+** A chapter matches several tickets, the doc text status of all the tickets is incomplete. As a result, the file is generated for the `internal` version of the document, but not for the `external` version.
