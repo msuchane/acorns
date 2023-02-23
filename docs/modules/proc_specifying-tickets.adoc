@@ -1,9 +1,9 @@
 :_content-type: PROCEDURE
 
-[id="adding-tickets-to-your-project_{context}"]
-= Adding tickets to your project
+[id="specifying-tickets_{context}"]
+= Specifying tickets
 
-The default, sample project configuration lists tickets that do not exist. Populate your release notes with existing tickets that contain documentation.
+To add tickets to your project, specify them in the `tickets.yaml` configuration file.
 
 .Prerequisites
 

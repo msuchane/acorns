@@ -1,9 +1,9 @@
 :_content-type: PROCEDURE
 
 [id="sorting-tickets-in-your-project-using-templates_{context}"]
-= Sorting tickets in your project using templates
+= Structuring templates
 
-The default, sample project configuration sorts your release notes based on their doc type. You can configure the templates in your release notes project to sort release notes using other criteria, and edit the content of the generated files.
+To structure your templates, edit the settings in the `templates.yaml` configuration file.
 
 .Prerequisites
 
@@ -46,4 +46,4 @@ In this case:
 [role="_additional-resources"]
 .Additional resources
 * For a complete description of the syntax in the `templates.yaml` file, see xref:available-options-to-sort-release-notes_{context}[].
-* For the process that creates AsciiDoc files from the template configuration, see xref:documentation-files-generated-from-templates_{context}.
+* For the process that creates AsciiDoc files from the template configuration, see xref:documentation-files-generated-from-templates_{context}[].

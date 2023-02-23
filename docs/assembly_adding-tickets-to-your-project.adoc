@@ -1,0 +1,23 @@
+ifdef::context[:parent-context-of-adding-tickets-to-your-project: {context}]
+
+:_content-type: ASSEMBLY
+
+ifndef::context[]
+[id="adding-tickets-to-your-project"]
+endif::[]
+ifdef::context[]
+[id="adding-tickets-to-your-project_{context}"]
+endif::[]
+= Adding tickets to your project
+
+:context: adding-tickets-to-your-project
+
+The default, sample project configuration lists tickets that do not exist. Populate your release notes with existing tickets that contain documentation.
+
+include::modules/proc_specifying-tickets.adoc[leveloffset=+1]
+
+include::modules/ref_alternative-methods-to-specify-tickets.adoc[leveloffset=+1]
+
+
+ifdef::parent-context-of-adding-tickets-to-your-project[:context: {parent-context-of-adding-tickets-to-your-project}]
+ifndef::parent-context-of-adding-tickets-to-your-project[:!context:]
