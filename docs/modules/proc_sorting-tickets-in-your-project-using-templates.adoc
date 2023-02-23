@@ -3,40 +3,47 @@
 [id="sorting-tickets-in-your-project-using-templates_{context}"]
 = Sorting tickets in your project using templates
 
-WARNING: This is currently just a template and a placeholder. The documentation will appear later.
-
-The default, sample project configuration sorts your release notes based on their doc type, as found in the tickets. You can configure your templates to sort release notes in a custom way, such as into sections nested by doc type and component.
+The default, sample project configuration sorts your release notes based on their doc type. You can configure the templates in your release notes project to sort release notes using other criteria, and edit the content of the generated files.
 
 .Prerequisites
 
-* A bulleted list of conditions that must be satisfied before the user starts the steps in this module.
-* Prerequisites can be full sentences or sentence fragments; however, prerequisite list items must be parallel.
+* You have installed {name}.
+* You have configured access to your tickets trackers.
+* You have added tickets to your release notes project configuration.
 
 .Procedure
 
-. Make each step an instruction.
+. In your release notes project, open the `{bin-name}/templates.yaml` file in an editor.
 
-. Include one command or action for each step with the exception of simple follow-step, for example:
-.. Do this thing and then select *Next*.
-.. Do this other thing and then select *Next*.
+. Decide how you want to sort your release notes:
 
-. Use an unnumbered bullet (*) if the procedure includes only one step.
+** In a relatively small project with few release notes, you might want to continue sorting just by one property of release notes, such as just by doc type, just by component, or just by subsystem.
++
+In this case, keep the `chapters` section of the configuration file and edit the rules in it.
+
+** In a relatively large project with many release notes, you might want to further divide your release notes by several properties, which results in several levels of nested sections. For example, you can sort by doc type at the base level and further divide each doc type chapter into subsections based on components.
++
+In this case:
+
+.. Add the `sections` section at the top of the configuration file, where you define the deeper levels of nested sorting.
+.. Edit the rules in the `chapters` section of the configuration file. Include the sorting rules that you defined in the `sections` section. Use the YaML anchors syntax to include previously defined rules.
+
+. Rebuild your release notes and examine the generated files in the `{bin-name}/generated/internal/` directory.
+
+. Include the generated files in your `main.adoc` file.
 
 .Verification
 
-. Provide an example of expected command output or a pop-up window that the user receives when the procedure is successful.
+. Build an HTML preview of the internal document:
++
+----
+# asciidoctor --safe -vn internal.adoc
+----
 
-. List actions for the user to complete, such as entering a command, to determine the success or failure of the procedure.
+. Open the preview and check the section structure.
 
-. Make each step an instruction.
-
-. Include one command or action per step.
-
-. Use an unnumbered bullet (*) if the verification includes only one step.
 
 [role="_additional-resources"]
 .Additional resources
-* A bulleted list of links to other closely-related material. These links can include `link:` and `xref:` macros.
-* For more details on writing procedure modules, see the link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-* Use a consistent system for file names, IDs, and titles. For tips, see _Anchor Names and File Names_ in link:https://github.com/redhat-documentation/modular-docs#modular-documentation-reference-guide[Modular Documentation Reference Guide].
-
+* For a complete description of the syntax in the `templates.yaml` file, see xref:available-options-to-sort-release-notes_{context}[].
+* For the process that creates AsciiDoc files from the template configuration, see xref:documentation-files-generated-from-templates_{context}.
