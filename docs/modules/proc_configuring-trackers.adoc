@@ -23,20 +23,19 @@ NOTE: Currently, {name} requires configuration for both trackers. If you are onl
 [source,yaml]
 ----
 bugzilla:
-  host: "https://bugzilla.host.org"
+  host: "https://bugzilla.host.org" <1>
   fields:
-    doc_type:
+    doc_type: <2>
       - "cf_doc_type"
-    doc_text:
+    doc_text: <3>
       - "cf_release_notes"
-    doc_text_status:
+    doc_text_status: <4>
       - "requires_doc_text"
 ----
-+
-`host`:: The base URL to your Bugzilla instance.
-`doc_type`:: The code name of the *Doc Type* field, which is probably a drop-down menu of values.
-`doc_text`:: The code name of the *Doc Text* field, which is a text box that contains your release note.
-`doc_text_status`:: The code name of the flag that describes the status of the release note.
+<1> The base URL to your Bugzilla instance.
+<2> The code name of the *Doc Type* field, which is probably a drop-down menu of values.
+<3> The code name of the *Doc Text* field, which is a text box that contains your release note.
+<4> The code name of the flag that describes the status of the release note.
 
 
 ** In the `jira` section, fill out the following, required fields for Jira:
@@ -44,22 +43,23 @@ bugzilla:
 [source,yaml]
 ----
 jira:
-  host: "https://jira.host.org"
+  host: "https://jira.host.org" <1>
   fields:
-    doc_type:
+    doc_type: <2>
       - "customfield_12345678"
-    doc_text:
+    doc_text: <3>
       - "customfield_23456789"
-    doc_text_status:
+    doc_text_status: <4>
       - "customfield_34567890"
-    docs_contact:
+    docs_contact: <5>
       - "customfield_45678901"
 ----
 +
-`host`:: The base URL to your Jira instance.
-`doc_type`:: The code name of the field that lists the type of the release note. It is a drop-down menu of values.
-`doc_text`:: The code name of the field that contains your release note. It is a text box.
-`doc_text_status`:: The code name of the field that lists the status of the release note. It is a drop-down menu of values.
+<1> The base URL to your Jira instance.
+<2> The code name of the field that lists the type of the release note. It is a drop-down menu of values.
+<3> The code name of the field that contains your release note. It is a text box.
+<4> The code name of the field that lists the status of the release note. It is a drop-down menu of values.
+<5> The code name of the field that contains the docs contact for this release note. It is a Jira user entry.
 
 .Verification
 
