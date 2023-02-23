@@ -1,5 +1,6 @@
 include::attributes.adoc[]
 
+[id={context}]
 = Generating release notes using {name}
 
 This guide describes how to use the {name} release notes generator to create, maintain, and publish release notes from a combination of manually written documentation and generated ticket descriptions.

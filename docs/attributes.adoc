@@ -9,3 +9,5 @@
 :container-repo-slug: msuchane/cizrna
 :copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/cizrna
 :copr-repo-slug: mareksu/cizrna
+
+:context: generating-release-notes-using-{bin-name}
