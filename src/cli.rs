@@ -18,31 +18,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use bpaf::Bpaf;
 
 /// Define the command-line arguments of the tool.
 #[must_use]
 pub fn arguments() -> Cli {
-    Cli::parse()
+    let usage_prefix = "Usage: cizrna {usage}";
+    cli().usage(usage_prefix).run()
 }
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[derive(Clone, Debug, Bpaf)]
+#[bpaf(options, version)]
 pub struct Cli {
     /// Display more detailed progress messages.
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    pub verbose: u8,
+    #[bpaf(short, long, switch, many, map(vec_len))]
+    pub verbose: usize,
 
-    #[command(subcommand)]
+    #[bpaf(external(commands))]
     pub command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Debug, Bpaf)]
 pub enum Commands {
     /// Build release notes from a configuration directory.
+    #[bpaf(command)]
     Build {
         /// Path to the configuration directory. The default is the current working directory.
-        #[arg(value_parser, value_name = "DIR", default_value = ".")]
+        #[bpaf(positional::<PathBuf>("DIR"), fallback(".".into()))]
         project: PathBuf,
         // Disabling the optional config paths for now.
         // It's questionable if it's even useful to specify these separately.
@@ -59,52 +61,63 @@ pub enum Commands {
         */
     },
     /// Query a single ticket.
+    #[bpaf(command)]
     Ticket {
-        /// The type of the issue tracker service.
-        #[arg(value_name = "SERVICE")]
-        //tracker: crate::config::tracker::Service,
-        tracker: String,
-        /// The ID of the ticket.
-        #[arg(value_name = "ID")]
-        id: String,
         /// The trackers configuration file.
-        #[arg(
+        #[bpaf(
             short,
             long,
-            value_parser,
-            value_name = "FILE",
-            default_value = "./cizrna/trackers.yaml"
+            argument("FILE"),
+            fallback("./cizrna/trackers.yaml".into())
         )]
         config: PathBuf,
         /// The API key to access the tracker.
-        #[arg(short, long, value_name = "FILE")]
+        #[bpaf(short, long, argument("SECRET"))]
         api_key: Option<String>,
+        /// The type of the issue tracker service.
+        #[bpaf(positional::<String>("SERVICE"))]
+        tracker: String,
+        /// The ID of the ticket.
+        #[bpaf(positional::<String>("ID"))]
+        id: String,
     },
     /// Convert a CoRN 3 configuration file to the new format.
+    #[bpaf(command)]
     Convert {
         /// The legacy corn.yaml configuration file.
-        #[arg(
+        #[bpaf(
             short,
             long,
-            value_parser,
-            value_name = "FILE",
-            default_value = "./corn.yaml"
+            argument("FILE"),
+            fallback("./corn.yaml".into())
         )]
         legacy_config: PathBuf,
         /// The new, converted configuration file.
-        #[arg(
+        #[bpaf(
             short,
             long,
-            value_parser,
-            value_name = "FILE",
-            default_value = "./tickets.yaml"
+            argument("FILE"),
+            fallback("./tickets.yaml".into())
         )]
         new_config: PathBuf,
     },
     /// Create a sample release notes project with basic configuration.
+    #[bpaf(command)]
     Init {
         /// Path to the project directory. The default is the current working directory.
-        #[arg(value_parser, value_name = "DIR", default_value = ".")]
+        #[bpaf(
+            positional::<PathBuf>("DIR"),
+            fallback(".".into())
+        )]
         directory: PathBuf,
     },
+}
+
+/// Calculate the length of a vector for repeating flags, such as verbosity.
+///
+/// This function has to take the argument by value because that's how
+/// the `bpaf` parser passes it in the map application.
+#[allow(clippy::needless_pass_by_value)]
+fn vec_len<T>(vec: Vec<T>) -> usize {
+    vec.len()
 }

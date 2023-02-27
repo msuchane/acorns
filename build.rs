@@ -1,29 +1,39 @@
-//! This script auto-generates a man page from the clap configuration.
-//! It creates the `cizrna.1` file in the current directory, which is
-//! ignored by git.
-//!
-//! The code comes from the sample at <https://rust-cli.github.io/book/in-depth/docs.html>.
+//! This script auto-generates a man page from the CLI configuration.
 
-use clap::CommandFactory;
+use bpaf::Section;
 
 // We're reusing the module just for the Cli struct. Ignore the rest of the code
 // and don't report it as "never used" in this build script.
 #[allow(dead_code)]
 #[path = "src/cli.rs"]
 mod cli;
-use cli::Cli;
+
+// Man page metadata
+const CARGO_PKG_NAME: &str = env!("CARGO_PKG_NAME");
+const SECTION: Section = Section::General;
+const DATE: &str = "February 2023";
+const CARGO_PKG_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+const CARGO_PKG_REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 
 fn main() -> std::io::Result<()> {
     let out_dir =
         std::path::PathBuf::from(std::env::var_os("OUT_DIR").ok_or(std::io::ErrorKind::NotFound)?);
 
-    let cmd: clap::Command = Cli::command();
+    let parser = cli::cli();
 
-    let man = clap_mangen::Man::new(cmd);
-    let mut buffer: Vec<u8> = Default::default();
-    man.render(&mut buffer)?;
+    let man_page = parser.as_manpage(
+        CARGO_PKG_NAME,
+        SECTION,
+        DATE,
+        CARGO_PKG_AUTHORS,
+        "",
+        CARGO_PKG_REPOSITORY,
+    );
 
-    std::fs::write(out_dir.join("cizrna.1"), buffer)?;
+    let man_name = format!("{CARGO_PKG_NAME}.1");
+    let man_path = out_dir.join(man_name);
+
+    std::fs::write(man_path, man_page)?;
 
     Ok(())
 }
