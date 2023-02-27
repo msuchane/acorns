@@ -14,6 +14,7 @@ const SECTION: Section = Section::General;
 const DATE: &str = "February 2023";
 const CARGO_PKG_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 const CARGO_PKG_REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+const CARGO_PKG_HOMEPAGE: &str = env!("CARGO_PKG_HOMEPAGE");
 
 fn main() -> std::io::Result<()> {
     let out_dir =
@@ -26,7 +27,7 @@ fn main() -> std::io::Result<()> {
         SECTION,
         DATE,
         CARGO_PKG_AUTHORS,
-        "",
+        CARGO_PKG_HOMEPAGE,
         CARGO_PKG_REPOSITORY,
     );
 
