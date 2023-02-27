@@ -29,6 +29,7 @@ pub fn arguments() -> Cli {
 
 #[derive(Clone, Debug, Bpaf)]
 #[bpaf(options, version)]
+/// Generate an AsciiDoc release notes document from tracking tickets.
 pub struct Cli {
     /// Display more detailed progress messages.
     #[bpaf(short, long, switch, many, map(vec_len))]
