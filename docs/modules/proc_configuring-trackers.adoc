@@ -16,7 +16,7 @@ To enable access to your ticket trackers, enter the required settings in the `tr
 
 . Configure access to your Bugzilla and Jira instance.
 +
-NOTE: Currently, {name} requires configuration for both trackers. If you are only using one, you can enter empty, invalid values for the other, unused trackers. {name} only uses the configuration on demand.
+NOTE: Currently, {name} requires configuration for both trackers. If you are using only one, you can enter empty, invalid values for the other, unused trackers, such as an empty list (`[]`) or the default values. {name} only loads the configuration for a particular tracker when your project contains tickets that come from the tracker. Otherwise, {name} ignores the tracker configuration.
 
 ** In the `bugzilla` section, fill out the following, required fields for Bugzilla:
 +

@@ -7,7 +7,9 @@ Install the {name} release notes generator on your system, so that you can run i
 
 .Procedure
 
-* On Fedora, CentOS Stream, or RHEL, use link:{copr-repo}[the Copr repository]:
+* On Fedora, CentOS Stream, or RHEL, use link:{copr-repo}[the Copr repository].
++
+WARNING: The repository is only available for actively supported releases of the operating system. If you are using a legacy, unsupported release, you can no longer install or update the package. Please upgrade your system.
 
 .. Enable the repository:
 +

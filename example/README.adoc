@@ -19,5 +19,7 @@ Configures access to your Bugzilla and Jira instance.
 `cizrna/templates.yaml`::
 Configures how your tickets are sorted into sections of the document.
 
-`cizrna/generated/internal/` and `cizrna/generated/internal/`::
-Store the generated assemblies and modules. These directories only appear when you let Cizrna generate documentation files. At every run, Cizrna removes and recreates these files.
+`cizrna/generated/external/` and `cizrna/generated/internal/`::
+Store the generated assemblies and modules. These directories strictly contain only generated content, and the directories appear when Cizrna has generated documentation files.
++
+At every run, Cizrna removes and recreates these files. Do not save manual content here.
