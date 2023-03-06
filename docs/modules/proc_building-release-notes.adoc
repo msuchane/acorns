@@ -25,7 +25,19 @@ $ cd _my-release-notes_
 [subs=+quotes]
 ----
 $ export BZ_API_KEY=__my-bugzilla-key__
+
 $ export JIRA_API_KEY=__my-jira-key__
+----
++
+If you are using a shell that is not compatible with the Bourne shell syntax, adjust the commands.
++
+For example, with the Fish shell:
++
+[subs=+quotes]
+----
+$ set -x BZ_API_KEY=__my-bugzilla-key__
+
+$ set -x JIRA_API_KEY __my-jira-key__
 ----
 
 . Generate release notes:
@@ -43,7 +55,9 @@ $ asciidoctor --safe -vn main.adoc
 $ asciidoctor --safe -vn internal.adoc
 ----
 
-. Preview the document:
+. Open the `main.html` and `internal.html` files in a web browser to preview the document.
++
+In the GNOME desktop environment, you can use the following commands:
 +
 ----
 $ gio open main.html

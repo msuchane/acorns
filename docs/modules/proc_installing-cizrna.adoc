@@ -34,11 +34,20 @@ On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following com
 $ docker pull {container-repo}
 ----
 
-.. Configure a command alias. Save this line in your shell configuration file, such as in the `~/.bashrc` file:
+.. Configure a command alias. Save this line in your shell configuration file:
 +
 [source,bash,subs="+attributes"]
 ----
 alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
+----
+
+*** With the Bash shell, save the line at the end of `~/.bashrc`.
+*** With the ZSH shell, save the line at the end of `~/.zshrc`.
+*** With the Fish shell, save the alias using the following command:
++
+[subs="+attributes"]
+----
+$ alias --save cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
 ----
 
 .. Open a new terminal to reload the shell configuration.
