@@ -201,7 +201,8 @@ pub mod tracker {
         pub doc_type: Vec<String>,
         pub doc_text: Vec<String>,
         pub doc_text_status: Vec<String>,
-        pub subsystems: Vec<String>,
+        /// This field is optional. Runtime decides if we need it.
+        pub subsystems: Option<Vec<String>>,
         /// These fields are standard, but you can override them.
         pub target_release: Option<Vec<String>>,
         pub docs_contact: Option<Vec<String>>,
@@ -216,7 +217,8 @@ pub mod tracker {
         pub doc_text: Vec<String>,
         pub doc_text_status: Vec<String>,
         pub docs_contact: Vec<String>,
-        pub subsystems: Vec<String>,
+        /// This field is optional. Runtime decides if we need it.
+        pub subsystems: Option<Vec<String>>,
         /// This field is standard, but you can override it.
         pub target_release: Option<Vec<String>>,
     }
@@ -282,7 +284,10 @@ pub mod tracker {
             }
         }
         fn subsystems(&self) -> &[String] {
-            &self.fields.subsystems
+            match &self.fields.subsystems {
+                Some(field) => field,
+                None => &[],
+            }
         }
         fn doc_text(&self) -> &[String] {
             &self.fields.doc_text
@@ -316,7 +321,10 @@ pub mod tracker {
             }
         }
         fn subsystems(&self) -> &[String] {
-            &self.fields.subsystems
+            match &self.fields.subsystems {
+                Some(field) => field,
+                None => &[],
+            }
         }
         fn doc_text(&self) -> &[String] {
             &self.fields.doc_text

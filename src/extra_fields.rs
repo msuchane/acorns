@@ -296,6 +296,13 @@ impl ExtraFields for Bug {
         let fields = config.subsystems();
         let mut errors = Vec::new();
 
+        // The subsystems configuration is optional and can be left empty.
+        // If a ticket actually requests sorting by subsystems, the following error appears.
+        if fields.is_empty() {
+            let error = eyre!("No subsystems field is configured in the trackers.yaml file.");
+            errors.push(error);
+        }
+
         for field in fields {
             let pool_field = self.extra.get(field);
 
@@ -532,6 +539,13 @@ impl ExtraFields for Issue {
         let fields = config.subsystems();
         // Record all errors that occur with tried fields that exist.
         let mut errors = Vec::new();
+
+        // The subsystems configuration is optional and can be left empty.
+        // If a ticket actually requests sorting by subsystems, the following error appears.
+        if fields.is_empty() {
+            let error = eyre!("No subsystems field is configured in the trackers.yaml file.");
+            errors.push(error);
+        }
 
         for field in fields {
             let pool = self.fields.extra.get(field);
