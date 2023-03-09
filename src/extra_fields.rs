@@ -224,7 +224,7 @@ impl fmt::Display for Id<'_> {
 /// Prepare a user-readable list of errors, reported in the order that they occurred.
 fn error_chain(mut errors: Vec<Report>, field_name: Field, fields: &[String], id: Id) -> Report {
     let top_error = eyre!(
-        "The {} field is missing or malformed in {}.\n\
+        "The {} field is missing or malformed in {}. \
         The configured fields are: {:?}",
         field_name,
         id,
@@ -395,7 +395,7 @@ impl ExtraFields for Bug {
         // No override succeeded. See if there's a value in the standard field.
         if self.docs_contact.is_none() {
             let report = error_chain(errors, Field::DocsContact, fields, Id::BZ(self.id));
-            log::warn!("{:?}", report);
+            log::warn!("{}", report);
         }
 
         // TODO: There's probably a way to avoid this clone.
@@ -520,7 +520,7 @@ impl ExtraFields for Issue {
             log::warn!("The custom target releases failed in {}. Falling back on the standard fix versions field.", id);
 
             // Provide this additional information on demand.
-            log::debug!("{:?}", report);
+            log::debug!("{}", report);
         }
 
         // Always fall back on the standard field.
@@ -621,7 +621,7 @@ impl ExtraFields for Issue {
         // No field produced a `Some` value.
         let report = error_chain(Vec::new(), Field::DocsContact, fields, Id::Jira(&self.key));
         // This field is non-critical.
-        log::warn!("{:?}", report);
+        log::warn!("{}", report);
 
         DocsContact(None)
     }
