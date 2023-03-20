@@ -33,9 +33,9 @@ bugzilla:
       - "requires_doc_text"
 ----
 <1> The base URL to your Bugzilla instance.
-<2> The code name of the *Doc Type* field, which is probably a drop-down menu of values.
-<3> The code name of the *Doc Text* field, which is a text box that contains your release note.
-<4> The code name of the flag that describes the status of the release note.
+<2> The ID of the *Doc Type* field, which is probably a drop-down menu of values.
+<3> The ID of the *Doc Text* field, which is a text box that contains your release note.
+<4> The ID of the flag that describes the status of the release note.
 
 
 ** In the `jira` section, fill out the following, required fields for Jira:
@@ -56,10 +56,10 @@ jira:
 ----
 +
 <1> The base URL to your Jira instance.
-<2> The code name of the field that lists the type of the release note. It is a drop-down menu of values.
-<3> The code name of the field that contains your release note. It is a text box.
-<4> The code name of the field that lists the status of the release note. It is a drop-down menu of values.
-<5> The code name of the field that contains the docs contact for this release note. It is a Jira user entry.
+<2> The ID of the field that lists the type of the release note. It is a drop-down menu of values.
+<3> The ID of the field that contains your release note. It is a text box.
+<4> The ID of the field that lists the status of the release note. It is a drop-down menu of values.
+<5> The ID of the field that contains the docs contact for this release note. It is a Jira user entry.
 
 .Verification
 
@@ -70,5 +70,5 @@ jira:
 
 [role="_additional-resources"]
 .Additional resources
-* xref:identifying-code-names-of-tracker-fields_{context}[]
+* xref:finding-ids-of-tracker-fields_{context}[]
 * xref:required-and-optional-fields-in-tracker-configuration_{context}[]

@@ -18,7 +18,7 @@ For the purpose of this document, a _ticket tracker_ is either *Bugzilla* or *Ji
 
 include::modules/proc_configuring-trackers.adoc[leveloffset=+1]
 
-include::modules/proc_identifying-code-names-of-tracker-fields.adoc[leveloffset=+1]
+include::modules/proc_finding-ids-of-tracker-fields.adoc[leveloffset=+1]
 
 include::modules/ref_required-and-optional-fields-in-tracker-configuration.adoc[leveloffset=+1]
 

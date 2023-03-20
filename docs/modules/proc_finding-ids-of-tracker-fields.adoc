@@ -1,9 +1,9 @@
 :_content-type: PROCEDURE
 
-[id="identifying-code-names-of-tracker-fields_{context}"]
-= Identifying code names of tracker fields
+[id="finding-ids-of-tracker-fields_{context}"]
+= Finding IDs of tracker fields
 
-To access your Bugzilla and Jira instance, you must know the internal code names that the tracker gives to your documentation fields. The following procedure identifies the field code names.
+To access your Bugzilla and Jira instance, you must know the internal IDs that the tracker gives to your documentation fields. The following procedure identifies the field IDs.
 
 .Prerequisites
 
@@ -21,7 +21,7 @@ To access your Bugzilla and Jira instance, you must know the internal code names
 
 . Your web browser displays a toolbar that lists the elements of the web page, and highlights the element that represents the selected documentation field.
 
-. Find the code name of the field in the `label` tag:
+. Find the field ID in the `label` tag:
 
 ** With Bugzilla:
 +
