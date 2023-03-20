@@ -3,7 +3,7 @@
 [id="required-and-optional-fields-in-tracker-configuration_{context}"]
 = Required and optional fields in tracker configuration
 
-The `{bin-name}/trackers.yaml` configuration file requires certain configuration fields and exposes several optional ones.
+The lists below describe mandatory and optional fields for the `{bin-name}/trackers.yaml` configuration file.
 
 .Bugzilla configuration
 
@@ -103,7 +103,7 @@ By default, {name} uses the standard Jira *Fix Version/s* field. You can overrid
 This field is required only if you configure your templates to sort using the subsystem. It is a drop-down menu of values.
 
 
-.Several possible IDs
+.Multiple field IDs from different projects
 
 Settings in the `fields` section always accept a list of IDs that {name} tries out successively.
 
