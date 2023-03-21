@@ -1,0 +1,26 @@
+ifdef::context[:parent-context-of-organizing-tickets-in-your-project-using-templates: {context}]
+
+:_content-type: ASSEMBLY
+
+ifndef::context[]
+[id="organizing-tickets-in-your-project-using-templates"]
+endif::[]
+ifdef::context[]
+[id="organizing-tickets-in-your-project-using-templates_{context}"]
+endif::[]
+= Organizing tickets in your project using templates
+
+:context: organizing-tickets-in-your-project-using-templates
+
+The default, sample project configuration organizes your release notes based on their doc type. You can configure the templates in your release notes project to organize release notes using other criteria, and edit the content of the generated files.
+
+include::modules/proc_structuring-templates.adoc[leveloffset=+1]
+
+include::modules/ref_available-options-to-organize-release-notes.adoc[leveloffset=+1]
+
+include::modules/con_documentation-files-generated-from-templates.adoc[leveloffset=+1]
+
+
+ifdef::parent-context-of-organizing-tickets-in-your-project-using-templates[:context: {parent-context-of-organizing-tickets-in-your-project-using-templates}]
+ifndef::parent-context-of-organizing-tickets-in-your-project-using-templates[:!context:]
+

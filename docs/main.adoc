@@ -16,7 +16,7 @@ include::assembly_adding-tickets-to-your-project.adoc[leveloffset=+1]
 
 include::modules/proc_building-release-notes.adoc[leveloffset=+1]
 
-include::assembly_sorting-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
+include::assembly_organizing-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
 
 include::modules/ref_differences-between-cizrna-and-corn-3.adoc[leveloffset=+1]
 

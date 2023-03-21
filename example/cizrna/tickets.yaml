@@ -19,5 +19,5 @@
 ### This is a standard JQL query.
 - [Jira, search: 'project="CentOS Stream" AND priority=Blocker']
 
-### This JQL query identifies an existing filter and lists all tickets from the filter.
+### This JQL query identifies a saved filter and lists all tickets from the filter.
 - [Jira, search: 'filter = 12345678']

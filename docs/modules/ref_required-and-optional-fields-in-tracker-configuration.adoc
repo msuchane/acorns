@@ -51,7 +51,7 @@ By default, {name} uses the standard Bugzilla *Docs Contact* field. You can over
 By default, {name} uses the standard Bugzilla *Target Release* field. You can override it with a custom field.
 
 `subsystems`::
-This field is required only if you configure your templates to sort using the subsystem.
+This field is required only if you configure your templates to organize using the subsystem.
 +
 Currently, this field expects an *Agile Pool* menu.
 
@@ -100,7 +100,7 @@ The following fields are optional:
 By default, {name} uses the standard Jira *Fix Version/s* field. You can override it with a custom field.
 
 `subsystems`::
-This field is required only if you configure your templates to sort using the subsystem. It is a drop-down menu of values.
+This field is required only if you configure your templates to organize using the subsystem. It is a drop-down menu of values.
 
 
 .Multiple field IDs from different projects

@@ -8,7 +8,7 @@ chapters:
     intro_abstract: "This part describes new features and major enhancements introduced in {PRODUCT}."
     # The `filter` field defines what kinds of tickets populate this chapter.
     filter:
-      # This filter sorts tickets by their doc type.
+      # This filter organizes tickets by their doc type.
       # All tickets that have a doc type of "Enhancement", "Release Note", or "Feature"
       # appear in the "New features" chapter of the document.
       doc_type: ["Enhancement", "Release Note", "Feature"]

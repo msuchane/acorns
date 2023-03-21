@@ -151,7 +151,7 @@ struct TicketQueryOptions {
 }
 
 /// Optional, configurable overrides that modify an `AbstractTicket`.
-/// The selected fields that you can modify affect the sorting of the ticket in the document.
+/// The selected fields that you can modify affect the organization of the ticket in the document.
 #[derive(Debug, Eq, PartialEq, Hash, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Overrides {

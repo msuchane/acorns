@@ -17,7 +17,7 @@ Lists the tickets and ticket queries that populate your release notes.
 Configures access to your Bugzilla and Jira instance.
 
 `cizrna/templates.yaml`::
-Configures how your tickets are sorted into sections of the document.
+Configures how your tickets are organized into sections of the document.
 
 `cizrna/generated/external/` and `cizrna/generated/internal/`::
 Store the generated assemblies and modules. These directories strictly contain only generated content, and the directories appear when Cizrna has generated documentation files.

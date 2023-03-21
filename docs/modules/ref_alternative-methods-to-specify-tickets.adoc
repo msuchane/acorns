@@ -25,7 +25,7 @@ Each entry in the `{bin-name}/tickets.yaml` configuration file follows this stru
 
 . Optional: The `overrides` keyword, which enables you to manually override the value of the ticket's doc type, components, or subsystems.
 
-. Optional: The `references` keyword, which enables you to set several other tickets that {name} adds as ID references to this release note.
+. Optional: The `references` keyword, which enables you to attach multiple additional ticket IDs to this release note.
 
 
 .Tickets listed individually, using their IDs or keys
