@@ -12,13 +12,13 @@ Each entry in the `{bin-name}/tickets.yaml` configuration file follows this stru
 
 . A pair of square brackets (`[ ]`) to contain the entry.
 
-. A keyword that identifies the ticket tracker, followed by a comma. Either of the following:
+. A keyword that identifies the ticket tracker, followed by a comma. The following values are supported:
 
 ** `Jira`
 ** `Bugzilla`
 ** `BZ` as a shorthand for `Bugzilla`
 
-. A keyword that specifies the method to retrieve tickets. Either of the following:
+. A keyword that specifies the method to retrieve tickets. The following values are supported:
 
 ** `key` to select a single ticket, followed by the ID or key of the ticket.
 ** `search` to select all tickets that match a search, followed by a string in the format that the ticket tracker recognizes as a search query.

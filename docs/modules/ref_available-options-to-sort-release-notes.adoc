@@ -6,11 +6,11 @@
 The `{bin-name}/templates.yaml` configuration file recognizes several options and properties to sort release notes in your document.
 
 .The base level of sorting
-The configuration file always requires the `chapters` section, which defines the initial, base sorting level.
+The configuration file always requires the `chapters` entry, which defines the initial, base sorting level.
 
 This level is called `chapters` because it usually generates files that you include directly from your `main.adoc` file, either as reference modules or as assemblies.
 
-The `chapters` section has the following syntax:
+The `chapters` entry has the following syntax:
 
 [source,yaml]
 ----
@@ -48,11 +48,11 @@ The asterisk (`*`) at the start of each section name is the YaML anchor syntax t
 
 
 .Deeper levels of sorting
-If you enable deeper levels of sorting by specifying the `sections` option in `chapters`, you must add the `sections` section at the top of the `templates.yaml` file.
+If you enable deeper levels of sorting by specifying the `sections` option in `chapters`, you must add the `sections` entry at the top of the `templates.yaml` file.
 
-The `sections` section defines rules sorting at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
+The `sections` entry defines rules sorting at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
 
-The `sections` section has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
+The `sections` entry has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
 
 [source,yaml]
 ----

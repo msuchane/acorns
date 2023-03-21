@@ -15,18 +15,18 @@ To structure your templates, edit the settings in the `templates.yaml` configura
 
 . In your release notes project, open the `{bin-name}/templates.yaml` file in an editor.
 
-. Decide how you want to sort your release notes:
+. Edit the templates to organize your release notes in the rendered document:
 
 ** In a relatively small project with few release notes, you might want to continue sorting just by one property of release notes, such as just by doc type, just by component, or just by subsystem.
 +
-In this case, keep the `chapters` section of the configuration file and edit the rules in it.
+In this case, keep the `chapters` entry of the configuration file and edit the rules in it.
 
 ** In a relatively large project with many release notes, you might want to further divide your release notes by several properties, which results in several levels of nested sections. For example, you can sort by doc type at the base level and further divide each doc type chapter into subsections based on components.
 +
 In this case:
 
-.. Add the `sections` section at the top of the configuration file, where you define the deeper levels of nested sorting.
-.. Edit the rules in the `chapters` section of the configuration file. Include the sorting rules that you defined in the `sections` section. Use the YaML anchors syntax to include previously defined rules.
+.. Add the `sections` entry at the top of the configuration file, where you define the deeper levels of nested sorting.
+.. Edit the rules in the `chapters` entry of the configuration file. Include the sorting rules that you defined in the `sections` entry. Use the YaML anchors syntax to include previously defined rules.
 
 . Rebuild your release notes and examine the generated files in the `{bin-name}/generated/internal/` directory.
 
@@ -40,7 +40,7 @@ In this case:
 # asciidoctor --safe -vn internal.adoc
 ----
 
-. Open the preview and check the section structure.
+. Open the preview and check the document structure.
 
 
 [role="_additional-resources"]

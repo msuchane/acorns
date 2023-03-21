@@ -105,7 +105,7 @@ This field is required only if you configure your templates to sort using the su
 
 .Multiple field IDs from different projects
 
-Settings in the `fields` section always accept a list of IDs that {name} tries out successively.
+Settings in the `fields` entry always accept a list of IDs that {name} tries out successively.
 
 For example, if you use Jira tickets from three different projects that each set a different doc text field, you can list all field IDs:
 

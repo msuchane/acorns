@@ -18,7 +18,7 @@ To enable access to your ticket trackers, enter the required settings in the `tr
 +
 NOTE: Currently, {name} requires configuration for both trackers. If you are using only one, you can enter empty, invalid values for the other, unused trackers, such as an empty list (`[]`) or the default values. {name} only loads the configuration for a particular tracker when your project contains tickets that come from the tracker. Otherwise, {name} ignores the tracker configuration.
 
-** In the `bugzilla` section, fill out the following, required fields for Bugzilla:
+** In the `bugzilla` entry, fill out the following, required fields for Bugzilla:
 +
 [source,yaml]
 ----
@@ -38,7 +38,7 @@ bugzilla:
 <4> The ID of the flag that describes the status of the release note.
 
 
-** In the `jira` section, fill out the following, required fields for Jira:
+** In the `jira` entry, fill out the following, required fields for Jira:
 +
 [source,yaml]
 ----
