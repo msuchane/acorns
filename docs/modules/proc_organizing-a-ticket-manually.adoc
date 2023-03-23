@@ -1,0 +1,54 @@
+:_content-type: PROCEDURE
+
+[id="organizing-a-ticket-manually_{context}"]
+= Organizing a ticket manually
+
+{name} organizes your release notes based on the ticket properties as defined in `templates.yaml`. If a release note appears in the wrong section, but you cannot edit the ticket itself, you can override certain ticket properties in the `tickets.yaml` file.
+
+.Prerequisites
+
+.Prerequisites
+
+* You have added tickets to your release notes project configuration.
+* You have defined release note templates.
+
+.Procedure
+
+. Find the line that defines the ticket in `tickets.yaml`.
++
+.A ticket without overrides
+====
+[source,yaml]
+----
+- [Jira, key: PROJECT-1234]
+----
+====
+
+. Add an override to adjust the release note organization:
++
+.A ticket with an override
+====
+[source,yaml, subs="+quotes"]
+----
+- [Jira, key: PROJECT-1234, { overrides: {__components__: [__CustomComponent__]} }]
+----
+====
++
+In the `overrides` block, you can use the following elements to override selected ticket properties:
++
+`components: [_Component1_, _Component2_]`::
+Set custom components for this ticket.
+`doc_type: _Type_`::
+Set a custom doc type for this ticket.
+`subsystems: [_SST1_, _SST2_]`::
+Set custom subsystems for this ticket.
+
+.Verification
+
+. Build an HTML preview of the internal document:
++
+----
+# asciidoctor --safe -vn internal.adoc
+----
+
+. Open the preview and check where the release note appears.

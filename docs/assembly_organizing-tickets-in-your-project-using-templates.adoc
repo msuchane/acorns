@@ -18,6 +18,8 @@ include::modules/proc_structuring-templates.adoc[leveloffset=+1]
 
 include::modules/ref_available-options-to-organize-release-notes.adoc[leveloffset=+1]
 
+include::modules/proc_organizing-a-ticket-manually.adoc[leveloffset=+1]
+
 include::modules/con_documentation-files-generated-from-templates.adoc[leveloffset=+1]
 
 
