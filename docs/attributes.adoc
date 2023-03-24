@@ -2,6 +2,8 @@
 :doctype: book
 :source-highlighter: highlight.js
 :icons: font
+:experimental:
+:sectanchors:
 
 :name: Cizrna
 :bin-name: cizrna
