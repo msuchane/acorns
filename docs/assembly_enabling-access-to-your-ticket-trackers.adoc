@@ -22,6 +22,8 @@ include::modules/proc_finding-ids-of-tracker-fields.adoc[leveloffset=+1]
 
 include::modules/ref_required-and-optional-fields-in-tracker-configuration.adoc[leveloffset=+1]
 
+include::modules/proc_obtaining-api-keys-to-ticket-trackers.adoc[leveloffset=+1]
+
 
 ifdef::parent-context-of-enabling-access-to-your-ticket-trackers[:context: {parent-context-of-enabling-access-to-your-ticket-trackers}]
 ifndef::parent-context-of-enabling-access-to-your-ticket-trackers[:!context:]

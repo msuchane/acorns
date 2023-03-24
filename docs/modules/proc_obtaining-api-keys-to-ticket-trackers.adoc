@@ -1,0 +1,45 @@
+:_content-type: PROCEDURE
+
+[id="obtaining-api-keys-to-ticket-trackers_{context}"]
+= Obtaining API keys to ticket trackers
+
+To log into your ticket trackers, {name} needs your API keys. If you do not have or do not know any API keys, you can generate them.
+
+.Prerequisites
+
+* You have logged into your Jira and Bugzilla accounts.
+* Your Jira instance enables the *Personal Access Tokens* plug-in (`com.atlassian.pats`).
+
+.Procedure
+
+. Generate a Jira API key:
+
+.. Click your profile picture in the upper-right corner and select *Profile*.
+
+.. Go to the *Personal Access Tokens* tab.
+
+.. Click *Create token*.
+
+.. In the *Token Name* field, enter a name for your new API key.
+
+.. Under *Expiry date*, set for how long this API key stays valid.
+
+.. Click *Create*.
+
+.. Note down the API key displayed at the top of the page.
+
+. Generate a Bugzilla API key:
+
+.. Click your name in the upper-right corner and select *Preferences*.
+
+.. Click *API Keys*.
+
+.. Under the *New API key* heading, check the checkbox and enter a name for your new API key.
+
+.. Click *Submit Changes*.
+
+.. Note down the API key displayed at the top of the page.
+
+. Save your API keys in a password manager.
++
+You cannot recover the API keys from Jira or Bugzilla. You can only generate new ones and revoke existing ones.
