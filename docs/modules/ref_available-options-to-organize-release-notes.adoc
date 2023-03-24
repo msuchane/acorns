@@ -8,7 +8,7 @@ The `{bin-name}/templates.yaml` configuration file recognizes several options an
 .The base level of organization
 The configuration file always requires the `chapters` entry, which defines the initial, base organization level.
 
-This level is called `chapters` because it usually generates files that you include directly from your `main.adoc` file, either as reference modules or as assemblies.
+This level is called `chapters` because it usually generates files that you include directly from your `main.adoc` file. These generated files can either be reference modules or assemblies, depending on their content.
 
 The `chapters` entry has the following syntax:
 
@@ -34,7 +34,7 @@ chapters:
       - *virtualization
 ----
 <1> The title (heading) of the generated AsciiDoc file.
-<2> Settings that define which tickets appear in this chapter (module or assembly).
+<2> Settings that define which tickets appear in this chapter or subsection.
 <3> The `filter` settings accept the following properties to select tickets:
 ** `doc_type`
 ** `component`

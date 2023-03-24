@@ -3,7 +3,7 @@
 [id="documentation-files-generated-from-templates_{context}"]
 = Documentation files generated from templates
 
-Every chapter and section defined in the `templates.yaml` file attempts to generate a matching AsciiDoc file according to the following rules:
+Every chapter and section defined in the `templates.yaml` file attempts to generate a matching AsciiDoc file. The generated file can either be a reference module or an assembly, depending on its content. The following rules decide the type and name of the generated file:
 
 * If this chapter or section includes no other `sections` definitions, it generates a reference module. The file name of the module is:
 +
