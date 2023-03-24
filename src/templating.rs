@@ -210,7 +210,7 @@ impl config::Section {
     ) -> Option<Module> {
         let matching_tickets: Vec<&AbstractTicket> = tickets
             .iter()
-            .filter(|t| self.matches_ticket(t))
+            .filter(|&&t| self.matches_ticket(t))
             .copied()
             .collect();
 
@@ -222,7 +222,7 @@ impl config::Section {
         };
 
         // If the section includes other sections, treat it as an assembly.
-        if let Some(sections) = &self.sections {
+        if let Some(sections) = &self.subsections {
             let file_name = format!("assembly_{module_id}.adoc");
             let included_modules: Vec<Module> = sections
                 .iter()

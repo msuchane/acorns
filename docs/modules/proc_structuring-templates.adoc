@@ -25,8 +25,8 @@ In this case, keep the `chapters` entry of the configuration file and edit the r
 +
 In this case:
 
-.. Add the `sections` entry at the top of the configuration file, where you define the deeper levels of nested organization. This entry is described in xref:available-options-to-organize-release-notes_{context}[].
-.. Edit the rules in the `chapters` entry of the configuration file. Include the organizing rules that you defined in the `sections` entry. Use the YaML anchors syntax to include previously defined rules.
+.. Add the `subsections` entry at the top of the configuration file, where you define the deeper levels of nested organization. This entry is described in xref:available-options-to-organize-release-notes_{context}[].
+.. Edit the rules in the `chapters` entry of the configuration file. Include the organizing rules that you defined in the `subsections` entry. Use the YaML anchors syntax to include previously defined rules.
 
 . Rebuild your release notes and examine the generated files in the `{bin-name}/generated/internal/` directory.
 

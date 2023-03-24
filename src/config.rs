@@ -339,7 +339,7 @@ pub mod tracker {
 }
 
 /// This struct models the template configuration file.
-/// It includes both `chapters` and `sections` because this is a way
+/// It includes both `chapters` and `subsections` because this is a way
 /// in YaML to create reusable section definitions that can then
 /// appear several times in different places. They have to be defined
 /// on the top level, outside the actual chapters.
@@ -347,12 +347,13 @@ pub mod tracker {
 #[serde(deny_unknown_fields)]
 pub struct Template {
     pub chapters: Vec<Section>,
-    pub sections: Option<Vec<Section>>,
+    #[serde(alias = "sections")]
+    pub subsections: Option<Vec<Section>>,
 }
 
 /// This struct covers the necessary properties of a section, which can either
 /// turn into a module if it's a leaf, or into an assembly if it includes
-/// more sections.
+/// more subsections.
 ///
 /// The `filter` field narrows down the tickets that can appear in this module
 /// or in the modules that are included in this assembly.
@@ -362,7 +363,8 @@ pub struct Section {
     pub title: String,
     pub intro_abstract: Option<String>,
     pub filter: Filter,
-    pub sections: Option<Vec<Section>>,
+    #[serde(alias = "sections")]
+    pub subsections: Option<Vec<Section>>,
 }
 
 /// The configuration of a filter, which narrows down the tickets

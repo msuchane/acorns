@@ -27,7 +27,7 @@ chapters:
       doc_type:
         - "Enhancement"
         - "Feature" <6>
-    sections: <7>
+    subsections: <7>
       - *installer
       - *networking
       - *storage
@@ -42,21 +42,23 @@ chapters:
 <4> This chapter lists all tickets that have the `Bug Fix` doc type.
 <5> Optional: An abstract (introduction) of this chapter. The text appears directly under the title and can contain arbitrary AsciiDoc syntax, including attributes.
 <6> Optional: This chapter lists all tickets that have either the `Enhancement` or `Feature` doc type. You can group multiple values together and they do not have to be related.
-<7> Optional: To enable a deeper level of nesting, this chapter includes sections with different organizing settings. This chapter starts with tickets of the `Enhancement` and `Feature` doc types, and divides them further by rules defined in the listed sections.
+<7> Optional: To enable a deeper level of nesting, this chapter includes subsections with different organizing settings. This chapter starts with tickets of the `Enhancement` and `Feature` doc types, and divides them further by rules defined in the listed subsections.
 +
-The asterisk (`*`) at the start of each section name is the YaML anchor syntax that refers to elements written elsewhere in the configuration file, labeled with this anchor.
+The asterisk (`*`) at the start of each subsection name is the YaML anchor syntax that refers to elements written elsewhere in the configuration file, labeled with this anchor.
++
+NOTE: Subsections can also be called `sections` in the configuration file for legacy compatibility.
 
 
 .Deeper levels of organization
-If you enable deeper levels of organization by specifying the `sections` option in `chapters`, you must add the `sections` entry at the top of the `templates.yaml` file.
+If you enable deeper levels of organization by specifying the `subsections` (or `sections`) option in `chapters`, you must add the `subsections` (or `sections`) entry at the top of the `templates.yaml` file.
 
-The `sections` entry defines rules organizing at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
+The `subsections` entry defines rules organizing at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
 
-The `sections` entry has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
+The `subsections` entry has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
 
 [source,yaml]
 ----
-sections:
+subsections:
 
   - &networking <1>
     title: "Networking" <2>
@@ -133,7 +135,7 @@ chapters:
 
 [source,yaml]
 ----
-sections:
+subsections:
   - &web_console
     title: "Web console"
     filter:
@@ -164,7 +166,7 @@ chapters:
         - "Enhancement"
         - "Release Note"
         - "Feature"
-    sections: <1>
+    subsections: <1>
       - *web_console
       - *oc
       - *images
@@ -174,7 +176,7 @@ chapters:
     filter:
       doc_type:
         - "Bug Fix"
-    sections:
+    subsections:
       - *web_console
       - *oc
       - *images
@@ -187,7 +189,7 @@ chapters:
     filter:
       doc_type:
         - "Technology Preview"
-    sections:
+    subsections:
       - *web_console
       - *oc
       - *images
@@ -200,7 +202,7 @@ chapters:
     filter:
       doc_type:
         - "Deprecated Functionality"
-    sections:
+    subsections:
       - *web_console
       - *oc
       - *images
@@ -211,7 +213,7 @@ chapters:
       doc_type:
         - "Known Issue"
 ----
-<1> You must repeat the sections list in each chapter configuration that you want to subdivide into deeper organizing levels.
-<2> This chapter does not list any sections. As a result, all tickets in this chapter will appear together in the same chapter, with no further division into sections.
+<1> You must repeat the subsections list in each chapter configuration that you want to subdivide into deeper organizing levels.
+<2> This chapter does not list any subsections. As a result, all tickets in this chapter will appear together in the same chapter, with no further division into subsections.
 
 ====
