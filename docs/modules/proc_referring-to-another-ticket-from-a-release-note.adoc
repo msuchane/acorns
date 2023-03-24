@@ -1,0 +1,48 @@
+:_content-type: PROCEDURE
+
+[id="referring-to-another-ticket-from-a-release-note_{context}"]
+= Referring to another ticket from a release note
+
+Every release note ends with a reference to the ticket that it comes from. You can extend this reference to also include other, related tickets. In the release note body, you can also refer to other release notes within the document.
+
+.Prerequisites
+
+* You have added tickets to your release notes project configuration.
+
+.Procedure
+
+* To refer to additional tickets at the end of the release note:
+
+.. Find the line that defines the ticket in `tickets.yaml`.
++
+.A ticket without references
+====
+[source,yaml]
+----
+- [Jira, key: PROJECT-1234]
+----
+====
+
+.. Add references to other tickets.
++
+.A ticket with references
+====
+[source,yaml, subs="+quotes"]
+----
+- [Jira, key: PROJECT-1234, { references: [[BZ, key: 123456], [Jira, key: PROJECT-2345]] }]
+----
+====
++
+The `references` block is a list that specifies tickets using the same syntax as the main list in `tickets.yaml`.
+
+* To refer to another release note within the document, use the standard AsciiDoc `xref` syntax in the release note body.
++
+You can refer to any release note using an ID that corresponds to its ticket tracker and ticket key, separated by a dash. For example:
++
+.References to release notes
+====
+[source,asciidoc]
+----
+See xref:BZ-123456[] and xref:Jira-PROJECT-1234[].
+----
+====

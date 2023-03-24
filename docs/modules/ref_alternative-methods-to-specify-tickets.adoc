@@ -102,3 +102,4 @@ Each entry in the `{bin-name}/tickets.yaml` configuration file follows this stru
 [role="_additional-resources"]
 .Additional resources
 * For an explanation of the `overrides` keyword, see xref:organizing-a-ticket-manually_organizing-tickets-in-your-project-using-templates[].
+* For an explanation of the `references` keyword, see xref:referring-to-another-ticket-from-a-release-note_organizing-tickets-in-your-project-using-templates[].
