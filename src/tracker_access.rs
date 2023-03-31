@@ -410,7 +410,7 @@ async fn issues_from_searches(
             .search(search)
             // This enables the download concurrency:
             .await
-            .wrap_err("Failed to download tickets from Bugzilla.")?
+            .wrap_err("Failed to download tickets from Jira.")?
             .into_iter()
             .map(|issue| (Arc::clone(query), issue))
             .collect();
