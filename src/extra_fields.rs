@@ -407,13 +407,9 @@ impl ExtraFields for Bug {
     }
 }
 
+/// A simple text entry field that might occur at various places in Jira.
 #[derive(Deserialize, Debug)]
-struct JiraDocType {
-    value: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct JiraSST {
+struct TextEntry {
     value: String,
 }
 
@@ -426,7 +422,7 @@ impl ExtraFields for Issue {
             let doc_type_field = self.fields.extra.get(field);
 
             if let Some(doc_type_field) = doc_type_field {
-                let doc_type: Result<JiraDocType, serde_json::Error> =
+                let doc_type: Result<TextEntry, serde_json::Error> =
                     serde_json::from_value(doc_type_field.clone());
 
                 match doc_type {
@@ -551,7 +547,7 @@ impl ExtraFields for Issue {
             let pool = self.fields.extra.get(field);
 
             if let Some(pool) = pool {
-                let ssts: Result<Vec<JiraSST>, serde_json::Error> =
+                let ssts: Result<Vec<TextEntry>, serde_json::Error> =
                     serde_json::from_value(pool.clone());
 
                 // If the field exist, try parsing it and returning the result.
