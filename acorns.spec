@@ -9,7 +9,7 @@ Group: Applications/Text
 Source0: https://github.com/msuchane/%{name}/archive/refs/tags/v%{version}.tar.gz
 
 # This works fine with Fedora and RHEL, but breaks the SUSE build:
-# ExclusiveArch: %{rust_arches}
+ExclusiveArch: %{rust_arches}
 
 BuildRequires: rust
 BuildRequires: cargo
