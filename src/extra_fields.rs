@@ -1,5 +1,5 @@
 /*
-cizrna: Generate an AsciiDoc release notes document from tracking tickets.
+acorns: Generate an AsciiDoc release notes document from tracking tickets.
 Copyright (C) 2022  Marek Suchánek  <msuchane@redhat.com>
 
 This program is free software: you can redistribute it and/or modify

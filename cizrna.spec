@@ -1,9 +1,9 @@
-Name: cizrna
+Name: acorns
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
 Version: 0.25.0
 Release: 1%{?dist}
 License: GPLv3+
-URL: https://github.com/msuchane/cizrna
+URL: https://github.com/msuchane/acorns
 Group: Applications/Text
 #Source0: https://static.crates.io/crates/%{name}/%{name}-%{version}.crate
 Source0: https://github.com/msuchane/%{name}/archive/refs/tags/v%{version}.tar.gz

@@ -1,5 +1,5 @@
 /*
-cizrna: Generate an AsciiDoc release notes document from tracking tickets.
+acorns: Generate an AsciiDoc release notes document from tracking tickets.
 Copyright (C) 2023  Marek Suchánek  <msuchane@redhat.com>
 
 This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /*!
-a Cizrna subcommand that initializes an empty directory with all the necessary Cizrna configuration files.
+A subcommand that initializes an empty directory with all the necessary aCoRNs configuration files.
 
 This makes it more convenient to set up a new release notes project from scratch.
 */
@@ -28,7 +28,7 @@ use std::path::Path;
 use color_eyre::{eyre::WrapErr, Result};
 use include_dir::{include_dir, Dir, DirEntry};
 
-/// The `example` directory in the Cizrna source repository.
+/// The `example` directory in the aCoRNs source repository.
 static EXAMPLE_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/example");
 
 /// Copy example configuration files into the selected directory.

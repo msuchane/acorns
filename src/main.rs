@@ -1,5 +1,5 @@
 /*
-cizrna: Generate an AsciiDoc release notes document from tracking tickets.
+acorns: Generate an AsciiDoc release notes document from tracking tickets.
 Copyright (C) 2022  Marek Suchánek  <msuchane@redhat.com>
 
 This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use color_eyre::eyre::Result;
 
-use cizrna::cli;
-use cizrna::run;
+use acorns::cli;
+use acorns::run;
 
 fn main() -> Result<()> {
     // Enable full-featured error logging.

@@ -5,9 +5,9 @@
 :experimental:
 :sectanchors:
 
-:name: Cizrna
-:bin-name: cizrna
-:git-repo: https://github.com/msuchane/cizrna
+:name: aCoRNs
+:bin-name: acorns
+:git-repo: https://github.com/msuchane/acorns
 :container-repo: quay.io/msuchane/cizrna
 :container-repo-slug: msuchane/cizrna
 :copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/cizrna

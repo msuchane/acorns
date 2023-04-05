@@ -3,6 +3,30 @@
 version = 3
 
 [[package]]
+name = "acorns"
+version = "0.25.0"
+dependencies = [
+ "askama",
+ "bpaf",
+ "bugzilla_query",
+ "chrono",
+ "color-eyre",
+ "counter",
+ "include_dir",
+ "jira_query",
+ "log",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serde_yaml",
+ "simplelog",
+ "time 0.3.19",
+ "tokio",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -197,30 +221,6 @@ dependencies = [
  "time 0.1.45",
  "wasm-bindgen",
  "winapi",
-]
-
-[[package]]
-name = "cizrna"
-version = "0.25.0"
-dependencies = [
- "askama",
- "bpaf",
- "bugzilla_query",
- "chrono",
- "color-eyre",
- "counter",
- "include_dir",
- "jira_query",
- "log",
- "once_cell",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "serde_yaml",
- "simplelog",
- "time 0.3.19",
- "tokio",
 ]
 
 [[package]]

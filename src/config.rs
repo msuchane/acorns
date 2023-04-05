@@ -1,5 +1,5 @@
 /*
-cizrna: Generate an AsciiDoc release notes document from tracking tickets.
+acorns: Generate an AsciiDoc release notes document from tracking tickets.
 Copyright (C) 2022  Marek Suchánek  <msuchane@redhat.com>
 
 This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ use serde::Deserialize;
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
-/// The sub-directory inside the release notes project that contains all Cizrna configuration and other files.
+/// The sub-directory inside the release notes project that contains all aCoRNs configuration and other files.
 /// The name of this sub-directory is the same as the name of this program.
 const DATA_PREFIX: &str = PROGRAM_NAME;
 

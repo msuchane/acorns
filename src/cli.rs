@@ -1,5 +1,5 @@
 /*
-cizrna: Generate an AsciiDoc release notes document from tracking tickets.
+acorns: Generate an AsciiDoc release notes document from tracking tickets.
 Copyright (C) 2022  Marek Suchánek  <msuchane@redhat.com>
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ use bpaf::Bpaf;
 /// Define the command-line arguments of the tool.
 #[must_use]
 pub fn arguments() -> Cli {
-    let usage_prefix = "Usage: cizrna {usage}";
+    let usage_prefix = "Usage: acorns {usage}";
     cli().usage(usage_prefix).run()
 }
 
@@ -69,7 +69,7 @@ pub enum Commands {
             short,
             long,
             argument("FILE"),
-            fallback("./cizrna/trackers.yaml".into())
+            fallback("./acorns/trackers.yaml".into())
         )]
         config: PathBuf,
         /// The API key to access the tracker.
