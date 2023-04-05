@@ -2,18 +2,18 @@
 # of the release notes and publishes them using GitLab Pages,
 # along with the generated status table.
 
-## Build the release notes using Cizrna
-cizrna:
-  image: quay.io/msuchane/cizrna:latest
+## Build the release notes using aCoRNs
+acorns:
+  image: quay.io/msuchane/acorns:latest
   stage: build
   tags:
     - shared
   artifacts:
     paths:
-      - 'cizrna/generated'
+      - 'acorns/generated'
   script:
-    - cizrna --version
-    - cizrna build
+    - acorns --version
+    - acorns build
 
 ## Compile HTML previews from the generated AsciiDoc
 pages:
@@ -31,8 +31,8 @@ pages:
     - cp preview-index.html $OUT_DIR/index.html
     - cp main.html $OUT_DIR/external.html
     - cp internal.html $OUT_DIR/internal.html
-    - cp cizrna/generated/status-table.html $OUT_DIR/status-table.html
-    - cp cizrna/generated/status-table.json $OUT_DIR/status-table.json
+    - cp acorns/generated/status-table.html $OUT_DIR/status-table.html
+    - cp acorns/generated/status-table.json $OUT_DIR/status-table.json
     - printf "<p>Latest generated release:</p><p><a href=$CI_COMMIT_REF_NAME>$CI_COMMIT_REF_NAME</a></p>" > public/index.html
   artifacts:
     paths:

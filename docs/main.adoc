@@ -6,7 +6,7 @@ include::attributes.adoc[]
 This guide describes how to use the {name} release notes generator to create, maintain, and publish release notes from a combination of manually written documentation and generated ticket descriptions.
 
 
-include::modules/proc_installing-cizrna.adoc[leveloffset=+1]
+include::modules/proc_installing-acorns.adoc[leveloffset=+1]
 
 include::modules/proc_creating-a-new-release-notes-project.adoc[leveloffset=+1]
 
@@ -18,7 +18,7 @@ include::modules/proc_building-release-notes.adoc[leveloffset=+1]
 
 include::assembly_organizing-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
 
-include::modules/ref_differences-between-cizrna-and-corn-3.adoc[leveloffset=+1]
+include::modules/ref_differences-between-acorns-and-corn-3.adoc[leveloffset=+1]
 
 
 == Known issues and limitations

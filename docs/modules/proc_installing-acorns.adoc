@@ -1,7 +1,7 @@
 :_content-type: PROCEDURE
 
-[id="installing-cizrna_{context}"]
-= Installing Cizrna
+[id="installing-acorns_{context}"]
+= Installing aCoRNs
 
 Install the {name} release notes generator on your system, so that you can run it locally.
 
@@ -27,7 +27,7 @@ If this is the case, please upgrade your system.
 # dnf copr enable {copr-repo-slug}
 ----
 
-.. Install the `cizrna` package:
+.. Install the `{bin-name}` package:
 +
 [subs="+attributes"]
 ----
@@ -49,7 +49,7 @@ $ docker pull {container-repo}
 +
 [source,bash,subs="+attributes"]
 ----
-alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
+alias acorns="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
 ----
 
 *** With the Bash shell, save the line at the end of `~/.bashrc`.
@@ -58,7 +58,7 @@ alias cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:
 +
 [subs="+attributes"]
 ----
-$ alias --save cizrna="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
+$ alias --save acorns="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{bin-name}:Z {container-repo-slug} {bin-name}"
 ----
 
 .. Open a new terminal to reload the shell configuration.

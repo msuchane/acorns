@@ -8,9 +8,9 @@
 :name: aCoRNs
 :bin-name: acorns
 :git-repo: https://github.com/msuchane/acorns
-:container-repo: quay.io/msuchane/cizrna
-:container-repo-slug: msuchane/cizrna
-:copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/cizrna
-:copr-repo-slug: mareksu/cizrna
+:container-repo: quay.io/msuchane/acorns
+:container-repo-slug: msuchane/acorns
+:copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/acorns
+:copr-repo-slug: mareksu/acorns
 
 :context: generating-release-notes-using-{bin-name}
