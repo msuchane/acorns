@@ -13,4 +13,4 @@ Previously known as Cizrna. This project is a reimplementation of the earlier Co
 
 ## Installation and usage
 
-See the complete user documentation: link:https://msuchane.github.io/acorns/[].
+See the complete user documentation: <https://msuchane.github.io/acorns/>.
