@@ -21,11 +21,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use color_eyre::eyre::{bail, Result, WrapErr};
+use color_eyre::eyre::{eyre, Result, WrapErr};
 use serde::Deserialize;
 
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
+
+/// The previous name of this program. Used for compatibility purposes.
+const LEGACY_NAME: &str = "cizrna";
 
 /// The sub-directory inside the release notes project that contains all aCoRNs configuration and other files.
 /// The name of this sub-directory is the same as the name of this program.
@@ -424,16 +427,8 @@ impl Project {
     /// and paths to the relevant project directories.
     pub fn new(directory: &Path) -> Result<Self> {
         let abs_path = directory.canonicalize()?;
-        let data_dir = abs_path.join(DATA_PREFIX);
+        let data_dir = locate_data_dir(directory)?;
         let generated_dir = data_dir.join(GENERATED_PREFIX);
-
-        // If not even the main configuration directory exists, exit with an error.
-        if !data_dir.is_dir() {
-            bail!(
-                "The configuration directory is missing: {}",
-                data_dir.display()
-            );
-        }
 
         // Prepare to access each configuration file.
         // TODO: Possibly enable overriding the default config paths.
@@ -462,5 +457,38 @@ impl Project {
             trackers,
             templates,
         })
+    }
+}
+
+/// Find the base data and configuration directory.
+///
+/// The directory is based on the current program name, and if not present, it might
+/// fall back on the legacy program name.
+fn locate_data_dir(directory: &Path) -> Result<PathBuf> {
+    let abs_path = directory.canonicalize()?;
+    let data_dir = abs_path.join(DATA_PREFIX);
+
+    // Try to return the primary, standard data directory.
+    if data_dir.is_dir() {
+        Ok(data_dir)
+    } else {
+        // If the standard directory doesn't exist, fall back on the legacy directory.
+        let legacy_data_dir = abs_path.join(LEGACY_NAME);
+
+        if legacy_data_dir.is_dir() {
+            log::warn!(
+                "Please rename the `{}/` directory to `{}/`.",
+                LEGACY_NAME,
+                DATA_PREFIX
+            );
+            log::warn!("After renaming, you also have to adjust AsciiDoc include paths.");
+            Ok(legacy_data_dir)
+        } else {
+            // If the legacy directory doesn't exist either, return an error.
+            Err(eyre!(
+                "The configuration directory is missing: {}",
+                data_dir.display()
+            ))
+        }
     }
 }
