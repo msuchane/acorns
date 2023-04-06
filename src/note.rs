@@ -68,10 +68,19 @@ impl AbstractTicket {
     /// For example, `link:https://...bugzilla...12345[BZ#12345]`.
     #[must_use]
     pub fn signature(&self) -> String {
+        let id = &self.id;
+
         if self.public {
-            format!("link:{}[{}]", &self.url, self.id)
+            // If the ticket is public, add a clickable link.
+            format!("link:{}[{}]", &self.url, id)
         } else {
-            self.id.to_string()
+            // If the ticket is private, add a footnote that explains
+            // why some links aren't clickable.
+            // The shared ID of the private footnote is arbitrary and large to avoid clashes:
+            // 255 is the u8 max value.
+            // The `{private-footnote}` attribute is defined in the reference template,
+            // and the user can override it in their AsciiDoc files.
+            format!("{id}footnote:255[{{PrivateFootnote}}]")
         }
     }
 

@@ -3,6 +3,11 @@
 
 {{ intro_abstract }}
 
+// A note that explains why some links aren't clickable. You can override the attribute in your manual doc files.
+ifndef::PrivateFootnote[]
+:PrivateFootnote: This ticket is not publicly accessible. Therefore, the release note does not include a link to the ticket.
+endif::[]
+
 {% for release_note in release_notes %}
 {{ release_note }}
 {% endfor %}
