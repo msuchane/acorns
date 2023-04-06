@@ -204,7 +204,10 @@ impl IntoAbstract for Issue {
             flags: None,
             // Jira does not recognize groups in the Bugzilla way. This might change.
             groups: None,
-            // TODO: Implement public
+            // If there are no s`fields.security` settings, the ticket is public. If there are some, it's private.
+            // However, the project as a whole can be public or private, which affects the ticket visibility.
+            // TODO: Find out how the API reports the project settings.
+            // public: self.fields.security.is_none(),
             public: false,
             references,
         };
