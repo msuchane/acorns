@@ -15,6 +15,6 @@ Previously known as Cizrna. This project is a reimplementation of the earlier Co
 
 See the complete user documentation: <https://msuchane.github.io/acorns/>.
 
-# Changes
+## Changes
 
 See [CHANGELOG.md](/CHANGELOG.md).
