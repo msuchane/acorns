@@ -1,7 +1,7 @@
 [package]
 name = "acorns"
 authors = ["Marek Suchánek <msuchane@redhat.com>"]
-version = "0.25.0"
+version = "0.26.0"
 edition = "2021"
 # Check the Rust version using `cargo msrv verify`.
 rust-version = "1.62"
@@ -9,7 +9,7 @@ description = "Generate an AsciiDoc release notes document from tracking tickets
 license = "GPL-3.0-or-later"
 readme = "README.md"
 categories = ["command-line-utilities", "text-processing", "template-engine"]
-keywords = ["release notes", "asciidoc", "documentation", "Red Hat"]
+keywords = ["releasenotes", "asciidoc", "documentation", "RedHat"]
 repository = "https://github.com/msuchane/acorns/"
 homepage = "https://msuchane.github.io/acorns/"
 

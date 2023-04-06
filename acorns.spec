@@ -1,10 +1,11 @@
 Name: acorns
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
-Version: 0.25.0
+Version: 0.26.0
 Release: 1%{?dist}
 License: GPLv3+
 URL: https://github.com/msuchane/acorns
 Group: Applications/Text
+Obsoletes: cizrna
 #Source0: https://static.crates.io/crates/%{name}/%{name}-%{version}.crate
 Source0: https://github.com/msuchane/%{name}/archive/refs/tags/v%{version}.tar.gz
 
@@ -50,7 +51,7 @@ install -m 0644 %{name}.1.gz %{buildroot}%{_mandir}/man1/%{name}.1.gz
 %files
 # Pick documentation and license files from the source directory.
 %doc README.md
-# %doc CHANGELOG.md
+%doc CHANGELOG.md
 %license LICENSE
 %{_mandir}/man1/%{name}.1.gz
 # Pick the binary from the virtual, chroot system.
