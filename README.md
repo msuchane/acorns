@@ -1,7 +1,7 @@
 # A Creator of Release Notes (aCoRNs)
 
-[![Crates.io](https://img.shields.io/crates/v/acorns.svg)](https://crates.io/crates/acorns)
-[![GPL-3.0-or-later license](https://img.shields.io/crates/l/acorns)](https://crates.io/crates/acorns)
+![Crates.io](https://img.shields.io/crates/v/acorns)
+![Crates.io](https://img.shields.io/crates/l/acorns?label=license)
 <!--[![Documentation](https://docs.rs/acorns/badge.svg)](https://docs.rs/acorns)-->
 
 [![CI tests](https://github.com/msuchane/acorns/actions/workflows/rust-tests.yml/badge.svg)](https://github.com/msuchane/acorns/actions/workflows/rust-tests.yml)
