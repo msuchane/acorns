@@ -80,7 +80,11 @@ impl AbstractTicket {
             // 255 is the u8 max value.
             // The `{private-footnote}` attribute is defined in the reference template,
             // and the user can override it in their AsciiDoc files.
-            format!("{id}{{fn-private}}")
+            //
+            // TODO: This works with asciidoctor, but the footnote doesn't render
+            // at all with Pantheon. Disabling for now.
+            // format!("{id}{{fn-private}}")
+            id.to_string()
         }
     }
 
