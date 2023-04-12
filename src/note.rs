@@ -80,7 +80,7 @@ impl AbstractTicket {
             // 255 is the u8 max value.
             // The `{private-footnote}` attribute is defined in the reference template,
             // and the user can override it in their AsciiDoc files.
-            format!("{id}footnote:255[{{PrivateFootnote}}]")
+            format!("{id}{{fn-private}}")
         }
     }
 
