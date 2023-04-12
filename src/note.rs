@@ -98,7 +98,7 @@ impl AbstractTicket {
             signatures.append(&mut references.clone());
         }
 
-        format!("({})", signatures.join(", "))
+        signatures.join(", ")
     }
 
     /// Format an ID, or an anchor, that this release note can set and that you can use
