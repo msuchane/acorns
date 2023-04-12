@@ -1,5 +1,11 @@
 # Changes
 
+## Version 0.27.1
+
+* Use a different footnote attribute, as recommended by the official `asciidoctor` documentation.
+
+  Instead of the `{PrivateFootnote}` attribute containing the footnote text, it is now the `fn-private` attribute that contains the whole footnote macro.
+
 ## Version 0.27.0
 
 * Private ticket IDs now feature a footnote that explains why the ID is not clickable. You can override the footnote text using the `{PrivateFootnote}` attribute.
