@@ -1,5 +1,11 @@
 # Changes
 
+## Version 0.28.0
+
+* Disable the footnote for now. It did not render with Pantheon.
+
+* Remove the parentheses around ticket IDs.
+
 ## Version 0.27.1
 
 * Use a different footnote attribute, as recommended by the official `asciidoctor` documentation.
