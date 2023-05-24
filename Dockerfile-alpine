@@ -1,0 +1,18 @@
+# See https://hub.docker.com/_/rust/
+
+FROM rust:alpine as builder
+WORKDIR /usr/src/acorns
+COPY . .
+RUN apk update
+RUN apk add openssl-dev
+RUN cargo install --path .
+
+FROM alpine:latest
+RUN apk update
+RUN apk add openssl-dev
+COPY --from=builder /usr/local/cargo/bin/acorns /usr/local/bin/acorns
+# When running this container interactively, use `-v .:/mnt/acorns:Z`
+# to mount the current directory in the host to the container working dir.
+VOLUME ["/mnt/acorns"]
+WORKDIR "/mnt/acorns"
+CMD ["acorns"]
