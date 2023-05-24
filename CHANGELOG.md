@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.28.1
+
+* Updated dependencies.
+
 ## Version 0.28.0
 
 * Disable the footnote for now. It did not render with Pantheon.
