@@ -4,6 +4,7 @@ FROM rust:alpine as builder
 WORKDIR /usr/src/acorns
 COPY . .
 RUN apk update
+RUN apk add musl-dev
 RUN apk add openssl-dev
 RUN CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse cargo install --path .
 
