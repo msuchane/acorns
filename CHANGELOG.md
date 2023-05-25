@@ -1,5 +1,10 @@
 # Changes
 
+## Version 0.28.2
+
+* Switch from OpenSSL to RusTLS for better portability.
+* Fix the verbose option.
+
 ## Version 0.28.1
 
 * Updated dependencies.
