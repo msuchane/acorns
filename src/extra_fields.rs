@@ -44,11 +44,12 @@ impl TryFrom<&str> for DocTextStatus {
     type Error = color_eyre::eyre::Error;
 
     fn try_from(string: &str) -> Result<Self> {
-        match string {
-            "+" | "Done" => Ok(Self::Approved),
-            "?" | "Proposed" | "In progress" | "Unset" => Ok(Self::InProgress),
+        // A case-insensitive comparison
+        match string.to_lowercase().as_str() {
+            "+" | "done" => Ok(Self::Approved),
+            "?" | "proposed" | "in progress" | "unset" => Ok(Self::InProgress),
             // TODO: Does "Upstream only" really mean to skip this RN?
-            "-" | "Rejected" | "Upstream only" => Ok(Self::NoDocumentation),
+            "-" | "rejected" | "upstream only" => Ok(Self::NoDocumentation),
             _ => bail!("Unrecognized doc text status value: {:?}", string),
         }
     }

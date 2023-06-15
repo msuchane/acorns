@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.28.3
+
+* Process the doc text status field as case-insensitive.
+
 ## Version 0.28.2
 
 * Switch from OpenSSL to RusTLS for better portability.
