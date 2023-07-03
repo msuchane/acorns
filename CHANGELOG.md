@@ -1,5 +1,10 @@
 # Changes
 
+## Version 0.28.4
+
+* Fix a bug caused by an unset ticket priority.
+* Update dependencies.
+
 ## Version 0.28.3
 
 * Process the doc text status field as case-insensitive.
