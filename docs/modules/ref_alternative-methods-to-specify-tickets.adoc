@@ -57,16 +57,34 @@ Each entry in the `{bin-name}/tickets.yaml` configuration file follows this stru
 - [BZ, search: 'bug_status=VERIFIED&bug_status=CLOSED&product=Our Container Platform&target_release=1.23.0']
 ----
 
+.All Bugzilla bugs that block a particular bug, sometimes called a tracker
+[source,yaml]
+----
+- [BZ, search: '"f1=blocked&o1=equals&v1=12345678"']
+----
+
 .A standard JQL query
 [source,yaml]
 ----
 - [Jira, search: 'project="CentOS Stream" AND priority=Blocker']
 ----
 
-.A Jira issue filter identified using JQL
+.A saved Jira issue filter identified using JQL
 [source,yaml]
 ----
 - [Jira, search: 'filter = 12345678']
+----
+
+.All Jira tickets that are attached to an epic as its children
+[source,yaml]
+----
+- [Jira, search: 'issue in childIssuesOf("PROJECT-123456")']
+----
+
+.All Jira tickets that are linked from a particular ticket, such as blocking or duplicating it
+[source,yaml]
+----
+- [Jira, search: 'issue in linkedIssues("PROJECT-123456")']
 ----
 
 ====
