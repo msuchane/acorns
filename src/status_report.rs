@@ -22,11 +22,11 @@ use std::default::Default;
 use std::ops::Neg;
 
 use askama::Template;
-use chrono::prelude::*;
 use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
 use regex::Regex;
 use serde::Serialize;
+use time::{OffsetDateTime, format_description::well_known::Rfc2822};
 
 use crate::extra_fields::DocTextStatus;
 use crate::note::content_lines;
@@ -519,7 +519,9 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
     let releases = combined_releases(tickets);
     let releases_display = list_or_placeholder(&releases, "releases");
 
-    let date_today = Utc::now().to_rfc2822();
+    let date_today = OffsetDateTime::now_utc()
+        .format(&Rfc2822)
+        .expect("Cannot format the current date to RFC2822. This is a bug.");
 
     // Store checks in their own Vec and zip them with tickets by reference,
     // This satisfies ownership requirements, because the template

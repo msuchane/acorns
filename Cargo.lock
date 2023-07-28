@@ -4,12 +4,11 @@ version = 3
 
 [[package]]
 name = "acorns"
-version = "0.28.3"
+version = "0.28.4"
 dependencies = [
  "askama",
  "bpaf",
  "bugzilla_query",
- "chrono",
  "color-eyre",
  "counter",
  "include_dir",
@@ -22,6 +21,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "simplelog",
+ "time 0.3.22",
  "tokio",
 ]
 
