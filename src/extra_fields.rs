@@ -55,7 +55,6 @@ impl TryFrom<&str> for DocTextStatus {
     }
 }
 
-
 impl fmt::Display for DocTextStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let display = match self {
@@ -589,7 +588,8 @@ impl ExtraFields for Issue {
                     // default to returing the InProgress status, but log a warning.
                     None => {
                         log::warn!(
-                            "The doc text status field is empty in {}",
+                            "The doc text status field ({}) is empty in {}.",
+                            field,
                             Id::Jira(&self.key)
                         );
                         return Ok(DocTextStatus::InProgress);
