@@ -55,6 +55,7 @@ impl TryFrom<&str> for DocTextStatus {
     }
 }
 
+
 impl fmt::Display for DocTextStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let display = match self {
@@ -580,11 +581,24 @@ impl ExtraFields for Issue {
                 .fields
                 .extra
                 .get(field)
-                .and_then(|rdt| rdt.get("value"))
-                .and_then(Value::as_str);
+                .and_then(|rdt| rdt.get("value"));
 
             if let Some(rdt_field) = rdt_field {
-                return DocTextStatus::try_from(rdt_field);
+                match rdt_field.as_str() {
+                    // If the doc text status field exists but it's empty (None value),
+                    // default to returing the InProgress status, but log a warning.
+                    None => {
+                        log::warn!(
+                            "The doc text status field is empty in {}",
+                            Id::Jira(&self.key)
+                        );
+                        return Ok(DocTextStatus::InProgress);
+                    }
+                    // If the field is set (Some value), use the regular string parsing.
+                    Some(string) => {
+                        return DocTextStatus::try_from(string);
+                    }
+                }
             };
         }
 
