@@ -26,7 +26,7 @@ use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
 use regex::Regex;
 use serde::Serialize;
-use time::{OffsetDateTime, format_description::well_known::Rfc2822};
+use time::{format_description::well_known::Rfc2822, OffsetDateTime};
 
 use crate::extra_fields::DocTextStatus;
 use crate::note::content_lines;
