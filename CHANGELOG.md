@@ -1,5 +1,10 @@
 # Changes
 
+## Version 0.28.5
+
+* If a Jira doc text status field exists but it empty (`None`), treat it as an In Progress release note and log a warning. Previously, an empty field caused a build failure.
+* Update dependencies.
+
 ## Version 0.28.4
 
 * Fix a bug caused by an unset ticket priority.
