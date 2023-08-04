@@ -63,6 +63,18 @@ $ alias --save acorns="docker run -it -e BZ_API_KEY -e JIRA_API_KEY -v .:/mnt/{b
 
 .. Open a new terminal to reload the shell configuration.
 
+* On macOS, you can use the Homebrew package manager:
++
+WARNING: This repository is currently experimental. Please report any problems with usage or installation as issues in the `acorns` repository.
+
+.. Install the Homebrew package manager as described on <https://brew.sh/>.
+
+.. Install `acorns`:
++
+----
+$ brew install msuchane/repo/acorns
+----
+
 * On any system, including different Linux distributions and macOS, you can build {name} from source:
 
 .. Install the Rust toolchain se described at <https://rustup.rs/>.
