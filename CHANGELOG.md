@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.28.6
+
+* Use the Jira issue key rather than ID in an error message. The ID is a Jira internal code, whereas the key is the human-readable code that we use in release notes.
+
 ## Version 0.28.5
 
 * If a Jira doc text status field exists but it empty (`None`), treat it as an In Progress release note and log a warning. Previously, an empty field caused a build failure.
