@@ -391,7 +391,7 @@ async fn issues_from_ids(
             .iter()
             .find(|(key, _query)| key == &issue.key.as_str())
             .map(|(_key, query)| Arc::clone(query))
-            .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.id))?;
+            .ok_or_else(|| eyre!("Issue {} doesn't match any configured query.", issue.key))?;
         annotated_issues.push((matching_query, issue));
     }
 
