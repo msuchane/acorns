@@ -440,6 +440,21 @@ impl AbstractTicket {
             self.components.join(", ")
         }
     }
+
+    /// Display the status, and if closed, also the resolution.
+    fn display_status(&self) -> String {
+        // For closed tickets, attach the resolution to the status.
+        if self.status.to_lowercase() == "closed" {
+            let resolution = match &self.resolution {
+                Some(resolution) => resolution.as_str(),
+                None => "no resolution",
+            };
+            format!("{}: {}", self.status, resolution)
+        // For open tickets, simply list the status as is.
+        } else {
+            self.status.clone()
+        }
+    }
 }
 
 /// Extract the account name before `@` from an email address.

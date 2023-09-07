@@ -153,7 +153,7 @@
         <td style="color: {{ overall_status.color() }}">{{ overall_status.message() }}</td>
         <td>{{ ticket.doc_type }}</td>
         <td style="text-align: center;">{{ ticket.doc_text_status }}</td>
-        <td style="color: {{ checks.development.color() }}">{{ ticket.status }}</td>
+        <td style="color: {{ checks.development.color() }}">{{ ticket.display_status() }}</td>
         <td>{{ ticket.docs_contact_short() }}</td>
         <td>{{ ticket.assignee_short() }}</td>
         <td>{{ ticket.display_target_releases() }}</td>

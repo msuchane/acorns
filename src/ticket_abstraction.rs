@@ -42,6 +42,7 @@ pub struct AbstractTicket {
     pub doc_text: String,
     pub docs_contact: DocsContact,
     pub status: String,
+    pub resolution: Option<String>,
     pub is_open: bool,
     pub priority: String,
     pub url: String,
@@ -141,6 +142,7 @@ impl IntoAbstract for Bug {
             url: self.url(config),
             summary: self.summary,
             status: self.status,
+            resolution: Some(self.resolution),
             is_open: self.is_open,
             priority: self.priority,
             // Bugs are always assigned to someone.
@@ -191,6 +193,7 @@ impl IntoAbstract for Issue {
             description: self.fields.description,
             is_open: &self.fields.status.name != "Closed",
             status: self.fields.status.name,
+            resolution: self.fields.resolution.map(|resolution| resolution.name),
             priority: self
                 .fields
                 .priority
