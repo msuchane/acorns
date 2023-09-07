@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.28.7
+
+* In the status table, list the ticket's resolution next to its status if the ticket is closed.
+
 ## Version 0.28.6
 
 * Use the Jira issue key rather than ID in an error message. The ID is a Jira internal code, whereas the key is the human-readable code that we use in release notes.

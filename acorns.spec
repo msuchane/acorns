@@ -1,6 +1,6 @@
 Name: acorns
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
-Version: 0.28.6
+Version: 0.28.7
 Release: 1%{?dist}
 License: GPLv3+
 URL: https://github.com/msuchane/acorns
