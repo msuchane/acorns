@@ -12,9 +12,12 @@ Source0: https://github.com/msuchane/%{name}/archive/refs/tags/v%{version}.tar.g
 # This works fine with Fedora and RHEL, but breaks the SUSE build:
 ExclusiveArch: %{rust_arches}
 
-BuildRequires: rust
-BuildRequires: cargo
+# Build dependencies of acorns:
 BuildRequires: openssl-devel
+# Dependencies of the Rust compiler:
+BuildRequires: make
+BuildRequires: gcc
+BuildRequires: llvm
 
 Requires: openssl-libs
 
@@ -30,8 +33,11 @@ Requires: openssl-libs
 %setup -q
 
 %build
+# Install the latest Rust compiler.
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+
 # Build the binary.
-cargo build --release
+~/.cargo/bin/cargo build --release
 
 %install
 # Clean up previous artifacts.
