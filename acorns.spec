@@ -1,6 +1,6 @@
 Name: acorns
 Summary: Generate an AsciiDoc release notes document from tracking tickets.
-Version: 0.28.7
+Version: 0.28.8
 Release: 1%{?dist}
 License: GPLv3+
 URL: https://github.com/msuchane/acorns
@@ -34,7 +34,7 @@ Requires: openssl-libs
 
 %build
 # Install the latest Rust compiler.
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --component cargo rust-std rustc
 
 # Build the binary.
 ~/.cargo/bin/cargo build --release
