@@ -62,6 +62,7 @@ Currently, this field expects an *Agile Pool* menu.
 ----
 jira:
   host: "https://jira.host.org"
+  private_projects: [SECRETPROJECT, MYPROJECT]
   fields:
     # Required
     doc_type:
@@ -95,6 +96,9 @@ The ID of the field that contains your release note. It is a text box.
 The ID of the field that lists the status of the release note. It is a drop-down menu of values.
 
 The following fields are optional:
+
+`private_projects`::
+If you set certain Jira projects as private, all ticket IDs in these projects will be non-clickable, even if the ticket itself is public in Jira.
 
 `target_release`::
 By default, {name} uses the standard Jira *Fix Version/s* field. You can override it with a custom field.
