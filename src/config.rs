@@ -243,6 +243,8 @@ pub mod tracker {
     pub struct JiraInstance {
         pub host: String,
         pub api_key: Option<String>,
+        #[serde(default)]
+        pub private_projects: Vec<String>,
         pub fields: JiraFields,
     }
 

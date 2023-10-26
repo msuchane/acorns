@@ -209,9 +209,8 @@ impl IntoAbstract for Issue {
             groups: None,
             // If there are no s`fields.security` settings, the ticket is public. If there are some, it's private.
             // However, the project as a whole can be public or private, which affects the ticket visibility.
-            // TODO: Find out how the API reports the project settings.
-            // public: self.fields.security.is_none(),
-            public: false,
+            // All projects are considered public unless you configure them in `JiraInstance::private_projects`.
+            public: self.fields.security.is_none(),
             references,
         };
 
