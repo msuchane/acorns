@@ -117,6 +117,7 @@ pub trait IntoAbstract {
         self,
         references: Option<Vec<String>>,
         config: &impl tracker::FieldsConfig,
+        config: &tracker::Config,
     ) -> Result<AbstractTicket>;
 }
 
@@ -124,7 +125,8 @@ impl IntoAbstract for Bug {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        config: &impl tracker::FieldsConfig,
+        fields: &impl tracker::FieldsConfig,
+        _config: &tracker::Config,
     ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
             id: Rc::new(TicketId {
@@ -133,13 +135,13 @@ impl IntoAbstract for Bug {
             }),
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: self.doc_type(config)?,
-            doc_text: self.doc_text(config)?,
-            target_releases: self.target_releases(config),
-            subsystems: self.subsystems(config).map_err(|e| e.to_string()),
-            doc_text_status: self.doc_text_status(config)?,
-            docs_contact: self.docs_contact(config),
-            url: self.url(config),
+            doc_type: self.doc_type(fields)?,
+            doc_text: self.doc_text(fields)?,
+            target_releases: self.target_releases(fields),
+            subsystems: self.subsystems(fields).map_err(|e| e.to_string()),
+            doc_text_status: self.doc_text_status(fields)?,
+            docs_contact: self.docs_contact(fields),
+            url: self.url(fields),
             summary: self.summary,
             status: self.status,
             resolution: Some(self.resolution),
@@ -172,17 +174,18 @@ impl IntoAbstract for Issue {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        config: &impl tracker::FieldsConfig,
+        fields: &impl tracker::FieldsConfig,
+        config: &tracker::Config,
     ) -> Result<AbstractTicket> {
         let ticket = AbstractTicket {
-            doc_type: self.doc_type(config)?,
-            doc_text: self.doc_text(config)?,
+            doc_type: self.doc_type(fields)?,
+            doc_text: self.doc_text(fields)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_releases: self.target_releases(config),
-            doc_text_status: self.doc_text_status(config)?,
-            docs_contact: self.docs_contact(config),
-            subsystems: self.subsystems(config).map_err(|e| e.to_string()),
-            url: self.url(config),
+            target_releases: self.target_releases(fields),
+            doc_text_status: self.doc_text_status(fields)?,
+            docs_contact: self.docs_contact(fields),
+            subsystems: self.subsystems(fields).map_err(|e| e.to_string()),
+            url: self.url(fields),
             // The ID in particular is wrapped in Rc because it's involved in various filters
             // and comparisons where ownership is complicated.
             id: Rc::new(TicketId {
@@ -201,6 +204,7 @@ impl IntoAbstract for Issue {
             // Issues might not be assigned to anyone.
             assignee: self.fields.assignee.map(|a| a.name),
             components: self.fields.components.into_iter().map(|c| c.name).collect(),
+            // The project name isn't exactly the product name, but it's the closest equivalent at hand.
             product: self.fields.project.name,
             labels: Some(self.fields.labels),
             // Jira does not support flags
@@ -210,7 +214,9 @@ impl IntoAbstract for Issue {
             // If there are no s`fields.security` settings, the ticket is public. If there are some, it's private.
             // However, the project as a whole can be public or private, which affects the ticket visibility.
             // All projects are considered public unless you configure them in `JiraInstance::private_projects`.
-            public: self.fields.security.is_none(),
+            public: {
+                self.fields.security.is_none() && !config.jira.private_projects.contains(&self.fields.project.key)
+            },
             references,
         };
 
