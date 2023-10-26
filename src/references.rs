@@ -56,8 +56,8 @@ impl ReferenceSignatures {
         config: &tracker::Config,
     ) -> Result<Self> {
         let mut signatures: HashMap<Arc<TicketQuery>, Vec<String>> = HashMap::new();
-        Self::store(&mut signatures, ref_bugs, &config.bugzilla, &config)?;
-        Self::store(&mut signatures, ref_issues, &config.jira, &config)?;
+        Self::store(&mut signatures, ref_bugs, &config)?;
+        Self::store(&mut signatures, ref_issues, &config)?;
 
         // For each ticket, sort its references alphabetically.
         // Otherwise, the order changes based on the response from the ticket tracker,
@@ -76,11 +76,10 @@ impl ReferenceSignatures {
     fn store<T: IntoAbstract>(
         signatures: &mut HashMap<Arc<TicketQuery>, Vec<String>>,
         ref_issues: Vec<(Arc<TicketQuery>, T)>,
-        fields: &impl tracker::FieldsConfig,
         config: &tracker::Config,
     ) -> Result<()> {
         for (query, issue) in ref_issues {
-            let ticket = issue.into_abstract(None, fields, config)?;
+            let ticket = issue.into_abstract(None, config)?;
             signatures
                 .entry(query)
                 .and_modify(|e| e.push(ticket.signature()))

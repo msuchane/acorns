@@ -141,13 +141,11 @@ pub async fn unsorted_tickets(
     let mut annotated_tickets = Vec::new();
     annotated_tickets.append(&mut into_annotated_tickets(
         plain_bugs,
-        &trackers.bugzilla,
         &trackers,
         &ref_signatures,
     )?);
     annotated_tickets.append(&mut into_annotated_tickets(
         plain_issues,
-        &trackers.jira,
         &trackers,
         &ref_signatures,
     )?);
@@ -163,7 +161,6 @@ pub async fn unsorted_tickets(
 /// Convert bugs and issues into abstract tickets.
 fn into_annotated_tickets(
     issues: Vec<(Arc<TicketQuery>, impl IntoAbstract)>,
-    fields: &impl tracker::FieldsConfig,
     config: &tracker::Config,
     ref_signatures: &ReferenceSignatures,
 ) -> Result<Vec<AnnotatedTicket>> {
@@ -172,7 +169,7 @@ fn into_annotated_tickets(
 
     for (query, issue) in issues {
         let attached_references = ref_signatures.reattach_to(&query);
-        let ticket = issue.into_abstract(Some(attached_references), fields, config)?;
+        let ticket = issue.into_abstract(Some(attached_references), config)?;
         let annotated = AnnotatedTicket { ticket, query };
         results.push(annotated);
     }

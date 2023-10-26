@@ -116,7 +116,6 @@ pub trait IntoAbstract {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        config: &impl tracker::FieldsConfig,
         config: &tracker::Config,
     ) -> Result<AbstractTicket>;
 }
@@ -125,9 +124,9 @@ impl IntoAbstract for Bug {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        fields: &impl tracker::FieldsConfig,
-        _config: &tracker::Config,
+        config: &tracker::Config,
     ) -> Result<AbstractTicket> {
+        let bz_fields = &config.bugzilla;
         let ticket = AbstractTicket {
             id: Rc::new(TicketId {
                 key: self.id.to_string(),
@@ -135,13 +134,13 @@ impl IntoAbstract for Bug {
             }),
             // TODO: Find out how to get the bug description from comment#0 with Bugzilla
             description: None,
-            doc_type: self.doc_type(fields)?,
-            doc_text: self.doc_text(fields)?,
-            target_releases: self.target_releases(fields),
-            subsystems: self.subsystems(fields).map_err(|e| e.to_string()),
-            doc_text_status: self.doc_text_status(fields)?,
-            docs_contact: self.docs_contact(fields),
-            url: self.url(fields),
+            doc_type: self.doc_type(bz_fields)?,
+            doc_text: self.doc_text(bz_fields)?,
+            target_releases: self.target_releases(bz_fields),
+            subsystems: self.subsystems(bz_fields).map_err(|e| e.to_string()),
+            doc_text_status: self.doc_text_status(bz_fields)?,
+            docs_contact: self.docs_contact(bz_fields),
+            url: self.url(bz_fields),
             summary: self.summary,
             status: self.status,
             resolution: Some(self.resolution),
@@ -174,18 +173,18 @@ impl IntoAbstract for Issue {
     fn into_abstract(
         self,
         references: Option<Vec<String>>,
-        fields: &impl tracker::FieldsConfig,
         config: &tracker::Config,
     ) -> Result<AbstractTicket> {
+        let jira_fields = &config.jira;
         let ticket = AbstractTicket {
-            doc_type: self.doc_type(fields)?,
-            doc_text: self.doc_text(fields)?,
+            doc_type: self.doc_type(jira_fields)?,
+            doc_text: self.doc_text(jira_fields)?,
             // The target release is non-essential. Discard the error and store as Option.
-            target_releases: self.target_releases(fields),
-            doc_text_status: self.doc_text_status(fields)?,
-            docs_contact: self.docs_contact(fields),
-            subsystems: self.subsystems(fields).map_err(|e| e.to_string()),
-            url: self.url(fields),
+            target_releases: self.target_releases(jira_fields),
+            doc_text_status: self.doc_text_status(jira_fields)?,
+            docs_contact: self.docs_contact(jira_fields),
+            subsystems: self.subsystems(jira_fields).map_err(|e| e.to_string()),
+            url: self.url(jira_fields),
             // The ID in particular is wrapped in Rc because it's involved in various filters
             // and comparisons where ownership is complicated.
             id: Rc::new(TicketId {
