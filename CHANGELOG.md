@@ -1,5 +1,10 @@
 # Changes
 
+## Version 0.29.0
+
+* Jira tickets can now have clickable links if the ticket is public.
+* You can set a Jira project as private to disable links to it.
+
 ## Version 0.28.7
 
 * In the status table, list the ticket's resolution next to its status if the ticket is closed.
