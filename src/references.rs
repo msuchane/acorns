@@ -56,8 +56,8 @@ impl ReferenceSignatures {
         config: &tracker::Config,
     ) -> Result<Self> {
         let mut signatures: HashMap<Arc<TicketQuery>, Vec<String>> = HashMap::new();
-        Self::store(&mut signatures, ref_bugs, &config)?;
-        Self::store(&mut signatures, ref_issues, &config)?;
+        Self::store(&mut signatures, ref_bugs, config)?;
+        Self::store(&mut signatures, ref_issues, config)?;
 
         // For each ticket, sort its references alphabetically.
         // Otherwise, the order changes based on the response from the ticket tracker,

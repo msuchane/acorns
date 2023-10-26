@@ -141,12 +141,12 @@ pub async fn unsorted_tickets(
     let mut annotated_tickets = Vec::new();
     annotated_tickets.append(&mut into_annotated_tickets(
         plain_bugs,
-        &trackers,
+        trackers,
         &ref_signatures,
     )?);
     annotated_tickets.append(&mut into_annotated_tickets(
         plain_issues,
-        &trackers,
+        trackers,
         &ref_signatures,
     )?);
 
@@ -311,7 +311,7 @@ async fn bugs_from_searches(
 ) -> Result<Vec<(Arc<TicketQuery>, Bug)>> {
     let mut annotated_bugs: Vec<(Arc<TicketQuery>, Bug)> = Vec::new();
 
-    for (search, query) in queries.iter() {
+    for (search, query) in queries {
         let mut bugs = bz_instance
             .search(search)
             // This enables the download concurrency:
@@ -405,7 +405,7 @@ async fn issues_from_searches(
 ) -> Result<Vec<(Arc<TicketQuery>, Issue)>> {
     let mut annotated_issues: Vec<(Arc<TicketQuery>, Issue)> = Vec::new();
 
-    for (search, query) in queries.iter() {
+    for (search, query) in queries {
         let mut issues = jira_instance
             .search(search)
             // This enables the download concurrency:

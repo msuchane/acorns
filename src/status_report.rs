@@ -489,7 +489,7 @@ fn combined_releases(tickets: &[AbstractTicket]) -> Vec<&str> {
     // Releases are a list, and each ticket can have several of them.
     // Update the counter with the values in the lists, rather than
     // with the lists themselves as values.
-    for ticket in tickets.iter() {
+    for ticket in tickets {
         releases.update(ticket.target_releases.iter().map(String::as_str));
     }
 

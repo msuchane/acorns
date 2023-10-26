@@ -214,7 +214,11 @@ impl IntoAbstract for Issue {
             // However, the project as a whole can be public or private, which affects the ticket visibility.
             // All projects are considered public unless you configure them in `JiraInstance::private_projects`.
             public: {
-                self.fields.security.is_none() && !config.jira.private_projects.contains(&self.fields.project.key)
+                self.fields.security.is_none()
+                    && !config
+                        .jira
+                        .private_projects
+                        .contains(&self.fields.project.key)
             },
             references,
         };

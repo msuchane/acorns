@@ -344,7 +344,7 @@ pub fn format_document(
     // Initializing with 0 rather than relying on each ticket's `entry` call
     // is necessary for tickets that end up unused, because they wouldn't
     // call `entry` at all, and would report nothing.
-    for ticket in tickets.iter() {
+    for ticket in tickets {
         ticket_stats.insert(Rc::clone(&ticket.id), 0);
     }
 
