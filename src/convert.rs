@@ -13,10 +13,7 @@ use regex::Regex;
 use serde::Deserialize;
 
 use crate::config::{tracker::Service, KeyOrSearch};
-
-/// A shared error message that displays if the static regular expressions
-/// are invalid, and the regex library can't parse them.
-const REGEX_ERROR: &str = "Invalid built-in regular expression.";
+use crate::REGEX_ERROR;
 
 /// A regular expression that matches the Bugzilla ID format in CoRN 3.
 static BZ_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^BZ#(\d+)$").expect(REGEX_ERROR));

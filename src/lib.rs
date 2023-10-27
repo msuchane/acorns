@@ -37,6 +37,7 @@ pub mod cli;
 mod config;
 mod convert;
 mod extra_fields;
+mod footnote;
 mod init;
 mod logging;
 mod note;
@@ -54,6 +55,10 @@ use templating::{DocumentVariant, Module};
 
 use crate::config::Project;
 pub use crate::ticket_abstraction::AbstractTicket;
+
+/// A shared error message that displays if the static regular expressions
+/// are invalid, and the regex library can't parse them.
+pub const REGEX_ERROR: &str = "Invalid built-in regular expression.";
 
 /// Run the subcommand that the user picked on the command line.
 pub fn run(cli: &Cli) -> Result<()> {

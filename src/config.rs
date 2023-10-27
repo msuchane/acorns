@@ -24,6 +24,8 @@ use std::sync::Arc;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use serde::Deserialize;
 
+use crate::footnote;
+
 /// The name of this program, as specified in Cargo.toml. Used later to access configuration files.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -422,6 +424,7 @@ pub struct Project {
     pub tickets: Vec<Arc<TicketQuery>>,
     pub trackers: tracker::Config,
     pub templates: Template,
+    pub private_footnote: bool,
 }
 
 impl Project {
@@ -452,12 +455,15 @@ impl Project {
         let trackers = parse_trackers(&trackers_path)?;
         let templates = parse_templates(&templates_path)?;
 
+        let private_footnote = footnote::is_footnote_defined(&abs_path)?;
+
         Ok(Self {
             base_dir: abs_path,
             generated_dir,
             tickets,
             trackers,
             templates,
+            private_footnote,
         })
     }
 }
