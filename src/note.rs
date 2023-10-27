@@ -67,24 +67,22 @@ impl AbstractTicket {
     ///
     /// For example, `link:https://...bugzilla...12345[BZ#12345]`.
     #[must_use]
-    pub fn signature(&self) -> String {
+    pub fn signature(&self, with_priv_footnote: bool) -> String {
         let id = &self.id;
 
         if self.public {
             // If the ticket is public, add a clickable link.
             format!("link:{}[{}]", &self.url, id)
         } else {
-            // If the ticket is private, add a footnote that explains
-            // why some links aren't clickable.
-            // The shared ID of the private footnote is arbitrary and large to avoid clashes:
-            // 255 is the u8 max value.
-            // The `{private-footnote}` attribute is defined in the reference template,
-            // and the user can override it in their AsciiDoc files.
-            //
-            // TODO: This works with asciidoctor, but the footnote doesn't render
-            // at all with Pantheon. Disabling for now.
-            // format!("{id}{{fn-private}}")
-            id.to_string()
+            // If the ticket is private, and the project configures a dedicated footnote,
+            // add a footnote that explains why the link isn't clickable.
+            // This uses the deprecated AsciiDoc `footnoteref` syntax
+            // so that you can build the document with very outdated asciidoctor.
+            if with_priv_footnote {
+                format!("{id}footnoteref:[PrivateTicketFootnote]")
+            } else {
+                id.to_string()
+            }
         }
     }
 
@@ -92,7 +90,7 @@ impl AbstractTicket {
     /// The result is a comma-separated list of signatures, enclosed in parentheses.
     #[must_use]
     fn all_signatures(&self) -> String {
-        let mut signatures = vec![self.signature()];
+        let mut signatures = vec![self.signature(true)];
 
         if let Some(references) = self.references.as_ref() {
             signatures.append(&mut references.clone());

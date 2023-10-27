@@ -82,8 +82,10 @@ impl ReferenceSignatures {
             let ticket = issue.into_abstract(None, config)?;
             signatures
                 .entry(query)
-                .and_modify(|e| e.push(ticket.signature()))
-                .or_insert_with(|| vec![ticket.signature()]);
+                // In reference IDs, never display the private ticket footnote,
+                // even when it's defined in the project. Too much clutter on one line.
+                .and_modify(|e| e.push(ticket.signature(false)))
+                .or_insert_with(|| vec![ticket.signature(false)]);
         }
 
         Ok(())
