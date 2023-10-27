@@ -26,7 +26,6 @@ pub fn is_footnote_defined(project: &Path) -> Result<bool> {
         }
     }
 
-    log::info!("The private ticket footnote is not defined.");
     Ok(false)
 }
 

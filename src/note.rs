@@ -22,7 +22,7 @@ use crate::ticket_abstraction::AbstractTicket;
 impl AbstractTicket {
     /// Compose a release note from an abstract ticket.
     #[must_use]
-    pub fn release_note(&self, variant: DocumentVariant) -> String {
+    pub fn release_note(&self, variant: DocumentVariant, with_priv_footnote: bool) -> String {
         let anchor = self.anchor_declaration();
 
         // This debug information line appears at empty release notes
@@ -51,7 +51,7 @@ impl AbstractTicket {
                 "{}\n{}\n\n{} {}",
                 anchor,
                 doc_text_unix,
-                self.all_signatures(),
+                self.all_signatures(with_priv_footnote),
                 // In the internal variant, add the debug information line.
                 if variant == DocumentVariant::Internal {
                     &debug_info
@@ -89,8 +89,8 @@ impl AbstractTicket {
     /// Prepare a list with signatures to this ticket and all its optional references.
     /// The result is a comma-separated list of signatures, enclosed in parentheses.
     #[must_use]
-    fn all_signatures(&self) -> String {
-        let mut signatures = vec![self.signature(true)];
+    fn all_signatures(&self, with_priv_footnote: bool) -> String {
+        let mut signatures = vec![self.signature(with_priv_footnote)];
 
         if let Some(references) = self.references.as_ref() {
             signatures.append(&mut references.clone());

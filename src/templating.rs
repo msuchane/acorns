@@ -161,6 +161,7 @@ impl config::Section {
         id: &str,
         tickets: &[&AbstractTicket],
         variant: DocumentVariant,
+        with_priv_footnote: bool,
         ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<String> {
         let matching_tickets: Vec<_> = tickets.iter().filter(|t| self.matches_ticket(t)).collect();
@@ -178,7 +179,7 @@ impl config::Section {
         } else {
             let release_notes: Vec<_> = matching_tickets
                 .iter()
-                .map(|t| t.release_note(variant))
+                .map(|t| t.release_note(variant, with_priv_footnote))
                 .collect();
 
             let template = Leaf {
@@ -206,6 +207,7 @@ impl config::Section {
         tickets: &[&AbstractTicket],
         prefix: Option<&str>,
         variant: DocumentVariant,
+        with_priv_footnote: bool,
         ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
     ) -> Option<Module> {
         let matching_tickets: Vec<&AbstractTicket> = tickets
@@ -227,7 +229,7 @@ impl config::Section {
             let included_modules: Vec<Module> = sections
                 .iter()
                 .filter_map(|s| {
-                    s.modules(&matching_tickets, Some(&module_id), variant, ticket_stats)
+                    s.modules(&matching_tickets, Some(&module_id), variant, with_priv_footnote, ticket_stats)
                 })
                 .collect();
             // If the assembly receives no modules, because all its modules are empty, return None.
@@ -261,7 +263,7 @@ impl config::Section {
         } else {
             // If the module receives no release notes and its body is empty, return None.
             // Otherwise, return the module formatted with its release notes.
-            self.render(&module_id, tickets, variant, ticket_stats)
+            self.render(&module_id, tickets, variant, with_priv_footnote, ticket_stats)
                 .map(|text| Module {
                     file_name: format!("ref_{module_id}.adoc"),
                     text,
@@ -335,6 +337,7 @@ pub fn format_document(
     tickets: &[&AbstractTicket],
     template: &config::Template,
     variant: DocumentVariant,
+    with_priv_footnote: bool,
 ) -> Vec<Module> {
     // Prepare a container for ticket usage statistics.
     let mut ticket_stats = HashMap::new();
@@ -354,7 +357,7 @@ pub fn format_document(
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .filter_map(|section| section.modules(tickets, None, variant, &mut ticket_stats))
+        .filter_map(|section| section.modules(tickets, None, variant, with_priv_footnote, &mut ticket_stats))
         .collect();
     log::debug!("Chapters: {:#?}", chapters);
 

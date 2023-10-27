@@ -157,11 +157,13 @@ impl Document {
             &tickets_for_internal,
             &project.templates,
             DocumentVariant::Internal,
+            project.private_footnote,
         );
         let external_modules = templating::format_document(
             &tickets_for_external,
             &project.templates,
             DocumentVariant::External,
+            project.private_footnote,
         );
 
         let (status_table, json_status) = status_report::analyze_status(&abstract_tickets)?;
