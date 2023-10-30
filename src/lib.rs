@@ -121,7 +121,7 @@ fn build_rn_project(project_dir: &Path) -> Result<()> {
     // TODO: Recognize the optional paths to different config files.
     let project = Project::new(project_dir)?;
 
-    log::info!("Building release notes in {}", &project.base_dir.display());
+    log::info!("Building the release notes project.");
 
     let document = Document::new(&project)?;
 

@@ -455,6 +455,8 @@ impl Project {
         let trackers = parse_trackers(&trackers_path)?;
         let templates = parse_templates(&templates_path)?;
 
+        log::info!("Valid release notes project in {}.", abs_path.display());
+
         let private_footnote = footnote::is_footnote_defined(&abs_path)?;
 
         Ok(Self {
