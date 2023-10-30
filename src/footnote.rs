@@ -39,7 +39,6 @@ static FOOTNOTE_ATTR_REGEX: Lazy<Regex> =
 
 /// Search the AsciiDoc files in the RN project and see if any of them defines
 /// the `PrivateTicketFootnote` footnote. Return `true` if the footnote is defined.
-#[must_use]
 pub fn is_footnote_defined(project: &Path) -> Result<bool> {
     for result in Walk::new(project) {
         // Each item yielded by the iterator is either a directory entry or an error.
