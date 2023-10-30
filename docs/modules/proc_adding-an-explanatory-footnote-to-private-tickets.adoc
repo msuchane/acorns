@@ -10,12 +10,6 @@
 [role="_abstract"]
 Public ticket IDs  contain a clickable link to the ticket. Private ticket IDs are non-clickable. If this is confusing to the readers, you can automatically generate a footnote next to private ticket IDs that explains why the ticket link is missing.
 
-For example:
-
-* link:https://bugzilla.redhat.com/show_bug.cgi?id=2157953[Bugzilla:2157953]
-* Bugzilla:2216257{blank}footnoteref:[PrivateTicketFootnote,{private-footnote-text}]
-
-
 .Procedure
 
 . Prepare the text that you want to add to every private ticket ID as a footnote. For example:
@@ -41,7 +35,7 @@ You can store the footnote text in a separate attribute, so that it is more conv
 
 This is the abstract paragraph.
 
-Release notes include links to access the original tracking tickets. Private tickets have no links and instead feature the following footnote{blank}footnoteref:[PrivateTicketFootnote,{private-footnote-text}.]
+Release notes include links to access the original tracking tickets. Private tickets have no links and instead feature the following footnote{blank}footnoteref:[PrivateTicketFootnote,{private-footnote-text}].
 
 <Include your modules here.>
 ----
@@ -52,6 +46,11 @@ Release notes include links to access the original tracking tickets. Private tic
 . Build the release notes project.
 . Open a preview.
 . Compare the IDs of public and private tickets. Verify that all private tickets feature the footnote.
++
+For example:
+
+** link:https://bugzilla.redhat.com/show_bug.cgi?id=2157953[Bugzilla:2157953]
+** Bugzilla:2216257{blank}footnoteref:[PrivateTicketFootnote,{private-footnote-text}]
 
 [role="_additional-resources"]
 .Additional resources
