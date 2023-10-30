@@ -18,6 +18,8 @@ include::modules/proc_building-release-notes.adoc[leveloffset=+1]
 
 include::assembly_organizing-tickets-in-your-project-using-templates.adoc[leveloffset=+1]
 
+include::modules/proc_adding-an-explanatory-footnote-to-private-tickets.adoc[leveloffset=+1]
+
 include::modules/ref_differences-between-acorns-and-corn-3.adoc[leveloffset=+1]
 
 
