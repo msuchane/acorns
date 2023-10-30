@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.30.0
+
+* You can attach a footnote to explain why private ticket IDs contain no links ([#24](https://github.com/msuchane/acorns/issues/24)).
+
 ## Version 0.29.0
 
 * Jira tickets can now have clickable links if the ticket is public.
