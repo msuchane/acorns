@@ -27,7 +27,7 @@ You can store the footnote text in a separate attribute, so that it is more conv
 +
 .Placement of the footnote in main.adoc
 ====
-[source,asciidoc"]
+[source,asciidoc]
 ----
 :private-footnote-text: This ticket is private.
 
