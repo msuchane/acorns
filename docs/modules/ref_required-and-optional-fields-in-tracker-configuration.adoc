@@ -62,7 +62,9 @@ Currently, this field expects an *Agile Pool* menu.
 ----
 jira:
   host: "https://jira.host.org"
-  private_projects: [SECRETPROJECT, MYPROJECT]
+  private_projects:
+    - "SECRETPROJECT"
+    - "MYPROJECT"
   fields:
     # Required
     doc_type:
