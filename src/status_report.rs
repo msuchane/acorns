@@ -131,6 +131,19 @@ impl<'a> WriterStats<'a> {
             (self.complete as f32) / (self.total as f32) * 100.0
         }
     }
+
+    /// Create an instance of `WriterStats` based on a name and initial statistics from a ticket.
+    fn new(name: &'a str, checks: &Checks) -> Self {
+        let mut stats = WriterStats {
+            name,
+            // The default numbers are 0.
+            ..Default::default()
+        };
+        // Add to the default 0 values.
+        stats.update(checks);
+
+        stats
+    }
 }
 
 /// Gather statistics on all writers involved in the project and all their release notes.
@@ -145,11 +158,10 @@ fn calculate_writer_stats<'a>(
         let name = ticket.docs_contact.as_str();
         writers_map
             .entry(name)
+            // If there's already an entry, add new statistics to it based on the current ticket.
             .and_modify(|stats| stats.update(checks))
-            .or_insert(WriterStats {
-                name,
-                ..Default::default()
-            });
+            // If there isn't an entry yet, initialize it with this ticket's statistics.
+            .or_insert(WriterStats::new(name, checks));
     }
 
     let mut writers: Vec<_> = writers_map.into_values().collect();

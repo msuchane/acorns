@@ -18,14 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! This module provides functionality that connects to the signature format in the release note,
 //! based on an optional footnote found in the manual AsciiDoc files in the docs repo.
-//! 
+//!
 //! If any manual AsciiDoc file defines the `PrivateTicketFootnote` footnote, private tickets
 //! will add the footnote to the non-clickable ticket signature.
 
 use std::fs;
 use std::path::Path;
 
-use color_eyre::{Result, eyre::WrapErr};
+use color_eyre::{eyre::WrapErr, Result};
 use ignore::Walk;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -36,7 +36,6 @@ use crate::REGEX_ERROR;
 static FOOTNOTE_ATTR_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"footnoteref:\[PrivateTicketFootnote,.+\]").expect(REGEX_ERROR));
 
-
 /// Search the AsciiDoc files in the RN project and see if any of them defines
 /// the `PrivateTicketFootnote` footnote. Return `true` if the footnote is defined.
 pub fn is_footnote_defined(project: &Path) -> Result<bool> {
@@ -45,7 +44,7 @@ pub fn is_footnote_defined(project: &Path) -> Result<bool> {
         let dir_entry = result?;
 
         let file_path = dir_entry.path();
-        
+
         if is_file_adoc(file_path) && file_contains_footnote(file_path)? {
             log::info!("The private ticket footnote is defined.");
             return Ok(true);
@@ -58,7 +57,7 @@ pub fn is_footnote_defined(project: &Path) -> Result<bool> {
 /// Estimate if the given file is an AsciiDoc file.
 fn is_file_adoc(path: &Path) -> bool {
     let adoc_extensions = ["adoc", "asciidoc"];
-    
+
     let file_ext = path.extension().and_then(|ext| ext.to_str());
 
     if let Some(ext) = file_ext {

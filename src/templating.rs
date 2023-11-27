@@ -229,7 +229,13 @@ impl config::Section {
             let included_modules: Vec<Module> = sections
                 .iter()
                 .filter_map(|s| {
-                    s.modules(&matching_tickets, Some(&module_id), variant, with_priv_footnote, ticket_stats)
+                    s.modules(
+                        &matching_tickets,
+                        Some(&module_id),
+                        variant,
+                        with_priv_footnote,
+                        ticket_stats,
+                    )
                 })
                 .collect();
             // If the assembly receives no modules, because all its modules are empty, return None.
@@ -263,12 +269,18 @@ impl config::Section {
         } else {
             // If the module receives no release notes and its body is empty, return None.
             // Otherwise, return the module formatted with its release notes.
-            self.render(&module_id, tickets, variant, with_priv_footnote, ticket_stats)
-                .map(|text| Module {
-                    file_name: format!("ref_{module_id}.adoc"),
-                    text,
-                    included_modules: None,
-                })
+            self.render(
+                &module_id,
+                tickets,
+                variant,
+                with_priv_footnote,
+                ticket_stats,
+            )
+            .map(|text| Module {
+                file_name: format!("ref_{module_id}.adoc"),
+                text,
+                included_modules: None,
+            })
         }
     }
 
@@ -357,7 +369,15 @@ pub fn format_document(
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .filter_map(|section| section.modules(tickets, None, variant, with_priv_footnote, &mut ticket_stats))
+        .filter_map(|section| {
+            section.modules(
+                tickets,
+                None,
+                variant,
+                with_priv_footnote,
+                &mut ticket_stats,
+            )
+        })
         .collect();
     log::debug!("Chapters: {:#?}", chapters);
 
