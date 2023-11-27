@@ -1,5 +1,13 @@
 # Changes
 
+## Version 0.30.2
+
+* Attempt to fix [#23](https://github.com/msuchane/acorns/issues/23).
+
+## Version 0.30.1
+
+* Fix a typo.
+
 ## Version 0.30.0
 
 * You can attach a footnote to explain why private ticket IDs contain no links ([#24](https://github.com/msuchane/acorns/issues/24)).
