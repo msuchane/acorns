@@ -47,11 +47,11 @@ const MAX_TITLE_LENGTH: usize = 120;
 struct OverallProgress {
     all: usize,
     complete: usize,
-    complete_pct: f64,
+    complete_pct: f32,
     warnings: usize,
-    warnings_pct: f64,
+    warnings_pct: f32,
     incomplete: usize,
-    incomplete_pct: f64,
+    incomplete_pct: f32,
 }
 
 impl From<&[Checks]> for OverallProgress {
@@ -92,8 +92,8 @@ impl From<&[Checks]> for OverallProgress {
 
 /// Calculate the percentage of a part in a total amount.
 /// Uses `usize` as input because it works with list lengths here.
-fn percentage(part: usize, total: usize) -> f64 {
-    (part as f64) / (total as f64) * 100.0
+fn percentage(part: usize, total: usize) -> f32 {
+    (part as f32) / (total as f32) * 100.0
 }
 
 /// Records all tickets that belong to a writer and stores statistics
