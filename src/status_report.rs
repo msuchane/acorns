@@ -122,13 +122,13 @@ impl<'a> WriterStats<'a> {
 
     // TODO: Consolidate with the `percentage` function if possible.
     /// Calculate the percentage of complete release notes assigned to this writer.
-    fn percent(&self) -> f64 {
+    fn percent(&self) -> f32 {
         // If no release notes are assigned to the writer, dividing by 0 would result in NaN.
         // To make the result more readable and useful, report that case as 0% complete.
         if self.total == 0 {
             0.0
         } else {
-            f64::from(self.complete) / f64::from(self.total) * 100.0
+            (self.complete as f32) / (self.total as f32) * 100.0
         }
     }
 }
