@@ -21,7 +21,7 @@ use std::rc::Rc;
 use std::string::ToString;
 use std::sync::Arc;
 
-use bugzilla_query::{Bug, Component};
+use bugzilla_query::Bug;
 use color_eyre::eyre::{bail, Result};
 use jira_query::Issue;
 use serde::ser::SerializeStruct;
@@ -148,10 +148,7 @@ impl IntoAbstract for Bug {
             priority: self.priority,
             // Bugs are always assigned to someone.
             assignee: Some(self.assigned_to),
-            components: match self.component {
-                Component::One(c) => vec![c],
-                Component::Many(cs) => cs,
-            },
+            components: self.component.into_vec(),
             product: self.product,
             // Bugzilla has no labels
             labels: None,

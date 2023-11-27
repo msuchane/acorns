@@ -281,8 +281,7 @@ impl ExtraFields for Bug {
 
         // Fall back on the standard field
         match &self.target_release {
-            Some(bugzilla_query::Version::One(version)) => vec![version.clone()],
-            Some(bugzilla_query::Version::Many(versions)) => versions.clone(),
+            Some(versions) => versions.clone().into_vec(),
             None => {
                 let report = error_chain(errors, Field::TargetRelease, fields, Id::BZ(self.id));
                 log::warn!("{report}");
