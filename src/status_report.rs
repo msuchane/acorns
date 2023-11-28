@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::collections::HashMap;
 use std::convert::From;
 use std::default::Default;
+use std::fmt;
 use std::ops::Neg;
 
 use askama::Template;
@@ -51,7 +52,7 @@ const MAX_TITLE_LENGTH: usize = 120;
 /// 2. x.y
 /// 3. x
 static VERSION_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(\d+\.\d+.\d+|\d+\.\d+|\d+)").expect(REGEX_ERROR));
+    Lazy::new(|| Regex::new(r"(?:(\d+)\.(\d+).(\d+)|(\d+)\.(\d+)|(\d+))").expect(REGEX_ERROR));
 
 /// An overview of the completeness status across all tickets.
 #[derive(Default, Serialize)]
@@ -359,13 +360,15 @@ impl Status {
     /// Report if the ticket's target release doesn't match the the global target release.
     fn from_target_release(
         ticket_releases: &[String],
-        likely_release: Option<&str>,
+        likely_release: Option<Version>,
         doc_type: &str,
     ) -> Self {
         if let Some(likely_release) = likely_release {
             // This is a replacement to the `contains` method that converts the `String` list to `&str`,
             // and thus enables us to compare the two strings without allocating every time.
-            if ticket_releases.iter().any(|r| r == likely_release)
+            if ticket_releases
+                .iter()
+                .any(|r| extract_version(r) == likely_release)
                 || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
             {
                 Self::Ok
@@ -390,7 +393,7 @@ impl From<DocTextStatus> for Status {
 
 impl AbstractTicket {
     /// Analyze the release note status of the ticket. Record the analysis as `Checks`.
-    fn checks(&self, release: Option<&str>) -> Checks {
+    fn checks(&self, release: Option<Version>) -> Checks {
         Checks {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_text(&self.doc_text),
@@ -502,29 +505,65 @@ fn most_common_product(tickets: &[AbstractTicket]) -> Option<&str> {
         .map(|(elem, _frequency)| *elem)
 }
 
-struct Version {
-    x: u32,
-    y: Option<u32>,
-    z: Option<u32>,
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Ord, PartialOrd)]
+enum Version<'a> {
+    Parsed {
+        x: u32,
+        y: Option<u32>,
+        z: Option<u32>,
+    },
+    Raw(&'a str),
+}
+
+impl fmt::Display for Version<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Parsed { x, y, z } => {
+                let mut s = x.to_string();
+                if let Some(y) = y {
+                    s = format!("{s}.{y}");
+                }
+                if let Some(z) = z {
+                    s = format!("{s}.{z}");
+                }
+                write!(f, "{s}")
+            }
+            Self::Raw(s) => {
+                write!(f, "{s}")
+            }
+        }
+    }
 }
 
 /// Try to extract an x.y.z, x.y, or x version from a string.
 /// If no such version is found, return the original release string back.
 /// The intended purpose is to recognize release strings such as `rhel-9.3.0`,
 /// `9.3.0`, `9.3.0 Beta` and `v9.3.0` as identical versions and count them together.
-fn extract_version(release: &str) -> &str {
-    VERSION_REGEX
-        // Capture the regex:
-        .captures(release)
-        // Take the first capture group:
-        .and_then(|cap| cap.get(1))
-        // Return either the capture group if some or the original string if none:
-        .map_or(release, |m| m.as_str())
+fn extract_version(release: &str) -> Version {
+    // Capture the regex:
+    let caps = VERSION_REGEX.captures(release);
+    // Take x, y, and z groups from the capture:
+    let x = caps.as_ref().and_then(|c| extract_number(c, 1));
+    let y = caps.as_ref().and_then(|c| extract_number(c, 2));
+    let z = caps.as_ref().and_then(|c| extract_number(c, 3));
+
+    // Return either the parsed version or the original string.
+    if let Some(x) = x {
+        Version::Parsed { x, y, z }
+    } else {
+        Version::Raw(release)
+    }
+}
+
+fn extract_number(caps: &regex::Captures, index: usize) -> Option<u32> {
+    caps.get(index)
+        .map(|m| m.as_str())
+        .and_then(|s| s.parse().ok())
 }
 
 /// List the most common release set in the tickets.
-fn most_common_release(tickets: &[AbstractTicket]) -> Option<&str> {
-    let mut releases: Counter<&str> = Counter::new();
+fn most_common_release(tickets: &[AbstractTicket]) -> Option<Version> {
+    let mut releases: Counter<Version> = Counter::new();
 
     // Releases are a list, and each ticket can have several of them.
     // Update the counter with the values in the lists, rather than
@@ -567,9 +606,10 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
     // Determine the product and release.
     let product = most_common_product(tickets);
     let release = most_common_release(tickets);
+    let release_s = release.map(|r| r.to_string());
 
     // Display these placeholders if there are no products or releases at all.
-    let releases_display = release.unwrap_or("no releases");
+    let releases_display = release_s.as_ref().map_or("no releases", |r| r.as_str());
     let products_display = product.unwrap_or("no releases");
 
     let date_today = OffsetDateTime::now_utc()
