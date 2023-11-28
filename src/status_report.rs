@@ -21,6 +21,7 @@ use std::convert::From;
 use std::default::Default;
 use std::fmt;
 use std::ops::Neg;
+use std::string::ToString;
 
 use askama::Template;
 use color_eyre::eyre::{Result, WrapErr};
@@ -45,14 +46,14 @@ const UNCHECKED_DOC_TYPES: [&str; 3] = [
 /// The maximum allowed title length for a release note.
 const MAX_TITLE_LENGTH: usize = 120;
 
-/// A regular expression to extract a version number.
-/// It tries the following formats in order:
-///
-/// 1. x.y.z
-/// 2. x.y
-/// 3. x
-static VERSION_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?:(\d+)\.(\d+).(\d+)|(\d+)\.(\d+)|(\d+))").expect(REGEX_ERROR));
+/// A regular expression to extract a version number in the x.y.z format.
+static VERSION_XYZ_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(\d+)\.(\d+)\.(\d+)").expect(REGEX_ERROR));
+/// A regular expression to extract a version number in the x.y format.
+static VERSION_XY_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(\d+)\.(\d+)").expect(REGEX_ERROR));
+/// A regular expression to extract a version number in the x (no .y.z) format.
+static VERSION_X_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"(\d+)").expect(REGEX_ERROR));
 
 /// An overview of the completeness status across all tickets.
 #[derive(Default, Serialize)]
@@ -368,7 +369,7 @@ impl Status {
             // and thus enables us to compare the two strings without allocating every time.
             if ticket_releases
                 .iter()
-                .any(|r| extract_version(r) == likely_release)
+                .any(|r| Version::from(r) == likely_release)
                 || UNCHECKED_DOC_TYPES.contains(&doc_type.to_lowercase().as_str())
             {
                 Self::Ok
@@ -507,12 +508,55 @@ fn most_common_product(tickets: &[AbstractTicket]) -> Option<&str> {
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Ord, PartialOrd)]
 enum Version<'a> {
+    Raw(&'a str),
     Parsed {
         x: u32,
         y: Option<u32>,
         z: Option<u32>,
     },
-    Raw(&'a str),
+}
+
+impl<'a> Version<'a> {
+    /// Try to extract an x.y.z, x.y, or x version from a string.
+    /// If no such version is found, return the original release string back.
+    /// The intended purpose is to recognize release strings such as `rhel-9.3.0`,
+    /// `9.3.0`, `9.3.0 Beta` and `v9.3.0` as identical versions and count them together.
+    fn from(release: &'a str) -> Self {
+        // Capture the regex:
+        let caps_xyz = VERSION_XYZ_REGEX.captures(release);
+
+        // Take x, y, and z groups from the capture:
+        if let Some(caps) = caps_xyz {
+            let x = extract_number(&caps, 1).expect("Regular expression failed.");
+            let y = extract_number(&caps, 2);
+            let z = extract_number(&caps, 3);
+
+            return Version::Parsed { x, y, z };
+        }
+
+        let caps_xy = VERSION_XY_REGEX.captures(release);
+
+        if let Some(caps) = caps_xy {
+            let x = extract_number(&caps, 1).expect("Regular expression failed.");
+            let y = extract_number(&caps, 2);
+            let z = None;
+
+            return Version::Parsed { x, y, z };
+        }
+
+        let caps_x = VERSION_X_REGEX.captures(release);
+
+        if let Some(caps) = caps_x {
+            let x = extract_number(&caps, 1).expect("Regular expression failed.");
+            let y = None;
+            let z = None;
+
+            return Version::Parsed { x, y, z };
+        }
+
+        // All previous parsing failed. Return the original string.
+        Version::Raw(release)
+    }
 }
 
 impl fmt::Display for Version<'_> {
@@ -535,26 +579,6 @@ impl fmt::Display for Version<'_> {
     }
 }
 
-/// Try to extract an x.y.z, x.y, or x version from a string.
-/// If no such version is found, return the original release string back.
-/// The intended purpose is to recognize release strings such as `rhel-9.3.0`,
-/// `9.3.0`, `9.3.0 Beta` and `v9.3.0` as identical versions and count them together.
-fn extract_version(release: &str) -> Version {
-    // Capture the regex:
-    let caps = VERSION_REGEX.captures(release);
-    // Take x, y, and z groups from the capture:
-    let x = caps.as_ref().and_then(|c| extract_number(c, 1));
-    let y = caps.as_ref().and_then(|c| extract_number(c, 2));
-    let z = caps.as_ref().and_then(|c| extract_number(c, 3));
-
-    // Return either the parsed version or the original string.
-    if let Some(x) = x {
-        Version::Parsed { x, y, z }
-    } else {
-        Version::Raw(release)
-    }
-}
-
 fn extract_number(caps: &regex::Captures, index: usize) -> Option<u32> {
     caps.get(index)
         .map(|m| m.as_str())
@@ -573,16 +597,37 @@ fn most_common_release(tickets: &[AbstractTicket]) -> Option<Version> {
         let extracted_versions = ticket
             .target_releases
             .iter()
-            .map(|release| extract_version(release));
+            .map(|release| Version::from(release));
         // Count the x.y.z versions.
         releases.update(extracted_versions);
     }
 
-    // Find the most common version.
-    releases
-        .k_most_common_ordered(1)
-        .first()
+    // Find the two most common versions.
+    let two_versions: Vec<Version<'_>> = releases
+        .k_most_common_ordered(2)
+        .iter()
         .map(|(elem, _frequency)| *elem)
+        .collect();
+
+    log::debug!("The two most common versions: {:?}", two_versions);
+
+    let first = two_versions.get(0);
+    let second = two_versions.get(1);
+
+    // In case the second most common version is more recent than the first most common, use the second one.
+    // This might occur in a release that inherits many release notes from the previous release
+    // and adds just a few more recent tickets on top.
+    if second > first {
+        log::info!(
+            "The second most common version, {:?}, is greater than {:?}. Switching.",
+            second.map(ToString::to_string),
+            first.map(ToString::to_string)
+        );
+        second.copied()
+    } else {
+        log::debug!("The most common version, {first:?}, is greater than or equal to {second:?}. Keeping.");
+        first.copied()
+    }
 }
 
 /// All the data that the status table needs to render.
@@ -647,4 +692,77 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
         .wrap_err("Failed to prepare the JSON status output.")?;
 
     Ok((as_html, as_json))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_versions() {
+        let release = "rhel-9.3.0 Beta";
+        let version_9_3_0 = Version::from(release);
+
+        assert_eq!(
+            version_9_3_0,
+            Version::Parsed {
+                x: 9,
+                y: Some(3),
+                z: Some(0)
+            }
+        );
+
+        let release = "rhel-9.3";
+        let version_9_3 = Version::from(release);
+
+        assert_eq!(
+            version_9_3,
+            Version::Parsed {
+                x: 9,
+                y: Some(3),
+                z: None
+            }
+        );
+
+        let release = "RHEL 9";
+        let version_9 = Version::from(release);
+
+        assert_eq!(
+            version_9,
+            Version::Parsed {
+                x: 9,
+                y: None,
+                z: None
+            }
+        );
+
+        let release = "No version here.";
+        let version_none = Version::from(release);
+
+        assert_eq!(version_none, Version::Raw(release));
+    }
+
+    #[test]
+    fn compare_versions() {
+        let release = "rhel-9.3.0 Beta";
+        let version_9_3_0 = Version::from(release);
+
+        let release = "rhel-9.3";
+        let version_9_3 = Version::from(release);
+
+        let release = "RHEL 9";
+        let version_9 = Version::from(release);
+
+        let release = "rhel-8.9.1";
+        let version_8_9_1 = Version::from(release);
+
+        let release = "No version here.";
+        let version_none = Version::from(release);
+
+        assert!(version_9_3_0 > version_8_9_1);
+        assert!(version_9_3_0 > version_9_3);
+        assert!(version_9_3 > version_9);
+        assert!(version_8_9_1 > version_none);
+        assert!(version_9 > version_8_9_1);
+    }
 }
