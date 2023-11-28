@@ -51,7 +51,7 @@ const MAX_TITLE_LENGTH: usize = 120;
 /// 2. x.y
 /// 3. x
 static VERSION_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(\d\.\d.\d|\d\.\d|\d)").expect(REGEX_ERROR));
+    Lazy::new(|| Regex::new(r"(\d+\.\d+.\d+|\d+\.\d+|\d+)").expect(REGEX_ERROR));
 
 /// An overview of the completeness status across all tickets.
 #[derive(Default, Serialize)]
@@ -500,6 +500,12 @@ fn most_common_product(tickets: &[AbstractTicket]) -> Option<&str> {
         .k_most_common_ordered(1)
         .first()
         .map(|(elem, _frequency)| *elem)
+}
+
+struct Version {
+    x: u32,
+    y: Option<u32>,
+    z: Option<u32>,
 }
 
 /// Try to extract an x.y.z, x.y, or x version from a string.
