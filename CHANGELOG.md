@@ -1,5 +1,9 @@
 # Changes
 
+## Version 0.31.0
+
+* More accurately parse and report target releases. If the second most common release in the project is more recent than the first most common, assume that the second release is the active one. [#13](https://github.com/msuchane/acorns/issues/13).
+
 ## Version 0.30.2
 
 * Attempt to fix [#23](https://github.com/msuchane/acorns/issues/23).
