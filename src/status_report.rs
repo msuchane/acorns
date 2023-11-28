@@ -24,6 +24,7 @@ use std::ops::Neg;
 use askama::Template;
 use color_eyre::eyre::{Result, WrapErr};
 use counter::Counter;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Serialize;
 use time::{format_description::well_known::Rfc2822, OffsetDateTime};
@@ -31,6 +32,7 @@ use time::{format_description::well_known::Rfc2822, OffsetDateTime};
 use crate::extra_fields::DocTextStatus;
 use crate::note::content_lines;
 use crate::ticket_abstraction::AbstractTicket;
+use crate::REGEX_ERROR;
 
 /// These doc types don't belong to any particular target release.
 /// Skip the release check for these.
@@ -41,6 +43,15 @@ const UNCHECKED_DOC_TYPES: [&str; 3] = [
 ];
 /// The maximum allowed title length for a release note.
 const MAX_TITLE_LENGTH: usize = 120;
+
+/// A regular expression to extract a version number.
+/// It tries the following formats in order:
+///
+/// 1. x.y.z
+/// 2. x.y
+/// 3. x
+static VERSION_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(\d\.\d.\d|\d\.\d|\d)").expect(REGEX_ERROR));
 
 /// An overview of the completeness status across all tickets.
 #[derive(Default, Serialize)]
@@ -348,7 +359,7 @@ impl Status {
     /// Report if the ticket's target release doesn't match the the global target release.
     fn from_target_release(
         ticket_releases: &[String],
-        likely_release: Option<&&str>,
+        likely_release: Option<&str>,
         doc_type: &str,
     ) -> Self {
         if let Some(likely_release) = likely_release {
@@ -379,7 +390,7 @@ impl From<DocTextStatus> for Status {
 
 impl AbstractTicket {
     /// Analyze the release note status of the ticket. Record the analysis as `Checks`.
-    fn checks(&self, releases: &[&str]) -> Checks {
+    fn checks(&self, release: Option<&str>) -> Checks {
         Checks {
             development: Status::from_devel_status(&self.status),
             title_and_text: Status::from_text(&self.doc_text),
@@ -387,7 +398,7 @@ impl AbstractTicket {
             doc_status: Status::from(self.doc_text_status),
             target_release: Status::from_target_release(
                 &self.target_releases,
-                releases.first(),
+                release,
                 &self.doc_type,
             ),
         }
@@ -478,48 +489,55 @@ fn email_prefix(email: &str) -> &str {
     }
 }
 
-/// List the products set in the tickets, sorted from most common to least common.
-/// Returns up to 3 most common products and ignores the rest.
-fn combined_products(tickets: &[AbstractTicket]) -> Vec<&str> {
+/// List the most common product set in the tickets.
+fn most_common_product(tickets: &[AbstractTicket]) -> Option<&str> {
     let products: Counter<&str> = tickets
         .iter()
         .map(|ticket| ticket.product.as_str())
         .collect();
 
     products
-        .k_most_common_ordered(3)
-        .iter()
+        .k_most_common_ordered(1)
+        .first()
         .map(|(elem, _frequency)| *elem)
-        .collect()
 }
 
-/// List the releases set in the tickets, sorted from most common to least common.
-/// Returns up to 3 most common releases and ignores the rest.
-fn combined_releases(tickets: &[AbstractTicket]) -> Vec<&str> {
+/// Try to extract an x.y.z, x.y, or x version from a string.
+/// If no such version is found, return the original release string back.
+/// The intended purpose is to recognize release strings such as `rhel-9.3.0`,
+/// `9.3.0`, `9.3.0 Beta` and `v9.3.0` as identical versions and count them together.
+fn extract_version(release: &str) -> &str {
+    VERSION_REGEX
+        // Capture the regex:
+        .captures(release)
+        // Take the first capture group:
+        .and_then(|cap| cap.get(1))
+        // Return either the capture group if some or the original string if none:
+        .map_or(release, |m| m.as_str())
+}
+
+/// List the most common release set in the tickets.
+fn most_common_release(tickets: &[AbstractTicket]) -> Option<&str> {
     let mut releases: Counter<&str> = Counter::new();
 
     // Releases are a list, and each ticket can have several of them.
     // Update the counter with the values in the lists, rather than
     // with the lists themselves as values.
     for ticket in tickets {
-        releases.update(ticket.target_releases.iter().map(String::as_str));
+        // Extract the x.y.z version numbers from the version strings.
+        let extracted_versions = ticket
+            .target_releases
+            .iter()
+            .map(|release| extract_version(release));
+        // Count the x.y.z versions.
+        releases.update(extracted_versions);
     }
 
+    // Find the most common version.
     releases
-        .k_most_common_ordered(3)
-        .iter()
+        .k_most_common_ordered(1)
+        .first()
         .map(|(elem, _frequency)| *elem)
-        .collect()
-}
-
-/// Display the list of releases or products as a string.
-/// If the list is empty, provide a placeholder instead.
-fn list_or_placeholder(list: &[&str], name: &str) -> String {
-    if list.is_empty() {
-        format!("no {name}")
-    } else {
-        list.join(", ")
-    }
 }
 
 /// All the data that the status table needs to render.
@@ -540,11 +558,13 @@ struct StatusTableTemplate<'a> {
 /// * As text with HTML markup.
 /// * As a JSON map in text form.
 pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
-    let products = combined_products(tickets);
-    let products_display = list_or_placeholder(&products, "products");
+    // Determine the product and release.
+    let product = most_common_product(tickets);
+    let release = most_common_release(tickets);
 
-    let releases = combined_releases(tickets);
-    let releases_display = list_or_placeholder(&releases, "releases");
+    // Display these placeholders if there are no products or releases at all.
+    let releases_display = release.unwrap_or("no releases");
+    let products_display = product.unwrap_or("no releases");
 
     let date_today = OffsetDateTime::now_utc()
         .format(&Rfc2822)
@@ -555,7 +575,7 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
     // needs to receive both tickets and checks by reference.
     let checks: Vec<Checks> = tickets
         .iter()
-        .map(|ticket| ticket.checks(&releases))
+        .map(|ticket| ticket.checks(release))
         .collect();
     let tickets_with_checks: Vec<(&AbstractTicket, &Checks)> =
         tickets.iter().zip(checks.iter()).collect();
@@ -565,8 +585,8 @@ pub fn analyze_status(tickets: &[AbstractTicket]) -> Result<(String, String)> {
     let writer_stats = calculate_writer_stats(&tickets_with_checks);
 
     let status_table = StatusTableTemplate {
-        products: &products_display,
-        release: &releases_display,
+        products: products_display,
+        release: releases_display,
         overall_progress,
         per_writer_stats: &writer_stats,
         tickets_with_checks: &tickets_with_checks,
