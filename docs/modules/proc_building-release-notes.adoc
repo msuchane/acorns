@@ -50,17 +50,17 @@ $ {bin-name} build
 . Compile the external and internal version of the AsciiDoc document:
 +
 ----
-$ asciidoctor --safe -vn main.adoc
+$ asciidoctor --safe -vn main-external.adoc
 
-$ asciidoctor --safe -vn internal.adoc
+$ asciidoctor --safe -vn main-internal.adoc
 ----
 
-. Open the `main.html` and `internal.html` files in a web browser to preview the document.
+. Open the `main-external.html` and `main-internal.html` files in a web browser to preview the document.
 +
 In the GNOME desktop environment, you can use the following commands:
 +
 ----
-$ gio open main.html
+$ gio open main-external.html
 
-$ gio open internal.html
+$ gio open main-internal.html
 ----

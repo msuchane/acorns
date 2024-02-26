@@ -28,7 +28,7 @@ ref___title-of-section__-__title-of-its-including-parent__.adoc
 
 * If no tickets in your project match the `filter` rules defined in this chapter or section, it does not generate any file.
 +
-You must remove or comment out the include statement to this file in your `main.adoc` file, otherwise `asciidoctor` reports an error when you compile the document.
+You must remove or comment out the include statement to this file in your `main-template.adoc` file, otherwise `asciidoctor` reports an error when you compile the document.
 +
 For example:
 

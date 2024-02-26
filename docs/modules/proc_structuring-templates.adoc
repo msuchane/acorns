@@ -30,7 +30,7 @@ In this case:
 
 . Rebuild your release notes and examine the generated files in the `{bin-name}/generated/internal/` directory.
 
-. Include the generated files in your `main.adoc` file.
+. Include the generated files in your `main-template.adoc` file.
 
 .Verification
 

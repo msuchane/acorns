@@ -8,7 +8,7 @@ The `{bin-name}/templates.yaml` configuration file recognizes several options an
 .The base level of organization
 The configuration file always requires the `chapters` entry, which defines the initial, base organization level.
 
-This level is called `chapters` because it usually generates files that you include directly from your `main.adoc` file. These generated files can either be reference modules or assemblies, depending on their content.
+This level is called `chapters` because it usually generates files that you include directly from your `main-template.adoc` file. These generated files can either be reference modules or assemblies, depending on their content.
 
 The `chapters` entry has the following syntax:
 
@@ -52,7 +52,7 @@ NOTE: Subsections can also be called `sections` in the configuration file for le
 .Deeper levels of organization
 If you enable deeper levels of organization by specifying the `subsections` (or `sections`) option in `chapters`, you must add the `subsections` (or `sections`) entry at the top of the `templates.yaml` file.
 
-The `subsections` entry defines rules organizing at levels that you do not include yourself in the `main.adoc` file, but rather, the base-level chapters include these generated files.
+The `subsections` entry defines rules organizing at levels that you do not include yourself in the `main-template.adoc` file, but rather, the base-level chapters include these generated files.
 
 The `subsections` entry has the following syntax, which is identical to the `chapters` syntax, except for the addition of YaML anchors:
 

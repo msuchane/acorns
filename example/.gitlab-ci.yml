@@ -26,11 +26,11 @@ pages:
   script:
     - mkdir -p $OUT_DIR
     - asciidoctor --safe -vn preview-index.adoc
-    - asciidoctor --safe -vn main.adoc
-    - asciidoctor --safe -vn internal.adoc
+    - asciidoctor --safe -vn main-external.adoc
+    - asciidoctor --safe -vn main-internal.adoc
     - cp preview-index.html $OUT_DIR/index.html
-    - cp main.html $OUT_DIR/external.html
-    - cp internal.html $OUT_DIR/internal.html
+    - cp main-external.html $OUT_DIR/external.html
+    - cp main-internal.html $OUT_DIR/internal.html
     - cp acorns/generated/status-table.html $OUT_DIR/status-table.html
     - cp acorns/generated/status-table.json $OUT_DIR/status-table.json
     - printf "<p>Latest generated release:</p><p><a href=$CI_COMMIT_REF_NAME>$CI_COMMIT_REF_NAME</a></p>" > public/index.html

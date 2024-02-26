@@ -1,11 +1,6 @@
 // Include the shared attributes
 include::attributes.adoc[]
 
-// By default, compile the external version of the document.
-ifndef::generated-dir[]
-:generated-dir: acorns/generated/external
-endif::[]
-
 // The name and ID of the title is defined in attributes.adoc
 [id="{ProjectNameID}"]
 = {ProjectName}
