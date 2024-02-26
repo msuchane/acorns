@@ -1,5 +1,10 @@
 # Changes
 
+## Version 0.31.1
+
+* Fixes and minor improvements to the example configuration files.
+* A nicer info message about the switched target releases.
+
 ## Version 0.31.0
 
 * More accurately parse and report target releases. If the second most common release in the project is more recent than the first most common, assume that the second release is the active one. [#13](https://github.com/msuchane/acorns/issues/13).
