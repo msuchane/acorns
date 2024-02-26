@@ -10,7 +10,7 @@
 :ProductNumber: 1.2.3
 // The product name with the current version
 :Product: {ProductName}{nbsp}{ProductNumber}
-:ProductShort: {ProductName}{nbsp}{ProductNumber}
+:ProductShort: {ProductShortName}{nbsp}{ProductNumber}
 
 // The name of the book
 :ProjectName: Release notes for {ProductShort}

@@ -50,7 +50,7 @@ impl TryFrom<&str> for DocTextStatus {
             "?" | "proposed" | "in progress" | "unset" => Ok(Self::InProgress),
             // TODO: Does "Upstream only" really mean to skip this RN?
             "-" | "rejected" | "upstream only" => Ok(Self::NoDocumentation),
-            _ => bail!("Unrecognized doc text status value: {:?}", string),
+            _ => Err(eyre!("Unrecognized doc text status value: {:?}", string)),
         }
     }
 }
