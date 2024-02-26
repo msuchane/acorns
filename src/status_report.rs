@@ -619,9 +619,9 @@ fn most_common_release(tickets: &[AbstractTicket]) -> Option<Version> {
     // and adds just a few more recent tickets on top.
     if second > first {
         log::info!(
-            "The second most common version, {:?}, is greater than {:?}. Switching.",
-            second.map(ToString::to_string),
-            first.map(ToString::to_string)
+            "The second most common version, {}, is greater than {}. Switching.",
+            second.map(ToString::to_string).unwrap_or("None".into()),
+            first.map(ToString::to_string).unwrap_or("None".into())
         );
         second.copied()
     } else {
