@@ -23,6 +23,6 @@
 // The name of the book for the purposes of {context}
 :ProjectNameID: release-notes
 
-:Year: 2023
+:Year: 2024
 
 :imagesdir: images
