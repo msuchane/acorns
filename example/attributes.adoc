@@ -15,7 +15,7 @@
 // The name of the book
 :ProjectName: Release notes for {ProductShort}
 // The subtitle of the book
-:Subtitle: Release Notes for Red Hat Enterprise Linux 9.2 Beta
+:Subtitle: Release notes for the {Product} release
 
 // The abstract of the book
 :Abstract: The release notes provide high-level coverage of the improvements and additions that have been implemented in {Product} and document known problems in this release, as well as notable bug fixes, Technology Previews, deprecated functionality, and other details.
