@@ -418,7 +418,7 @@ struct TextEntry {
 #[derive(Deserialize, Debug)]
 struct Team {
     name: String,
-    _id: u32,
+    // id: u32,
 }
 
 /// For categorizing release notes, both subsystems and teams provide similar data.
