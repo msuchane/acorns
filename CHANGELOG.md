@@ -1,5 +1,13 @@
 # Changes
 
+## Version 0.32.0
+
+* Enable Team as an alternative Subsystems field structure (RHELDOCS-17810). The field structure is:
+
+    ```
+    Team { name: string, id: number }
+    ```
+
 ## Version 0.31.1
 
 * Fixes and minor improvements to the example configuration files.
