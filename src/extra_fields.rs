@@ -413,6 +413,24 @@ struct TextEntry {
     value: String,
 }
 
+/// A field that identifies a team with a name and an ID. Similar to `TextEntry` in practice,
+/// but it must be parsed separately.
+#[derive(Deserialize, Debug)]
+struct Team {
+    name: String,
+    _id: u32,
+}
+
+/// For categorizing release notes, both subsystems and teams provide similar data.
+/// This enum enables you to configure either a text entry list or a team field
+/// as providing subsystems information, which you can later use in RN templates.
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum Subsystems {
+    Strings(Vec<TextEntry>),
+    Team(Team),
+}
+
 impl ExtraFields for Issue {
     fn doc_type(&self, config: &impl tracker::FieldsConfig) -> Result<String> {
         let fields = config.doc_type();
@@ -547,16 +565,22 @@ impl ExtraFields for Issue {
             let pool = self.fields.extra.get(field);
 
             if let Some(pool) = pool {
-                let ssts: Result<Vec<TextEntry>, serde_json::Error> =
+                let ssts: Result<Subsystems, serde_json::Error> =
                     serde_json::from_value(pool.clone());
 
                 // If the field exist, try parsing it and returning the result.
                 // If the parsing fails, record the error for later.
                 match ssts {
-                    Ok(ssts) => {
-                        let sst_names = ssts.into_iter().map(|sst| sst.value).collect();
+                    // When the SSTs field is a list of SST names:
+                    Ok(Subsystems::Strings(values)) => {
+                        let sst_names = values.into_iter().map(|sst| sst.value).collect();
                         return Ok(sst_names);
-                    }
+                    },
+                    // When the SSTs field is a a Team entry:
+                    Ok(Subsystems::Team(team)) => {
+                        let sst_names = vec![team.name];
+                        return Ok(sst_names);
+                    },
                     Err(error) => {
                         errors.push(error.into());
                     }
