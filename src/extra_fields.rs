@@ -575,12 +575,12 @@ impl ExtraFields for Issue {
                     Ok(Subsystems::Strings(values)) => {
                         let sst_names = values.into_iter().map(|sst| sst.value).collect();
                         return Ok(sst_names);
-                    },
+                    }
                     // When the SSTs field is a a Team entry:
                     Ok(Subsystems::Team(team)) => {
                         let sst_names = vec![team.name];
                         return Ok(sst_names);
-                    },
+                    }
                     Err(error) => {
                         errors.push(error.into());
                     }

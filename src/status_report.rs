@@ -625,7 +625,9 @@ fn most_common_release(tickets: &[AbstractTicket]) -> Option<Version> {
         );
         second.copied()
     } else {
-        log::debug!("The most common version, {first:?}, is greater than or equal to {second:?}. Keeping.");
+        log::debug!(
+            "The most common version, {first:?}, is greater than or equal to {second:?}. Keeping."
+        );
         first.copied()
     }
 }
