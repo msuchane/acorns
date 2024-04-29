@@ -44,6 +44,8 @@ On Fedora, RHEL, and CentOS, replace `docker` with `podman` in the following com
 ----
 $ docker pull {container-repo}
 ----
++
+NOTE: If this image is unavailable, you can use a backup image at `docker.io/msuchane/acorns:latest`.
 
 .. Configure a command alias. Save this line in your shell configuration file:
 +
