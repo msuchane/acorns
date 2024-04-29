@@ -138,7 +138,7 @@ impl IntoAbstract for Bug {
             doc_text: self.doc_text(bz_fields)?,
             target_releases: self.target_releases(bz_fields),
             subsystems: self.subsystems(bz_fields).map_err(|e| e.to_string()),
-            doc_text_status: self.doc_text_status(bz_fields)?,
+            doc_text_status: self.doc_text_status(bz_fields),
             docs_contact: self.docs_contact(bz_fields),
             url: self.url(bz_fields),
             summary: self.summary,
@@ -178,7 +178,7 @@ impl IntoAbstract for Issue {
             doc_text: self.doc_text(jira_fields)?,
             // The target release is non-essential. Discard the error and store as Option.
             target_releases: self.target_releases(jira_fields),
-            doc_text_status: self.doc_text_status(jira_fields)?,
+            doc_text_status: self.doc_text_status(jira_fields),
             docs_contact: self.docs_contact(jira_fields),
             subsystems: self.subsystems(jira_fields).map_err(|e| e.to_string()),
             url: self.url(jira_fields),

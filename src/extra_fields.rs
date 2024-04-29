@@ -20,10 +20,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::string::ToString;
 
-use color_eyre::{
-    eyre::{bail, eyre},
-    Report, Result,
-};
+use color_eyre::{eyre::eyre, Report, Result};
 use serde::Deserialize;
 use serde_json::value::Value;
 
@@ -140,7 +137,7 @@ pub trait ExtraFields {
     /// Extract the subsystems from the ticket.
     fn subsystems(&self, config: &impl tracker::FieldsConfig) -> Result<Vec<String>>;
     /// Extract the doc text status ("requires doc text") from the ticket.
-    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus>;
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> DocTextStatus;
     /// Extract the docs contact from the ticket.
     fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact;
     /// Construct a URL back to the original ticket online.
@@ -333,7 +330,7 @@ impl ExtraFields for Bug {
     /// If the flag is unset, treat it only as a warning, not a breaking error,
     /// and proceed with the default value.
     /// An unset RDT is a relatively common occurrence on Bugzilla.
-    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus> {
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> DocTextStatus {
         let fields = config.doc_text_status();
         let mut errors = Vec::new();
         // Record all empty but potentially okay fields.
@@ -346,7 +343,7 @@ impl ExtraFields for Bug {
             if let Some(rdt) = self.get_flag(flag) {
                 match DocTextStatus::try_from(rdt) {
                     Ok(status) => {
-                        return Ok(status);
+                        return status;
                     }
                     Err(error) => {
                         errors.push(eyre!(
@@ -361,19 +358,20 @@ impl ExtraFields for Bug {
             }
         }
 
-        // If all we've got are errors, return an error with the complete errors report.
+        // If all we've got are errors, report an error with the complete errors report.
         if empty_fields.is_empty() {
             let report = error_chain(errors, Field::DocTextStatus, fields, Id::BZ(self.id));
-            Err(report)
-        // If we at least got an existing but empty field, return the default value.
+            log::warn!("{}", report);
+        // If we at least got an existing but empty field, report the empty flags.
         } else {
             log::warn!(
                 "Flags are empty in {}: {}",
                 Id::BZ(self.id),
                 empty_fields.join(", ")
             );
-            Ok(default_rdt)
         }
+        // In case of both errors, return the default RDT value.
+        default_rdt
     }
 
     fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact {
@@ -596,7 +594,13 @@ impl ExtraFields for Issue {
         Err(report)
     }
 
-    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> Result<DocTextStatus> {
+    fn doc_text_status(&self, config: &impl tracker::FieldsConfig) -> DocTextStatus {
+        // This is the default, fallback status in case fields are empty:
+        let default_status = DocTextStatus::InProgress;
+
+        // Record all errors that occur with tried fields that exist.
+        let mut errors = Vec::new();
+
         let fields = config.doc_text_status();
         for field in fields {
             let rdt_field = self
@@ -608,31 +612,37 @@ impl ExtraFields for Issue {
             if let Some(rdt_field) = rdt_field {
                 match rdt_field.as_str() {
                     // If the doc text status field exists but it's empty (None value),
-                    // default to returing the InProgress status, but log a warning.
+                    // default to returing the fallback status, but log a warning.
                     None => {
-                        log::warn!(
+                        let error = eyre!(
                             "The doc text status field ({}) is empty in {}.",
                             field,
                             Id::Jira(&self.key)
                         );
-                        return Ok(DocTextStatus::InProgress);
+                        errors.push(error);
+                        return default_status;
                     }
                     // If the field is set (Some value), use the regular string parsing.
-                    Some(string) => {
-                        return DocTextStatus::try_from(string);
-                    }
+                    Some(string) => match DocTextStatus::try_from(string) {
+                        Ok(status) => {
+                            return status;
+                        }
+                        Err(e) => {
+                            errors.push(e);
+                            return default_status;
+                        }
+                    },
                 }
             };
         }
 
         // No field produced a `Some` value.
-        let report = error_chain(
-            Vec::new(),
-            Field::DocTextStatus,
-            fields,
-            Id::Jira(&self.key),
-        );
-        Err(report)
+        let report = error_chain(errors, Field::DocTextStatus, fields, Id::Jira(&self.key));
+        // Report all errors.
+        log::warn!("{}", report);
+
+        // Return the fallback value.
+        default_status
     }
 
     fn docs_contact(&self, config: &impl tracker::FieldsConfig) -> DocsContact {
