@@ -36,7 +36,7 @@ If you do not use this workflow, you can still archive previous releases in one 
 +
 Because you are including files in the same directory, specify only the file names with no directory path in the include directives.
 
-. Include the new assembly from your master file, such as the `master_-_template.adoc` file. For example:
+. Include the new assembly from your master file, such as the `master_template.adoc` file. For example:
 +
 [subs="quotes"]
 ----
