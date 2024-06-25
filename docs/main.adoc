@@ -20,6 +20,8 @@ include::assembly_organizing-tickets-in-your-project-using-templates.adoc[levelo
 
 include::modules/proc_adding-an-explanatory-footnote-to-private-tickets.adoc[leveloffset=+1]
 
+include::modules/proc_publishing-previous-releases-in-one-continuous-document.adoc[leveloffset=+1]
+
 include::modules/ref_differences-between-acorns-and-corn-3.adoc[leveloffset=+1]
 
 
