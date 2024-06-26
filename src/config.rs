@@ -419,7 +419,7 @@ fn parse_templates(template_file: &Path) -> Result<Template> {
 
 /// Parsed input metadata that represent the configuration of a release notes project
 pub struct Project {
-    pub base_dir: PathBuf,
+    pub _base_dir: PathBuf,
     pub generated_dir: PathBuf,
     pub tickets: Vec<Arc<TicketQuery>>,
     pub trackers: tracker::Config,
@@ -460,7 +460,7 @@ impl Project {
         let private_footnote = footnote::is_footnote_defined(&abs_path)?;
 
         Ok(Self {
-            base_dir: abs_path,
+            _base_dir: abs_path,
             generated_dir,
             tickets,
             trackers,

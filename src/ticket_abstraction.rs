@@ -198,7 +198,7 @@ impl IntoAbstract for Issue {
                 .priority
                 .map_or_else(|| "Missing".to_string(), |p| p.name),
             // Issues might not be assigned to anyone.
-            assignee: self.fields.assignee.map(|a| a.name),
+            assignee: self.fields.assignee.and_then(|a| a.name),
             components: self.fields.components.into_iter().map(|c| c.name).collect(),
             // The project name isn't exactly the product name, but it's the closest equivalent at hand.
             product: self.fields.project.name,
