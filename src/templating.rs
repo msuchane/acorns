@@ -80,8 +80,7 @@ impl Module {
     /// The module's file name.
     pub fn file_name(&self) -> &str {
         match self {
-            Self::WithContent { file_name, .. } => file_name,
-            Self::Blank { file_name, .. } => file_name,
+            Self::Blank { file_name, .. } | Self::WithContent { file_name, .. } => file_name,
         }
     }
     /// Return `true` if the module is of the `WithContent` variant.
@@ -259,7 +258,7 @@ impl config::Section {
                         ticket_stats,
                     )
                 })
-                .filter(|module| module.has_content())
+                .filter(Module::has_content)
                 .collect();
             // If the assembly receives no modules, because all its modules are empty, return Blank.
             if included_modules.is_empty() {

@@ -188,7 +188,7 @@ impl Document {
         // Make sure that the output directory exists.
         fs::create_dir_all(generated_dir)?;
 
-        Self::write_chapters(modules, summary, generated_dir)?;
+        Self::write_chapters(modules, generated_dir)?;
 
         // Save the appendix.
         let summary_file = generated_dir.join("ref_list-of-tickets-by-component.adoc");
@@ -200,9 +200,9 @@ impl Document {
 
     /// Write the top-level chapters. These need special treatment so that they get created even
     /// if they're completely empty, in order not to break include directives.
-    fn write_chapters(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
+    fn write_chapters(modules: &[Module], generated_dir: &Path) -> Result<()> {
         for chapter in modules {
-            let out_file = generated_dir.join(&chapter.file_name());
+            let out_file = generated_dir.join(chapter.file_name());
             log::debug!("Writing file: {}", out_file.display());
 
             let text = match chapter {
@@ -219,7 +219,7 @@ impl Document {
             } = chapter
             {
                 if let Some(included_modules) = included_modules {
-                    Self::write_modules(included_modules, summary, generated_dir)?;
+                    Self::write_modules(included_modules, generated_dir)?;
                 }
             }
         }
@@ -228,7 +228,7 @@ impl Document {
     }
 
     /// Write modules for all sub-sections recursively. Only create files if they have some content.
-    fn write_modules(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
+    fn write_modules(modules: &[Module], generated_dir: &Path) -> Result<()> {
         for module in modules {
             if let Module::WithContent {
                 file_name,
@@ -243,7 +243,7 @@ impl Document {
                 // If the currently processed module is an assembly,
                 // recursively descend into the assembly and write its included modules.
                 if let Some(included_modules) = included_modules {
-                    Self::write_modules(included_modules, summary, generated_dir)?;
+                    Self::write_modules(included_modules, generated_dir)?;
                 }
             }
         }
