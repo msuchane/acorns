@@ -188,22 +188,61 @@ impl Document {
         // Make sure that the output directory exists.
         fs::create_dir_all(generated_dir)?;
 
-        for module in modules {
-            let out_file = generated_dir.join(&module.file_name);
+        Self::write_chapters(modules, summary, generated_dir)?;
+
+        // Save the appendix.
+        let summary_file = generated_dir.join("ref_list-of-tickets-by-component.adoc");
+        log::debug!("Writing file: {}", summary_file.display());
+        fs::write(summary_file, summary).wrap_err("Failed to write generated summary appendix.")?;
+
+        Ok(())
+    }
+
+    fn write_chapters(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
+        for chapter in modules {
+            let out_file = generated_dir.join(&chapter.file_name());
             log::debug!("Writing file: {}", out_file.display());
-            fs::write(out_file, &module.text).wrap_err("Failed to write generated module.")?;
+
+            let text = match chapter {
+                Module::WithContent { text, .. } => text,
+                Module::Blank { .. } => "",
+            };
+
+            fs::write(out_file, text).wrap_err("Failed to write generated module.")?;
 
             // If the currently processed module is an assembly,
             // recursively descend into the assembly and write its included modules.
-            if let Some(included_modules) = &module.included_modules {
-                Self::write_variant(included_modules, summary, generated_dir)?;
+            if let Module::WithContent {
+                included_modules, ..
+            } = chapter
+            {
+                if let Some(included_modules) = included_modules {
+                    Self::write_modules(included_modules, summary, generated_dir)?;
+                }
             }
+        }
 
-            // Save the appendix.
-            let summary_file = generated_dir.join("ref_list-of-tickets-by-component.adoc");
-            log::debug!("Writing file: {}", summary_file.display());
-            fs::write(summary_file, summary)
-                .wrap_err("Failed to write generated summary appendix.")?;
+        Ok(())
+    }
+
+    fn write_modules(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
+        for module in modules {
+            if let Module::WithContent {
+                file_name,
+                text,
+                included_modules,
+            } = module
+            {
+                let out_file = generated_dir.join(file_name);
+                log::debug!("Writing file: {}", out_file.display());
+                fs::write(out_file, text).wrap_err("Failed to write generated module.")?;
+
+                // If the currently processed module is an assembly,
+                // recursively descend into the assembly and write its included modules.
+                if let Some(included_modules) = included_modules {
+                    Self::write_modules(included_modules, summary, generated_dir)?;
+                }
+            }
         }
 
         Ok(())

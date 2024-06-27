@@ -58,16 +58,33 @@ pub enum DocumentVariant {
 
 /// The representation of a module, before being finally rendered.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Module {
-    pub file_name: String,
-    pub text: String,
-    pub included_modules: Option<Vec<Self>>,
+pub enum Module {
+    WithContent {
+        file_name: String,
+        text: String,
+        included_modules: Option<Vec<Self>>,
+    },
+    Blank {
+        file_name: String,
+    },
 }
 
 impl Module {
     /// The AsciiDoc include statement to include this module elsewhere.
     pub fn include_statement(&self) -> String {
-        format!("include::{}[leveloffset=+1]", &self.file_name)
+        format!("include::{}[leveloffset=+1]", self.file_name())
+    }
+    pub fn file_name(&self) -> &str {
+        match self {
+            Self::WithContent { file_name, .. } => file_name,
+            Self::Blank { file_name, .. } => file_name,
+        }
+    }
+    fn has_content(&self) -> bool {
+        match self {
+            Self::WithContent { .. } => true,
+            Self::Blank { .. } => false,
+        }
     }
 }
 
@@ -201,7 +218,7 @@ impl config::Section {
     /// Convert the section into either a leaf module, or into an assembly and all
     /// the modules that it includes, recursively.
     ///
-    /// Returns `None` if the module or assembly captured no release notes at all.
+    /// Returns `Blank` if the module or assembly captured no release notes at all.
     fn modules(
         &self,
         tickets: &[&AbstractTicket],
@@ -209,7 +226,7 @@ impl config::Section {
         variant: DocumentVariant,
         with_priv_footnote: bool,
         ticket_stats: &mut HashMap<Rc<TicketId>, u32>,
-    ) -> Option<Module> {
+    ) -> Module {
         let matching_tickets: Vec<&AbstractTicket> = tickets
             .iter()
             .filter(|&&t| self.matches_ticket(t))
@@ -228,7 +245,7 @@ impl config::Section {
             let file_name = format!("assembly_{module_id}.adoc");
             let included_modules: Vec<Module> = sections
                 .iter()
-                .filter_map(|s| {
+                .map(|s| {
                     s.modules(
                         &matching_tickets,
                         Some(&module_id),
@@ -237,10 +254,11 @@ impl config::Section {
                         ticket_stats,
                     )
                 })
+                .filter(|module| module.has_content())
                 .collect();
-            // If the assembly receives no modules, because all its modules are empty, return None.
+            // If the assembly receives no modules, because all its modules are empty, return Blank.
             if included_modules.is_empty() {
-                None
+                Module::Blank { file_name }
             } else {
                 let include_statements: Vec<String> = included_modules
                     .iter()
@@ -259,28 +277,33 @@ impl config::Section {
                     .render()
                     .expect("Failed to render an assembly template.");
 
-                Some(Module {
+                Module::WithContent {
                     file_name,
                     text,
                     included_modules: Some(included_modules),
-                })
+                }
             }
         // If the section includes no sections, treat it as a leaf, reference module.
         } else {
-            // If the module receives no release notes and its body is empty, return None.
+            // If the module receives no release notes and its body is empty, return Blank.
             // Otherwise, return the module formatted with its release notes.
-            self.render(
+            let text = self.render(
                 &module_id,
                 tickets,
                 variant,
                 with_priv_footnote,
                 ticket_stats,
-            )
-            .map(|text| Module {
-                file_name: format!("ref_{module_id}.adoc"),
-                text,
-                included_modules: None,
-            })
+            );
+            let file_name = format!("ref_{module_id}.adoc");
+            if let Some(text) = text {
+                Module::WithContent {
+                    file_name,
+                    text,
+                    included_modules: None,
+                }
+            } else {
+                Module::Blank { file_name }
+            }
         }
     }
 
@@ -369,7 +392,7 @@ pub fn format_document(
     let chapters: Vec<_> = template
         .chapters
         .iter()
-        .filter_map(|section| {
+        .map(|section| {
             section.modules(
                 tickets,
                 None,
