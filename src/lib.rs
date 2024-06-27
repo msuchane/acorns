@@ -198,6 +198,8 @@ impl Document {
         Ok(())
     }
 
+    /// Write the top-level chapters. These need special treatment so that they get created even
+    /// if they're completely empty, in order not to break include directives.
     fn write_chapters(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
         for chapter in modules {
             let out_file = generated_dir.join(&chapter.file_name());
@@ -225,6 +227,7 @@ impl Document {
         Ok(())
     }
 
+    /// Write modules for all sub-sections recursively. Only create files if they have some content.
     fn write_modules(modules: &[Module], summary: &str, generated_dir: &Path) -> Result<()> {
         for module in modules {
             if let Module::WithContent {

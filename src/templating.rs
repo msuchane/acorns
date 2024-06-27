@@ -59,11 +59,14 @@ pub enum DocumentVariant {
 /// The representation of a module, before being finally rendered.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Module {
+    /// This is the full version of a module.
     WithContent {
         file_name: String,
         text: String,
         included_modules: Option<Vec<Self>>,
     },
+    /// This is an outline of a module that only carries its file name.
+    /// Its purpose is to create blank assemblies for top-level chapters.
     Blank {
         file_name: String,
     },
@@ -74,12 +77,14 @@ impl Module {
     pub fn include_statement(&self) -> String {
         format!("include::{}[leveloffset=+1]", self.file_name())
     }
+    /// The module's file name.
     pub fn file_name(&self) -> &str {
         match self {
             Self::WithContent { file_name, .. } => file_name,
             Self::Blank { file_name, .. } => file_name,
         }
     }
+    /// Return `true` if the module is of the `WithContent` variant.
     fn has_content(&self) -> bool {
         match self {
             Self::WithContent { .. } => true,
