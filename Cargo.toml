@@ -10,8 +10,8 @@ license = "GPL-3.0-or-later"
 readme = "README.md"
 categories = ["command-line-utilities", "text-processing", "template-engine"]
 keywords = ["releasenotes", "asciidoc", "documentation", "RedHat"]
-repository = "https://github.com/msuchane/acorns/"
-homepage = "https://msuchane.github.io/acorns/"
+repository = "https://github.com/redhat-documentation/acorns/"
+homepage = "https://redhat-documentation.github.io/acorns/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

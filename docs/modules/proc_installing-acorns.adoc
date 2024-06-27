@@ -74,7 +74,7 @@ WARNING: This repository is currently experimental. Please report any problems w
 .. Install `acorns`:
 +
 ----
-$ brew install msuchane/repo/acorns
+$ brew install redhat-documentation/repo/acorns
 ----
 
 * On any system, including different Linux distributions and macOS, you can build {name} from source:

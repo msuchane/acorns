@@ -4,7 +4,7 @@
 
 ## Build the release notes using aCoRNs
 acorns:
-  image: quay.io/msuchane/acorns:latest
+  image: quay.io/redhat-documentation/acorns:latest
   stage: build
   tags:
     - shared

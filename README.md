@@ -4,8 +4,8 @@
 ![Crates.io](https://img.shields.io/crates/l/acorns?label=license)
 <!--[![Documentation](https://docs.rs/acorns/badge.svg)](https://docs.rs/acorns)-->
 
-[![CI tests](https://github.com/msuchane/acorns/actions/workflows/rust-tests.yml/badge.svg)](https://github.com/msuchane/acorns/actions/workflows/rust-tests.yml)
-[![Dependency status](https://deps.rs/repo/github/msuchane/acorns/status.svg)](https://deps.rs/repo/github/msuchane/acorns)
+[![CI tests](https://github.com/redhat-documentation/acorns/actions/workflows/rust-tests.yml/badge.svg)](https://github.com/redhat-documentation/acorns/actions/workflows/rust-tests.yml)
+[![Dependency status](https://deps.rs/repo/github/redhat-documentation/acorns/status.svg)](https://deps.rs/repo/github/redhat-documentation/acorns)
 
 Generate an AsciiDoc release notes document from tracking tickets.
 
@@ -13,7 +13,7 @@ Previously known as Cizrna. This project is a reimplementation of the earlier Co
 
 ## Installation and usage
 
-See the complete user documentation: <https://msuchane.github.io/acorns/>.
+See the complete user documentation: <https://redhat-documentation.github.io/acorns/>.
 
 ## Changes
 

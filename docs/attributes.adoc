@@ -7,10 +7,10 @@
 
 :name: aCoRNs
 :bin-name: acorns
-:git-repo: https://github.com/msuchane/acorns
-:container-repo: quay.io/msuchane/acorns
-:container-repo-slug: msuchane/acorns
-:copr-repo: https://copr.fedorainfracloud.org/coprs/mareksu/acorns
-:copr-repo-slug: mareksu/acorns
+:git-repo: https://github.com/redhat-documentation/acorns
+:container-repo: quay.io/redhat-documentation/acorns
+:container-repo-slug: redhat-documentation/acorns
+:copr-repo: https://copr.fedorainfracloud.org/coprs/mmuehlfeldrh/acorns/
+:copr-repo-slug: mmuehlfeldrh/acorns
 
 :context: generating-release-notes-using-{bin-name}
